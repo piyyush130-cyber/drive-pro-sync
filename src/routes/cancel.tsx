@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
+import { CircleCheck } from "lucide-react";
 import { submitPublicCancellation } from "@/lib/public-booking.functions";
 import { toast } from "sonner";
 
@@ -29,40 +30,53 @@ function CancelPage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 flex items-center justify-center p-6">
-      <div className="bg-white ring-1 ring-black/5 rounded-xl p-8 w-full max-w-md">
-        <Link to="/" className="text-xs text-zinc-500">← Back</Link>
-        <h1 className="text-2xl font-medium mt-3 mb-2">Cancel or reschedule</h1>
-        <p className="text-sm text-zinc-600 mb-6">
-          Enter your booking confirmation ID (sent in your confirmation) and tell us why.
+    <div className="min-h-screen bg-[color:var(--color-mist)] flex items-center justify-center p-6">
+      <div className="card-premium p-8 w-full max-w-md">
+        <Link to="/" className="text-xs text-slate-500 hover:text-slate-900">
+          ← Back to booking
+        </Link>
+        <div className="eyebrow text-blue-700 mt-3">DriveProSync</div>
+        <h1 className="text-2xl font-semibold tracking-tight mt-1 mb-2">
+          Cancel or reschedule
+        </h1>
+        <p className="text-sm text-slate-600 mb-6">
+          Enter your booking confirmation ID (from your confirmation message) and tell us why. The
+          school will reach out shortly.
         </p>
         {done ? (
-          <div className="text-emerald-800">Request sent. The school will reach out shortly.</div>
+          <div className="text-center py-4">
+            <div className="mx-auto size-12 rounded-full bg-emerald-50 ring-1 ring-emerald-200 grid place-items-center">
+              <CircleCheck className="size-6 text-emerald-600" />
+            </div>
+            <div className="mt-3 font-semibold tracking-tight">Request sent</div>
+            <div className="text-sm text-slate-500 mt-1">
+              The school will reach out shortly.
+            </div>
+          </div>
         ) : (
           <form onSubmit={onSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-zinc-700 mb-1">Booking ID</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">Booking ID</label>
               <input
                 required
                 value={bookingId}
                 onChange={(e) => setBookingId(e.target.value)}
-                className="w-full bg-zinc-50 border border-zinc-200 rounded-md px-3 py-2 text-sm"
+                className="input-premium"
+                placeholder="e.g. 9f2c…"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-zinc-700 mb-1">Reason</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">Reason</label>
               <textarea
                 required
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
-                className="w-full bg-zinc-50 border border-zinc-200 rounded-md px-3 py-2 text-sm min-h-[100px]"
+                className="input-premium min-h-[110px]"
+                placeholder="Let the school know what's changed."
               />
             </div>
-            <button
-              disabled={submitting}
-              className="w-full bg-emerald-800 text-white py-3 rounded-md font-medium text-sm disabled:opacity-50"
-            >
-              {submitting ? "Sending..." : "Send Request"}
+            <button disabled={submitting} className="btn-primary w-full">
+              {submitting ? "Sending…" : "Send request"}
             </button>
           </form>
         )}

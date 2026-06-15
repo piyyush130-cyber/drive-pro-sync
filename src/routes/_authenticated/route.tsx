@@ -36,16 +36,16 @@ function AuthLayout() {
   }, [loading, user, navigate]);
 
   if (loading || rolesQ.isLoading) {
-    return <div className="min-h-screen flex items-center justify-center text-zinc-500">Loading...</div>;
+    return <div className="min-h-screen flex items-center justify-center text-slate-500">Loading…</div>;
   }
 
   const roles = rolesQ.data ?? [];
   if (roles.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center p-6 text-center">
-        <div className="max-w-md">
-          <h1 className="text-xl font-medium">No role assigned yet</h1>
-          <p className="text-sm text-zinc-500 mt-2">
+        <div className="max-w-md card-premium p-8">
+          <h1 className="text-xl font-semibold tracking-tight">No role assigned yet</h1>
+          <p className="text-sm text-slate-500 mt-2">
             Your account exists but doesn't have a role. Ask the school admin to grant access from
             the Instructors page.
           </p>
@@ -54,7 +54,7 @@ function AuthLayout() {
               await supabase.auth.signOut();
               navigate({ to: "/auth", replace: true });
             }}
-            className="mt-4 text-sm text-emerald-800 underline"
+            className="mt-4 text-sm text-blue-700 underline"
           >
             Sign out
           </button>
@@ -64,8 +64,8 @@ function AuthLayout() {
   }
 
   return (
-    <div className="min-h-screen flex bg-zinc-100">
-      <AppSidebar schoolName={settingsQ.data?.school_name ?? "Driving School"} />
+    <div className="min-h-screen flex bg-[color:var(--color-mist)]">
+      <AppSidebar schoolName={settingsQ.data?.school_name ?? "Standard Driving School"} />
       <main className="flex-1 min-w-0">
         <Outlet />
       </main>
