@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.bookings_guard_instructor_edits() FROM PUBLIC, anon, authenticated;
