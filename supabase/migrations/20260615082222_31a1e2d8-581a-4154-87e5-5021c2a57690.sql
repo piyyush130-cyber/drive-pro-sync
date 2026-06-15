@@ -1,0 +1,2 @@
+UPDATE public.lesson_types SET name = 'Custom / Not Sure' WHERE name = 'Custom Package';
+UPDATE public.lesson_types SET price_cents = 12500 WHERE name = '2 Hour Driving Lesson' AND price_cents = 12000;
