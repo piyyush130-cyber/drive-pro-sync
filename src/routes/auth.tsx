@@ -2,7 +2,17 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { CarFront } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useServerFn } from "@tanstack/react-start";
+import { seedDemoAccounts } from "@/lib/seed-demo.functions";
 import { toast } from "sonner";
+
+async function redirectByRole(navigate: ReturnType<typeof useNavigate>, userId: string) {
+  const { data } = await supabase.from("user_roles").select("role").eq("user_id", userId);
+  const roles = (data ?? []).map((r) => r.role);
+  if (roles.includes("admin")) navigate({ to: "/dashboard", replace: true });
+  else if (roles.includes("instructor")) navigate({ to: "/instructor", replace: true });
+  else navigate({ to: "/dashboard", replace: true });
+}
 
 export const Route = createFileRoute("/auth")({
   component: AuthPage,
@@ -16,9 +26,11 @@ function AuthPage() {
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const seed = useServerFn(seedDemoAccounts);
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/dashboard", replace: true });
+      if (data.session?.user) redirectByRole(navigate, data.session.user.id);
     });
   }, [navigate]);
 
@@ -46,14 +58,33 @@ function AuthPage() {
           } else {
             toast.success("Account created. Ask the admin to assign your role.");
           }
+          await redirectByRole(navigate, data.user.id);
         }
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        if (data.user) await redirectByRole(navigate, data.user.id);
       }
-      navigate({ to: "/dashboard", replace: true });
     } catch (err: any) {
       toast.error(err.message || "Authentication failed");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function loadDemo(role: "admin" | "instructor") {
+    setLoading(true);
+    try {
+      await seed({});
+      const demoEmail = role === "admin" ? "admin@demo.com" : "instructor@demo.com";
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: demoEmail,
+        password: "Demo12345",
+      });
+      if (error) throw error;
+      if (data.user) await redirectByRole(navigate, data.user.id);
+    } catch (err: any) {
+      toast.error(err.message || "Could not start demo");
     } finally {
       setLoading(false);
     }
@@ -133,6 +164,29 @@ function AuthPage() {
               {loading ? "…" : mode === "signin" ? "Sign in" : "Create account"}
             </button>
           </form>
+          <div className="my-5 flex items-center gap-3 text-[10px] uppercase tracking-widest text-slate-400">
+            <div className="h-px flex-1 bg-slate-200" />
+            Try the demo
+            <div className="h-px flex-1 bg-slate-200" />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              disabled={loading}
+              onClick={() => loadDemo("admin")}
+              className="btn-secondary text-xs"
+            >
+              Admin demo
+            </button>
+            <button
+              type="button"
+              disabled={loading}
+              onClick={() => loadDemo("instructor")}
+              className="btn-secondary text-xs"
+            >
+              Instructor demo
+            </button>
+          </div>
           <button
             onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
             className="mt-4 text-xs text-slate-500 hover:text-slate-900 w-full text-center"

@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet, redirect, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Outlet, redirect, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -61,6 +61,22 @@ function AuthLayout() {
         </div>
       </div>
     );
+  }
+
+  const isAdmin = roles.includes("admin");
+  const isInstructor = roles.includes("instructor");
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  // Instructor (non-admin) is locked to /instructor
+  useEffect(() => {
+    if (!isAdmin && isInstructor && pathname !== "/instructor") {
+      navigate({ to: "/instructor", replace: true });
+    }
+  }, [isAdmin, isInstructor, pathname, navigate]);
+
+  // Instructor-only view skips the admin sidebar
+  if (!isAdmin && isInstructor) {
+    return <Outlet />;
   }
 
   return (
