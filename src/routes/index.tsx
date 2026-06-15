@@ -15,6 +15,7 @@ import {
   ShieldCheck,
   Hourglass,
   Sparkles,
+  LogIn,
 } from "lucide-react";
 import {
   addMonths,
@@ -46,7 +47,6 @@ type LessonType = {
 };
 type Settings = { school_name: string };
 
-// Demo time slots (8:00 AM – 10:00 PM).
 const TIME_SLOTS: { time: string; label: string }[] = [
   { time: "08:00", label: "8:00 AM" },
   { time: "09:30", label: "9:30 AM" },
@@ -165,11 +165,11 @@ function BookingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#070b1c] text-slate-100 relative">
-      {/* Ambient glow */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-[520px] overflow-hidden">
-        <div className="absolute -top-40 left-1/2 -translate-x-1/2 size-[900px] rounded-full bg-blue-600/20 blur-[140px]" />
-        <div className="absolute top-20 right-0 size-[420px] rounded-full bg-indigo-500/10 blur-[120px]" />
+    <div className="min-h-screen bg-[#f5f7fb] text-slate-900 relative">
+      {/* Subtle ambient light */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[420px] overflow-hidden">
+        <div className="absolute -top-40 left-1/2 -translate-x-1/2 size-[900px] rounded-full bg-blue-400/10 blur-[140px]" />
+        <div className="absolute top-10 right-0 size-[420px] rounded-full bg-indigo-300/10 blur-[120px]" />
       </div>
 
       <TopBar school={school} />
@@ -178,11 +178,7 @@ function BookingPage() {
         <div className="grid gap-6 lg:grid-cols-[1.15fr_1fr]">
           {/* LEFT COLUMN */}
           <div className="space-y-5">
-            <Panel
-              eyebrow="Select service"
-              title="Choose a lesson"
-              icon={Sparkles}
-            >
+            <Panel eyebrow="Select service" title="Choose a lesson" icon={Sparkles}>
               <ServicePicker
                 types={typesQ.data ?? []}
                 selected={selected}
@@ -229,12 +225,12 @@ function BookingPage() {
                   placeholder="123 Street Name, City"
                 />
               </Field>
-              <label className="flex items-center gap-2.5 text-sm text-slate-300 select-none">
+              <label className="flex items-center gap-2.5 text-sm text-slate-700 select-none">
                 <input
                   type="checkbox"
                   checked={form.dropoff_same}
                   onChange={(e) => setForm({ ...form, dropoff_same: e.target.checked })}
-                  className="size-4 accent-blue-500"
+                  className="size-4 accent-blue-600"
                 />
                 Drop-off same as pickup
               </label>
@@ -290,9 +286,18 @@ function BookingPage() {
           </div>
         </div>
 
-        <p className="text-center text-xs text-slate-500 mt-10">
-          Powered by <span className="font-semibold text-slate-300">DriveProSync</span>
-        </p>
+        <div className="text-center mt-10 space-y-2">
+          <p className="text-xs text-slate-500">
+            Powered by <span className="font-semibold text-slate-700">DriveProSync</span>
+          </p>
+          <Link
+            to="/login"
+            className="inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-400 hover:text-blue-600 transition-colors"
+          >
+            <LogIn className="size-3" />
+            Staff login
+          </Link>
+        </div>
       </main>
     </div>
   );
@@ -302,25 +307,35 @@ function BookingPage() {
 
 function TopBar({ school }: { school: string }) {
   return (
-    <header className="relative border-b border-white/[0.06] bg-[#050818]/80 backdrop-blur-xl">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-3">
+    <header className="relative bg-gradient-to-r from-[#0b1220] via-[#0f1b3d] to-[#16234f] text-white">
+      <div className="absolute inset-0 opacity-[0.08] [background-image:linear-gradient(rgba(255,255,255,0.6)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.6)_1px,transparent_1px)] [background-size:48px_48px]" />
+      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="size-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 ring-1 ring-white/15 grid place-items-center shrink-0 shadow-[0_8px_24px_-8px_rgba(59,130,246,0.6)]">
+          <div className="size-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 ring-1 ring-white/20 grid place-items-center shrink-0 shadow-[0_8px_24px_-8px_rgba(59,130,246,0.7)]">
             <CarFront className="size-5 text-white" />
           </div>
           <div className="min-w-0">
-            <div className="text-sm font-semibold tracking-tight leading-none truncate text-white">
+            <div className="text-sm font-semibold tracking-tight leading-none truncate">
               DriveProSync Booking
             </div>
-            <div className="text-[10px] text-blue-300/80 uppercase tracking-[0.18em] mt-1.5 truncate">
+            <div className="text-[10px] text-blue-200/80 uppercase tracking-[0.18em] mt-1.5 truncate">
               For {school}
             </div>
           </div>
         </div>
-        <span className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-semibold text-blue-100 bg-white/5 ring-1 ring-white/10 rounded-full px-3 py-1.5 whitespace-nowrap">
-          <ShieldCheck className="size-3" />
-          Secure booking
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-semibold text-blue-50 bg-white/10 ring-1 ring-white/15 rounded-full px-3 py-1.5 whitespace-nowrap">
+            <ShieldCheck className="size-3" />
+            Secure booking
+          </span>
+          <Link
+            to="/login"
+            className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-blue-100 hover:text-white bg-white/5 hover:bg-white/10 ring-1 ring-white/15 rounded-full px-3 py-1.5 transition-colors whitespace-nowrap"
+          >
+            <LogIn className="size-3" />
+            Staff
+          </Link>
+        </div>
       </div>
     </header>
   );
@@ -340,18 +355,18 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-2xl bg-white/[0.03] ring-1 ring-white/[0.07] backdrop-blur-xl p-5 sm:p-6 shadow-[0_30px_80px_-40px_rgba(0,0,0,0.6)]">
+    <section className="rounded-2xl bg-white/90 backdrop-blur-xl ring-1 ring-slate-200/80 p-5 sm:p-6 shadow-[0_1px_0_rgba(15,27,61,0.02),0_24px_60px_-32px_rgba(15,27,61,0.18)]">
       <div className="flex items-center gap-2.5 mb-4">
         {Icon && (
-          <div className="size-7 rounded-lg bg-blue-500/15 ring-1 ring-blue-400/30 grid place-items-center">
-            <Icon className="size-3.5 text-blue-300" />
+          <div className="size-7 rounded-lg bg-blue-50 ring-1 ring-blue-100 grid place-items-center">
+            <Icon className="size-3.5 text-blue-600" />
           </div>
         )}
         <div>
-          <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-blue-300/80">
+          <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-blue-700/80">
             {eyebrow}
           </div>
-          <div className="font-semibold tracking-tight text-white text-base mt-0.5">
+          <div className="font-semibold tracking-tight text-slate-900 text-base mt-0.5">
             {title}
           </div>
         </div>
@@ -380,7 +395,7 @@ function ServicePicker({
     "Custom / Not Sure": "Let the school help you decide.",
   };
   if (!types.length) {
-    return <div className="text-sm text-slate-400">Loading services…</div>;
+    return <div className="text-sm text-slate-500">Loading services…</div>;
   }
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -394,28 +409,28 @@ function ServicePicker({
             onClick={() => onSelect(t)}
             className={`group relative text-left rounded-xl p-3.5 transition-all overflow-hidden ${
               active
-                ? "bg-blue-500/10 ring-2 ring-blue-400 shadow-[0_0_0_4px_rgba(59,130,246,0.12),0_18px_40px_-20px_rgba(59,130,246,0.55)]"
-                : "bg-white/[0.02] ring-1 ring-white/[0.08] hover:ring-white/20 hover:bg-white/[0.04]"
+                ? "bg-blue-50 ring-2 ring-blue-500 shadow-[0_0_0_4px_rgba(59,130,246,0.10),0_18px_40px_-22px_rgba(59,130,246,0.55)]"
+                : "bg-white ring-1 ring-slate-200 hover:ring-blue-300 hover:bg-slate-50"
             }`}
           >
             {active && (
-              <div className="absolute top-2.5 right-2.5 size-5 rounded-full bg-blue-500 grid place-items-center text-white shadow-md">
+              <div className="absolute top-2.5 right-2.5 size-5 rounded-full bg-blue-600 grid place-items-center text-white shadow-md">
                 <Check className="size-3" strokeWidth={3} />
               </div>
             )}
-            <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-blue-300/80">
+            <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-blue-700/80">
               <Clock className="size-3" />
               {t.duration_minutes} min
             </div>
-            <div className="mt-1.5 font-semibold tracking-tight text-white text-sm pr-6">
+            <div className="mt-1.5 font-semibold tracking-tight text-slate-900 text-sm pr-6">
               {name}
             </div>
-            <div className="text-[11px] text-slate-400 mt-0.5 line-clamp-1">
+            <div className="text-[11px] text-slate-500 mt-0.5 line-clamp-1">
               {blurbs[t.name] ?? t.description ?? ""}
             </div>
             <div
               className={`mt-2 text-base font-semibold tracking-tight ${
-                active ? "text-blue-200" : "text-white"
+                active ? "text-blue-700" : "text-slate-900"
               }`}
             >
               {t.price_cents > 0 ? money(t.price_cents) : "Custom Quote"}
@@ -448,9 +463,9 @@ function Scheduler({
   return (
     <div className="space-y-5">
       {/* Calendar */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <div className="font-semibold tracking-tight text-white text-sm">
+      <div className="rounded-xl bg-white ring-1 ring-slate-200 p-4 shadow-[0_1px_0_rgba(15,27,61,0.02),0_12px_28px_-20px_rgba(15,27,61,0.18)]">
+        <div className="flex items-center justify-between mb-4">
+          <div className="font-semibold tracking-tight text-slate-900 text-sm">
             {format(month, "MMMM yyyy")}
           </div>
           <div className="flex items-center gap-1">
@@ -458,7 +473,7 @@ function Scheduler({
               type="button"
               onClick={() => setMonth(addMonths(month, -1))}
               disabled={isSameMonth(month, today)}
-              className="size-8 rounded-md grid place-items-center text-slate-300 hover:bg-white/10 disabled:opacity-30 disabled:hover:bg-transparent"
+              className="size-8 rounded-lg grid place-items-center text-slate-600 hover:bg-slate-100 hover:text-slate-900 ring-1 ring-slate-200 disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed transition-colors"
               aria-label="Previous month"
             >
               <ChevronLeft className="size-4" />
@@ -466,14 +481,14 @@ function Scheduler({
             <button
               type="button"
               onClick={() => setMonth(addMonths(month, 1))}
-              className="size-8 rounded-md grid place-items-center text-slate-300 hover:bg-white/10"
+              className="size-8 rounded-lg grid place-items-center text-slate-600 hover:bg-slate-100 hover:text-slate-900 ring-1 ring-slate-200 transition-colors"
               aria-label="Next month"
             >
               <ChevronRight className="size-4" />
             </button>
           </div>
         </div>
-        <div className="grid grid-cols-7 gap-1 text-[10px] text-slate-500 mb-1">
+        <div className="grid grid-cols-7 gap-1 text-[10px] text-slate-400 mb-1">
           {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
             <div key={i} className="text-center py-1 font-semibold tracking-wider uppercase">
               {d}
@@ -493,14 +508,14 @@ function Scheduler({
                 type="button"
                 disabled={disabled}
                 onClick={() => onDate(d)}
-                className={`relative h-9 rounded-lg text-sm font-medium transition-all ${
+                className={`relative h-10 rounded-lg text-sm font-medium transition-all ${
                   isSel
-                    ? "bg-blue-500 text-white shadow-[0_0_0_2px_rgba(59,130,246,0.3),0_8px_24px_-8px_rgba(59,130,246,0.7)]"
+                    ? "bg-blue-600 text-white shadow-[0_0_0_2px_rgba(59,130,246,0.20),0_10px_24px_-8px_rgba(59,130,246,0.55)]"
                     : disabled
-                      ? "text-slate-700 cursor-not-allowed"
+                      ? "text-slate-300 cursor-not-allowed"
                       : isToday
-                        ? "bg-blue-500/10 text-blue-200 ring-1 ring-blue-400/40 hover:bg-blue-500/20"
-                        : "text-slate-200 hover:bg-white/10"
+                        ? "text-blue-700 ring-1 ring-blue-300 hover:bg-blue-50"
+                        : "text-slate-700 hover:bg-slate-100"
                 }`}
               >
                 {d.getDate()}
@@ -513,15 +528,15 @@ function Scheduler({
       {/* Slots */}
       <div>
         <div className="flex items-center justify-between mb-2.5">
-          <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-blue-300/80">
+          <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-blue-700/80">
             Available times
           </div>
-          <div className="text-xs text-slate-400">
+          <div className="text-xs text-slate-500">
             {date ? format(date, "EEE, MMM d") : "Pick a date"}
           </div>
         </div>
         {!date ? (
-          <div className="text-sm text-slate-500 py-6 text-center rounded-lg bg-white/[0.02] ring-1 ring-white/[0.05]">
+          <div className="text-sm text-slate-500 py-6 text-center rounded-lg bg-slate-50 ring-1 ring-slate-200">
             Choose a date to see open slots.
           </div>
         ) : (
@@ -537,10 +552,10 @@ function Scheduler({
                   onClick={() => onTime(s.time)}
                   className={`rounded-lg px-2 py-2 text-xs font-semibold transition-all ${
                     active
-                      ? "bg-blue-500 text-white shadow-[0_0_0_2px_rgba(59,130,246,0.3),0_8px_20px_-8px_rgba(59,130,246,0.7)]"
+                      ? "bg-blue-600 text-white shadow-[0_0_0_2px_rgba(59,130,246,0.20),0_8px_20px_-8px_rgba(59,130,246,0.55)]"
                       : unavailable
-                        ? "bg-white/[0.02] text-slate-600 ring-1 ring-white/[0.04] cursor-not-allowed line-through"
-                        : "bg-white/[0.03] text-slate-200 ring-1 ring-white/[0.08] hover:ring-blue-400/50 hover:bg-blue-500/10"
+                        ? "bg-slate-50 text-slate-300 ring-1 ring-slate-100 cursor-not-allowed line-through"
+                        : "bg-white text-slate-700 ring-1 ring-slate-200 hover:ring-blue-400 hover:bg-blue-50"
                   }`}
                 >
                   {s.label}
@@ -588,20 +603,22 @@ function SummaryCard({
   const ready = !!(lesson && date && time && form.full_name && form.phone && form.pickup_address);
 
   return (
-    <section className="rounded-2xl overflow-hidden ring-1 ring-white/10 bg-gradient-to-br from-[#0c1430] via-[#0a1028] to-[#070b1c] shadow-[0_30px_80px_-30px_rgba(37,99,235,0.45)]">
-      <div className="p-5 sm:p-6 border-b border-white/[0.06]">
-        <div className="flex items-center justify-between">
-          <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-blue-300/80">
-            Live summary
-          </div>
-          <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold text-amber-200 bg-amber-500/10 ring-1 ring-amber-400/30 rounded-full px-2.5 py-1">
-            <Hourglass className="size-3" /> Pending school approval
-          </span>
+    <section className="rounded-2xl overflow-hidden ring-1 ring-slate-200 bg-white shadow-[0_1px_0_rgba(15,27,61,0.02),0_30px_70px_-32px_rgba(15,27,61,0.25)]">
+      {/* Navy header strip */}
+      <div className="bg-gradient-to-r from-[#0b1220] via-[#0f1b3d] to-[#16234f] text-white px-5 sm:px-6 py-4 flex items-center justify-between">
+        <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-blue-200/90">
+          Live summary
         </div>
-        <div className="mt-3 text-lg font-semibold tracking-tight text-white">
+        <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold text-amber-200 bg-amber-400/15 ring-1 ring-amber-300/40 rounded-full px-2.5 py-1">
+          <Hourglass className="size-3" /> Pending school approval
+        </span>
+      </div>
+
+      <div className="p-5 sm:p-6 border-b border-slate-100">
+        <div className="text-lg font-semibold tracking-tight text-slate-900">
           {lesson ? lesson.name.replace(" Driving Lesson", " Lesson") : "Select a service"}
         </div>
-        <div className="text-sm text-slate-400 mt-0.5">
+        <div className="text-sm text-slate-500 mt-0.5">
           {lesson ? `${lesson.duration_minutes} min` : "—"}
           {date && time && (
             <>
@@ -610,7 +627,7 @@ function SummaryCard({
             </>
           )}
         </div>
-        <div className="mt-3 text-2xl font-semibold tracking-tight text-white">
+        <div className="mt-3 text-2xl font-semibold tracking-tight text-slate-900">
           {lesson ? (lesson.price_cents > 0 ? money(lesson.price_cents) : "Custom Quote") : "—"}
         </div>
       </div>
@@ -635,8 +652,8 @@ function SummaryCard({
           disabled={!ready || submitting}
           className={`w-full inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-sm font-semibold transition-all ${
             ready && !submitting
-              ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-400 hover:to-indigo-400 shadow-[0_12px_30px_-10px_rgba(59,130,246,0.7)]"
-              : "bg-white/5 text-slate-500 ring-1 ring-white/10 cursor-not-allowed"
+              ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-500 hover:to-indigo-500 shadow-[0_12px_30px_-10px_rgba(37,99,235,0.55)]"
+              : "bg-slate-100 text-slate-400 ring-1 ring-slate-200 cursor-not-allowed"
           }`}
         >
           {submitting ? "Sending…" : "Request Lesson Time"}
@@ -661,10 +678,10 @@ function Row({
 }) {
   return (
     <div className={full ? "col-span-2" : ""}>
-      <div className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold">
+      <div className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">
         {label}
       </div>
-      <div className="text-sm text-slate-200 mt-0.5 truncate">{children}</div>
+      <div className="text-sm text-slate-800 mt-0.5 truncate">{children}</div>
     </div>
   );
 }
@@ -682,9 +699,9 @@ function Field({
 }) {
   return (
     <div>
-      <label className="block text-xs font-medium text-slate-300 mb-1.5">
+      <label className="block text-xs font-medium text-slate-700 mb-1.5">
         {label}
-        {required && <span className="text-rose-400"> *</span>}
+        {required && <span className="text-rose-500"> *</span>}
       </label>
       {children}
     </div>
@@ -708,7 +725,7 @@ function LuxInput({
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      className="w-full rounded-lg bg-white/[0.04] ring-1 ring-white/[0.08] focus:ring-2 focus:ring-blue-400/60 focus:bg-white/[0.06] outline-none px-3.5 py-2.5 text-sm text-white placeholder:text-slate-500 transition-all"
+      className="w-full rounded-lg bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 focus:shadow-[0_0_0_4px_rgba(37,99,235,0.10)] outline-none px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition-all"
     />
   );
 }
@@ -727,7 +744,7 @@ function LuxTextarea({
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      className="w-full rounded-lg bg-white/[0.04] ring-1 ring-white/[0.08] focus:ring-2 focus:ring-blue-400/60 focus:bg-white/[0.06] outline-none px-3.5 py-2.5 text-sm text-white placeholder:text-slate-500 min-h-[80px] transition-all"
+      className="w-full rounded-lg bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 focus:shadow-[0_0_0_4px_rgba(37,99,235,0.10)] outline-none px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 min-h-[80px] transition-all"
     />
   );
 }
@@ -750,31 +767,31 @@ function ConfirmationScreen({
   name: string;
 }) {
   return (
-    <div className="min-h-screen bg-[#070b1c] text-slate-100 relative">
+    <div className="min-h-screen bg-[#f5f7fb] text-slate-900 relative">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[420px] overflow-hidden">
-        <div className="absolute -top-40 left-1/2 -translate-x-1/2 size-[700px] rounded-full bg-emerald-500/15 blur-[140px]" />
+        <div className="absolute -top-40 left-1/2 -translate-x-1/2 size-[700px] rounded-full bg-emerald-300/15 blur-[140px]" />
       </div>
       <TopBar school={school} />
       <main className="relative max-w-xl mx-auto px-4 sm:px-6 py-12">
-        <div className="rounded-2xl overflow-hidden ring-1 ring-white/10 bg-white/[0.03] backdrop-blur-xl shadow-[0_30px_80px_-30px_rgba(16,185,129,0.4)]">
+        <div className="rounded-2xl overflow-hidden ring-1 ring-slate-200 bg-white shadow-[0_1px_0_rgba(15,27,61,0.02),0_30px_80px_-30px_rgba(16,185,129,0.25)]">
           <div className="p-8 text-center">
-            <div className="mx-auto size-14 rounded-full bg-emerald-500/15 ring-1 ring-emerald-400/40 grid place-items-center">
-              <CircleCheck className="size-7 text-emerald-300" />
+            <div className="mx-auto size-14 rounded-full bg-emerald-50 ring-1 ring-emerald-200 grid place-items-center">
+              <CircleCheck className="size-7 text-emerald-600" />
             </div>
-            <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-300 mt-5">
+            <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-700 mt-5">
               Booking request received
             </div>
-            <h1 className="text-2xl font-semibold tracking-tight mt-2 text-white">
+            <h1 className="text-2xl font-semibold tracking-tight mt-2 text-slate-900">
               Thanks, {name.split(" ")[0] || "driver"}!
             </h1>
-            <p className="text-slate-400 mt-2 text-pretty max-w-md mx-auto text-sm">
+            <p className="text-slate-500 mt-2 text-pretty max-w-md mx-auto text-sm">
               {school} will review your request and confirm by phone, text, or email.
             </p>
-            <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-amber-200 bg-amber-500/10 ring-1 ring-amber-400/30 rounded-full px-3 py-1">
+            <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-amber-700 bg-amber-50 ring-1 ring-amber-200 rounded-full px-3 py-1">
               <Hourglass className="size-3" /> Pending school approval
             </span>
           </div>
-          <div className="border-t border-white/[0.06] p-6 grid sm:grid-cols-2 gap-x-8 gap-y-4">
+          <div className="border-t border-slate-100 p-6 grid sm:grid-cols-2 gap-x-8 gap-y-4">
             <Row label="Lesson">{lesson.name.replace(" Driving Lesson", " Lesson")}</Row>
             <Row label="Date">{format(date, "EEEE, MMM d")}</Row>
             <Row label="Time">{time}</Row>
@@ -784,12 +801,12 @@ function ConfirmationScreen({
           </div>
         </div>
         <div className="text-center mt-6">
-          <Link to="/" className="text-sm font-medium text-blue-300 hover:text-blue-200">
+          <Link to="/" className="text-sm font-medium text-blue-700 hover:text-blue-800">
             Book another lesson
           </Link>
         </div>
         <p className="text-center text-xs text-slate-500 mt-8">
-          Powered by <span className="font-semibold text-slate-300">DriveProSync</span>
+          Powered by <span className="font-semibold text-slate-700">DriveProSync</span>
         </p>
       </main>
     </div>
