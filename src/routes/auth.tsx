@@ -2,7 +2,17 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { CarFront } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useServerFn } from "@tanstack/react-start";
+import { seedDemoAccounts } from "@/lib/seed-demo.functions";
 import { toast } from "sonner";
+
+async function redirectByRole(navigate: ReturnType<typeof useNavigate>, userId: string) {
+  const { data } = await supabase.from("user_roles").select("role").eq("user_id", userId);
+  const roles = (data ?? []).map((r) => r.role);
+  if (roles.includes("admin")) navigate({ to: "/dashboard", replace: true });
+  else if (roles.includes("instructor")) navigate({ to: "/instructor", replace: true });
+  else navigate({ to: "/dashboard", replace: true });
+}
 
 export const Route = createFileRoute("/auth")({
   component: AuthPage,
