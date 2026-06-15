@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { submitPublicBooking } from "@/lib/public-booking.functions";
 import { money } from "@/lib/format";
 import { toast } from "sonner";
 
@@ -65,37 +67,26 @@ function BookingPage() {
     notes: "",
   });
 
+  const submit = useServerFn(submitPublicBooking);
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!selected) return toast.error("Please select a lesson type first.");
     if (!form.date || !form.time) return toast.error("Pick a date and time.");
     setSubmitting(true);
     try {
-      const { data: student, error: e1 } = await supabase
-        .from("students")
-        .insert({
+      const scheduled_at = new Date(`${form.date}T${form.time}`).toISOString();
+      await submit({
+        data: {
           full_name: form.full_name,
           phone: form.phone,
           email: form.email || null,
           pickup_address: form.pickup_address,
+          dropoff_address: form.dropoff_same ? form.pickup_address : form.dropoff_address,
           notes: form.notes || null,
-        })
-        .select("id")
-        .single();
-      if (e1) throw e1;
-      const scheduled_at = new Date(`${form.date}T${form.time}`).toISOString();
-      const { error: e2 } = await supabase.from("bookings").insert({
-        student_id: student.id,
-        lesson_type_id: selected.id,
-        scheduled_at,
-        duration_minutes: selected.duration_minutes,
-        pickup_address: form.pickup_address,
-        dropoff_address: form.dropoff_same ? form.pickup_address : form.dropoff_address,
-        notes: form.notes || null,
-        price_cents: selected.price_cents,
-        status: "pending",
+          lesson_type_id: selected.id,
+          scheduled_at,
+        },
       });
-      if (e2) throw e2;
       setSubmitted(true);
     } catch (err: any) {
       toast.error(err.message || "Failed to submit booking");
