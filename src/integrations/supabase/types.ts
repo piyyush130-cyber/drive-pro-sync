@@ -14,16 +14,394 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      bookings: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          dropoff_address: string | null
+          duration_minutes: number
+          id: string
+          instructor_id: string | null
+          lesson_notes: string | null
+          lesson_type_id: string | null
+          notes: string | null
+          paid_at: string | null
+          payment_method: Database["public"]["Enums"]["payment_method"] | null
+          payment_status: Database["public"]["Enums"]["payment_status"]
+          pickup_address: string | null
+          price_cents: number
+          scheduled_at: string
+          status: Database["public"]["Enums"]["booking_status"]
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          dropoff_address?: string | null
+          duration_minutes?: number
+          id?: string
+          instructor_id?: string | null
+          lesson_notes?: string | null
+          lesson_type_id?: string | null
+          notes?: string | null
+          paid_at?: string | null
+          payment_method?: Database["public"]["Enums"]["payment_method"] | null
+          payment_status?: Database["public"]["Enums"]["payment_status"]
+          pickup_address?: string | null
+          price_cents?: number
+          scheduled_at: string
+          status?: Database["public"]["Enums"]["booking_status"]
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          dropoff_address?: string | null
+          duration_minutes?: number
+          id?: string
+          instructor_id?: string | null
+          lesson_notes?: string | null
+          lesson_type_id?: string | null
+          notes?: string | null
+          paid_at?: string | null
+          payment_method?: Database["public"]["Enums"]["payment_method"] | null
+          payment_status?: Database["public"]["Enums"]["payment_status"]
+          pickup_address?: string | null
+          price_cents?: number
+          scheduled_at?: string
+          status?: Database["public"]["Enums"]["booking_status"]
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_instructor_id_fkey"
+            columns: ["instructor_id"]
+            isOneToOne: false
+            referencedRelation: "instructors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_lesson_type_id_fkey"
+            columns: ["lesson_type_id"]
+            isOneToOne: false
+            referencedRelation: "lesson_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cancellation_requests: {
+        Row: {
+          booking_id: string
+          created_at: string
+          id: string
+          reason: string | null
+          resolved_at: string | null
+          status: Database["public"]["Enums"]["cancel_status"]
+        }
+        Insert: {
+          booking_id: string
+          created_at?: string
+          id?: string
+          reason?: string | null
+          resolved_at?: string | null
+          status?: Database["public"]["Enums"]["cancel_status"]
+        }
+        Update: {
+          booking_id?: string
+          created_at?: string
+          id?: string
+          reason?: string | null
+          resolved_at?: string | null
+          status?: Database["public"]["Enums"]["cancel_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cancellation_requests_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      instructors: {
+        Row: {
+          active: boolean
+          created_at: string
+          email: string | null
+          full_name: string
+          id: string
+          notes: string | null
+          phone: string | null
+          profile_id: string | null
+          updated_at: string
+          weekly_availability: Json
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          email?: string | null
+          full_name: string
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          profile_id?: string | null
+          updated_at?: string
+          weekly_availability?: Json
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          email?: string | null
+          full_name?: string
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          profile_id?: string | null
+          updated_at?: string
+          weekly_availability?: Json
+        }
+        Relationships: []
+      }
+      lesson_types: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string | null
+          duration_minutes: number
+          id: string
+          name: string
+          price_cents: number
+          sort_order: number
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          name: string
+          price_cents?: number
+          sort_order?: number
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          name?: string
+          price_cents?: number
+          sort_order?: number
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      school_settings: {
+        Row: {
+          cancellation_policy: string | null
+          contact_email: string | null
+          contact_phone: string | null
+          default_buffer_minutes: number
+          default_duration_minutes: number
+          id: number
+          logo_url: string | null
+          require_approval: boolean
+          school_name: string
+          service_area: string | null
+          updated_at: string
+        }
+        Insert: {
+          cancellation_policy?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          default_buffer_minutes?: number
+          default_duration_minutes?: number
+          id?: number
+          logo_url?: string | null
+          require_approval?: boolean
+          school_name?: string
+          service_area?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cancellation_policy?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          default_buffer_minutes?: number
+          default_duration_minutes?: number
+          id?: number
+          logo_url?: string | null
+          require_approval?: boolean
+          school_name?: string
+          service_area?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      student_progress: {
+        Row: {
+          general_notes: string | null
+          id: string
+          road_test_ready: boolean
+          skills: Json
+          student_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          general_notes?: string | null
+          id?: string
+          road_test_ready?: boolean
+          skills?: Json
+          student_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          general_notes?: string | null
+          id?: string
+          road_test_ready?: boolean
+          skills?: Json
+          student_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_progress_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: true
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      students: {
+        Row: {
+          created_at: string
+          email: string | null
+          full_name: string
+          id: string
+          lessons_purchased: number
+          notes: string | null
+          phone: string | null
+          pickup_address: string | null
+          profile_id: string | null
+          road_test_notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          full_name: string
+          id?: string
+          lessons_purchased?: number
+          notes?: string | null
+          phone?: string | null
+          pickup_address?: string | null
+          profile_id?: string | null
+          road_test_notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          full_name?: string
+          id?: string
+          lessons_purchased?: number
+          notes?: string | null
+          phone?: string | null
+          pickup_address?: string | null
+          profile_id?: string | null
+          road_test_notes?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "instructor" | "student"
+      booking_status:
+        | "pending"
+        | "confirmed"
+        | "declined"
+        | "rescheduled"
+        | "cancelled"
+        | "completed"
+        | "no_show"
+      cancel_status: "requested" | "approved" | "rejected"
+      payment_method: "cash" | "etransfer" | "card" | "other"
+      payment_status: "unpaid" | "deposit_paid" | "paid" | "refunded"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +528,20 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "instructor", "student"],
+      booking_status: [
+        "pending",
+        "confirmed",
+        "declined",
+        "rescheduled",
+        "cancelled",
+        "completed",
+        "no_show",
+      ],
+      cancel_status: ["requested", "approved", "rejected"],
+      payment_method: ["cash", "etransfer", "card", "other"],
+      payment_status: ["unpaid", "deposit_paid", "paid", "refunded"],
+    },
   },
 } as const
