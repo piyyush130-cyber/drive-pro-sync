@@ -9,16 +9,18 @@ import {
   Settings,
   LogOut,
   CarFront,
+  Tag,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 const items = [
-  { title: "Dispatch", url: "/dashboard", icon: Gauge },
-  { title: "Bookings", url: "/bookings", icon: Inbox },
+  { title: "Daily Dispatch", url: "/dashboard", icon: Gauge },
+  { title: "Booking Queue", url: "/bookings", icon: Inbox },
   { title: "Calendar", url: "/calendar", icon: CalendarDays },
   { title: "Students", url: "/students", icon: Users },
   { title: "Instructors", url: "/instructors", icon: GraduationCap },
-  { title: "Payments", url: "/payments", icon: Wallet },
+  { title: "Services & Pricing", url: "/services", icon: Tag },
+  { title: "Payment Watch", url: "/payments", icon: Wallet },
   { title: "Settings", url: "/settings", icon: Settings },
 ];
 
