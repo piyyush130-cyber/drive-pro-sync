@@ -15,8 +15,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Standard Driving School — Book a Lesson" },
-      { name: "description", content: "Book driving lessons online. Simple scheduling, transparent pricing, and clear pickup details." },
+      { title: "DriveProSync — Driving School Booking System" },
+      { name: "description", content: "Simple booking, scheduling, pickup coordination, instructor management, and payment tracking for driving schools." },
+      { property: "og:title", content: "DriveProSync — Driving School Booking System" },
+      { name: "twitter:title", content: "DriveProSync — Driving School Booking System" },
+      { property: "og:description", content: "Simple booking, scheduling, pickup coordination, instructor management, and payment tracking for driving schools." },
+      { name: "twitter:description", content: "Simple booking, scheduling, pickup coordination, instructor management, and payment tracking for driving schools." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/db0a783a-6b7f-400c-b7e6-e8ac8d165ed7/id-preview-2a3032fd--a4ab71a0-4ab6-48b3-831d-8c01ad32c818.lovable.app-1781502457180.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/db0a783a-6b7f-400c-b7e6-e8ac8d165ed7/id-preview-2a3032fd--a4ab71a0-4ab6-48b3-831d-8c01ad32c818.lovable.app-1781502457180.png" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { property: "og:type", content: "website" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
