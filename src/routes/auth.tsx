@@ -26,9 +26,11 @@ function AuthPage() {
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const seed = useServerFn(seedDemoAccounts);
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/dashboard", replace: true });
+      if (data.session?.user) redirectByRole(navigate, data.session.user.id);
     });
   }, [navigate]);
 
@@ -56,14 +58,33 @@ function AuthPage() {
           } else {
             toast.success("Account created. Ask the admin to assign your role.");
           }
+          await redirectByRole(navigate, data.user.id);
         }
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        if (data.user) await redirectByRole(navigate, data.user.id);
       }
-      navigate({ to: "/dashboard", replace: true });
     } catch (err: any) {
       toast.error(err.message || "Authentication failed");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function loadDemo(role: "admin" | "instructor") {
+    setLoading(true);
+    try {
+      await seed({});
+      const demoEmail = role === "admin" ? "admin@demo.com" : "instructor@demo.com";
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: demoEmail,
+        password: "Demo12345",
+      });
+      if (error) throw error;
+      if (data.user) await redirectByRole(navigate, data.user.id);
+    } catch (err: any) {
+      toast.error(err.message || "Could not start demo");
     } finally {
       setLoading(false);
     }
