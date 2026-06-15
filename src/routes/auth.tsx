@@ -164,6 +164,29 @@ function AuthPage() {
               {loading ? "…" : mode === "signin" ? "Sign in" : "Create account"}
             </button>
           </form>
+          <div className="my-5 flex items-center gap-3 text-[10px] uppercase tracking-widest text-slate-400">
+            <div className="h-px flex-1 bg-slate-200" />
+            Try the demo
+            <div className="h-px flex-1 bg-slate-200" />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              disabled={loading}
+              onClick={() => loadDemo("admin")}
+              className="btn-secondary text-xs"
+            >
+              Admin demo
+            </button>
+            <button
+              type="button"
+              disabled={loading}
+              onClick={() => loadDemo("instructor")}
+              className="btn-secondary text-xs"
+            >
+              Instructor demo
+            </button>
+          </div>
           <button
             onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
             className="mt-4 text-xs text-slate-500 hover:text-slate-900 w-full text-center"
