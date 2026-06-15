@@ -55,7 +55,7 @@ function InstructorPage() {
     },
   });
 
-  async function setStatus(id: string, status: string) {
+  async function setStatus(id: string, status: "completed" | "no_show") {
     const { error } = await supabase.from("bookings").update({ status }).eq("id", id);
     if (error) return toast.error(error.message);
     toast.success("Updated");
@@ -171,9 +171,7 @@ function InstructorPage() {
                     )}
                   </div>
                   <span
-                    className={`text-xs font-semibold px-2.5 py-1 rounded-full ${statusTone(
-                      b.status,
-                    )}`}
+                    className={`text-xs font-semibold px-2.5 py-1 rounded-full ${statusTone[b.status] ?? ""}`}
                   >
                     {statusLabel(b.status)}
                   </span>
