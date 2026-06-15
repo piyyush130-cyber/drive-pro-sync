@@ -63,6 +63,22 @@ function AuthLayout() {
     );
   }
 
+  const isAdmin = roles.includes("admin");
+  const isInstructor = roles.includes("instructor");
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  // Instructor (non-admin) is locked to /instructor
+  useEffect(() => {
+    if (!isAdmin && isInstructor && pathname !== "/instructor") {
+      navigate({ to: "/instructor", replace: true });
+    }
+  }, [isAdmin, isInstructor, pathname, navigate]);
+
+  // Instructor-only view skips the admin sidebar
+  if (!isAdmin && isInstructor) {
+    return <Outlet />;
+  }
+
   return (
     <div className="min-h-screen flex bg-[color:var(--color-mist)]">
       <AppSidebar schoolName={settingsQ.data?.school_name ?? "Standard Driving School"} />
