@@ -68,7 +68,7 @@ function Dashboard() {
         supabase
           .from("cancellation_requests")
           .select("*", { count: "exact", head: true })
-          .eq("status", "pending"),
+          .eq("status", "requested"),
         supabase
           .from("bookings")
           .select("*", { count: "exact", head: true })
