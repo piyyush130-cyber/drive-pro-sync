@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { CarFront } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -36,7 +37,6 @@ function AuthPage() {
         });
         if (error) throw error;
         if (data.user) {
-          // Auto-grant admin role to the first user
           const { count } = await supabase
             .from("user_roles")
             .select("*", { count: "exact", head: true });
@@ -60,75 +60,89 @@ function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 flex items-center justify-center p-6">
-      <div className="w-full max-w-sm bg-white ring-1 ring-black/5 rounded-xl p-8">
-        <Link to="/" className="text-xs text-zinc-500">← Back to booking</Link>
-        <h1 className="text-2xl font-medium mt-3 mb-1">
-          {mode === "signin" ? "Staff sign in" : "Create staff account"}
-        </h1>
-        <p className="text-sm text-zinc-500 mb-6">
-          {mode === "signin"
-            ? "Admin & instructor access."
-            : "First account becomes the school admin."}
-        </p>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {mode === "signup" && (
-            <Field label="Full name">
+    <div className="min-h-screen grid lg:grid-cols-2">
+      {/* Left brand panel */}
+      <div className="hidden lg:flex brand-gradient brand-grid-bg text-white p-12 flex-col justify-between">
+        <div className="flex items-center gap-2.5">
+          <div className="size-9 rounded-xl bg-white/10 ring-1 ring-white/15 grid place-items-center">
+            <CarFront className="size-4.5 text-blue-300" />
+          </div>
+          <div className="text-sm font-semibold tracking-tight">DriveProSync</div>
+        </div>
+        <div>
+          <div className="eyebrow text-blue-300">Operations Console</div>
+          <h2 className="text-3xl xl:text-4xl font-semibold tracking-tight mt-3 max-w-[24ch] text-balance">
+            Run the dispatch board, not the inbox.
+          </h2>
+          <p className="text-slate-300 mt-4 max-w-[42ch]">
+            Bookings, pickups, instructor scheduling, and payments — all in one premium control
+            center built for small driving schools.
+          </p>
+        </div>
+        <div className="text-xs text-slate-400">© DriveProSync</div>
+      </div>
+
+      {/* Right form */}
+      <div className="flex items-center justify-center p-6 bg-[color:var(--color-mist)]">
+        <div className="w-full max-w-sm card-premium p-8">
+          <Link to="/" className="text-xs text-slate-500 hover:text-slate-900">
+            ← Back to booking
+          </Link>
+          <div className="eyebrow text-blue-700 mt-3">
+            {mode === "signin" ? "Staff sign in" : "New staff account"}
+          </div>
+          <h1 className="text-2xl font-semibold tracking-tight mt-1 mb-1">
+            {mode === "signin" ? "Welcome back" : "Create your account"}
+          </h1>
+          <p className="text-sm text-slate-500 mb-6">
+            {mode === "signin"
+              ? "Admin & instructor access."
+              : "First account becomes the school admin."}
+          </p>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {mode === "signup" && (
+              <Field label="Full name">
+                <input
+                  required
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="input-premium"
+                />
+              </Field>
+            )}
+            <Field label="Email">
               <input
                 required
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                className="input"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="input-premium"
               />
             </Field>
-          )}
-          <Field label="Email">
-            <input
-              required
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="input"
-            />
-          </Field>
-          <Field label="Password">
-            <input
-              required
-              type="password"
-              minLength={6}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="input"
-            />
-          </Field>
+            <Field label="Password">
+              <input
+                required
+                type="password"
+                minLength={6}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="input-premium"
+              />
+            </Field>
+            <button disabled={loading} className="btn-primary w-full">
+              {loading ? "…" : mode === "signin" ? "Sign in" : "Create account"}
+            </button>
+          </form>
           <button
-            disabled={loading}
-            className="w-full bg-emerald-800 text-white py-3 rounded-md font-medium text-sm disabled:opacity-50"
+            onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
+            className="mt-4 text-xs text-slate-500 hover:text-slate-900 w-full text-center"
           >
-            {loading ? "..." : mode === "signin" ? "Sign in" : "Create account"}
+            {mode === "signin"
+              ? "Need an account? Create one"
+              : "Already have an account? Sign in"}
           </button>
-        </form>
-        <button
-          onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
-          className="mt-4 text-xs text-zinc-500 hover:text-zinc-900 w-full text-center"
-        >
-          {mode === "signin"
-            ? "Need an account? Create one"
-            : "Already have an account? Sign in"}
-        </button>
+        </div>
       </div>
-      <style>{`
-        .input {
-          width: 100%;
-          background: #fafafa;
-          border: 1px solid #e4e4e7;
-          border-radius: 6px;
-          padding: 8px 12px;
-          font-size: 14px;
-          outline: none;
-        }
-        .input:focus { border-color: #064e3b; background: #fff; }
-      `}</style>
     </div>
   );
 }
@@ -136,7 +150,7 @@ function AuthPage() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-zinc-700 mb-1">{label}</label>
+      <label className="block text-sm font-medium text-slate-700 mb-1.5">{label}</label>
       {children}
     </div>
   );

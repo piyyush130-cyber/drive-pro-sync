@@ -12,16 +12,18 @@ export const fmtDateTime = (iso: string) => `${fmtDate(iso)} · ${fmtTime(iso)}`
 export const statusLabel = (s: string) =>
   s.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
+// Status pill tones — premium automotive palette
 export const statusTone: Record<string, string> = {
-  pending: "bg-amber-100 text-amber-800",
-  confirmed: "bg-emerald-100 text-emerald-800",
-  completed: "bg-zinc-100 text-zinc-700",
-  cancelled: "bg-rose-100 text-rose-700",
-  declined: "bg-rose-100 text-rose-700",
-  no_show: "bg-rose-100 text-rose-700",
-  rescheduled: "bg-blue-100 text-blue-700",
-  paid: "bg-emerald-100 text-emerald-800",
-  unpaid: "bg-amber-100 text-amber-800",
-  deposit_paid: "bg-blue-100 text-blue-700",
-  refunded: "bg-zinc-100 text-zinc-700",
+  pending: "bg-amber-50 text-amber-700 ring-1 ring-amber-200",
+  confirmed: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200",
+  completed: "bg-slate-100 text-slate-700 ring-1 ring-slate-200",
+  cancelled: "bg-rose-50 text-rose-700 ring-1 ring-rose-200",
+  declined: "bg-rose-50 text-rose-700 ring-1 ring-rose-200",
+  no_show: "bg-rose-50 text-rose-700 ring-1 ring-rose-200",
+  rescheduled: "bg-blue-50 text-blue-700 ring-1 ring-blue-200",
+  paid: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200",
+  unpaid: "bg-amber-50 text-amber-700 ring-1 ring-amber-200",
+  deposit_paid: "bg-blue-50 text-blue-700 ring-1 ring-blue-200",
+  refunded: "bg-slate-100 text-slate-700 ring-1 ring-slate-200",
+  overdue: "bg-rose-50 text-rose-700 ring-1 ring-rose-200",
 };
