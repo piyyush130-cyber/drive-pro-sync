@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useServerFn } from "@tanstack/react-start";
+import { submitPublicCancellation } from "@/lib/public-booking.functions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/cancel")({
@@ -12,16 +13,19 @@ function CancelPage() {
   const [reason, setReason] = useState("");
   const [done, setDone] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const submit = useServerFn(submitPublicCancellation);
 
-  async function submit(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitting(true);
-    const { error } = await supabase
-      .from("cancellation_requests")
-      .insert({ booking_id: bookingId, reason, status: "requested" });
-    setSubmitting(false);
-    if (error) return toast.error(error.message);
-    setDone(true);
+    try {
+      await submit({ data: { booking_id: bookingId, reason } });
+      setDone(true);
+    } catch (err: any) {
+      toast.error(err.message || "Could not submit request");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -35,7 +39,7 @@ function CancelPage() {
         {done ? (
           <div className="text-emerald-800">Request sent. The school will reach out shortly.</div>
         ) : (
-          <form onSubmit={submit} className="space-y-4">
+          <form onSubmit={onSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-zinc-700 mb-1">Booking ID</label>
               <input
