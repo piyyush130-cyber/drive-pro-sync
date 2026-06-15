@@ -134,6 +134,97 @@ export type Database = {
           },
         ]
       }
+      instructor_availability: {
+        Row: {
+          break_end: string | null
+          break_start: string | null
+          created_at: string
+          day_of_week: number
+          end_time: string
+          id: string
+          instructor_id: string
+          is_available: boolean
+          max_lessons_per_day: number | null
+          notes: string | null
+          start_time: string
+          updated_at: string
+        }
+        Insert: {
+          break_end?: string | null
+          break_start?: string | null
+          created_at?: string
+          day_of_week: number
+          end_time: string
+          id?: string
+          instructor_id: string
+          is_available?: boolean
+          max_lessons_per_day?: number | null
+          notes?: string | null
+          start_time: string
+          updated_at?: string
+        }
+        Update: {
+          break_end?: string | null
+          break_start?: string | null
+          created_at?: string
+          day_of_week?: number
+          end_time?: string
+          id?: string
+          instructor_id?: string
+          is_available?: boolean
+          max_lessons_per_day?: number | null
+          notes?: string | null
+          start_time?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "instructor_availability_instructor_id_fkey"
+            columns: ["instructor_id"]
+            isOneToOne: false
+            referencedRelation: "instructors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      instructor_blocked_times: {
+        Row: {
+          created_at: string
+          date: string
+          end_time: string | null
+          id: string
+          instructor_id: string
+          reason: string | null
+          start_time: string | null
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          end_time?: string | null
+          id?: string
+          instructor_id: string
+          reason?: string | null
+          start_time?: string | null
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          end_time?: string | null
+          id?: string
+          instructor_id?: string
+          reason?: string | null
+          start_time?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "instructor_blocked_times_instructor_id_fkey"
+            columns: ["instructor_id"]
+            isOneToOne: false
+            referencedRelation: "instructors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       instructors: {
         Row: {
           active: boolean
@@ -176,6 +267,8 @@ export type Database = {
       lesson_types: {
         Row: {
           active: boolean
+          buffer_minutes: number
+          category: string
           created_at: string
           description: string | null
           duration_minutes: number
@@ -186,6 +279,8 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          buffer_minutes?: number
+          category?: string
           created_at?: string
           description?: string | null
           duration_minutes?: number
@@ -196,6 +291,8 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          buffer_minutes?: number
+          category?: string
           created_at?: string
           description?: string | null
           duration_minutes?: number
