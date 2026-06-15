@@ -42,9 +42,10 @@ function StudentDetail() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const p = studentQ.data?.student_progress?.[0];
+    const sp: any = studentQ.data?.student_progress;
+    const p = Array.isArray(sp) ? sp[0] : sp;
     if (p) {
-      setSkills(p.skills ?? {});
+      setSkills((p.skills as Record<string, boolean>) ?? {});
       setNotes(p.general_notes ?? "");
       setReady(p.road_test_ready ?? false);
     }

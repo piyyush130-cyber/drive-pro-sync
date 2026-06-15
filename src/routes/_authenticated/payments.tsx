@@ -38,7 +38,7 @@ function PaymentsPage() {
       .from("bookings")
       .update({
         payment_status: "paid",
-        payment_method: method,
+        payment_method: method as "cash" | "etransfer" | "card" | "other",
         paid_at: new Date().toISOString(),
       })
       .eq("id", id);
