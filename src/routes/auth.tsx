@@ -102,22 +102,22 @@ function AuthPage() {
       <div className="glow-blob-br" />
       <div className="relative z-10 min-h-screen flex items-center justify-center p-4 py-12">
         <div className="w-full max-w-md glass-card p-8">
-          <Link to="/" className="text-xs text-slate-500 hover:text-slate-300">
+          <Link to="/" className="text-xs text-slate-500 hover:text-slate-700">
             ← Back to booking
           </Link>
           <div className="flex items-center gap-2.5 mt-4 mb-4">
-            <div className="size-9 rounded-xl bg-[#3B82F6]/20 grid place-items-center">
-              <CarFront className="size-4.5 text-[#60A5FA]" />
+            <div className="size-9 rounded-xl bg-blue-50 border border-blue-100 grid place-items-center">
+              <CarFront className="size-4.5 text-blue-600" />
             </div>
-            <div className="text-sm font-semibold text-white">DriveProSync</div>
+            <div className="text-sm font-semibold text-slate-900">DriveProSync</div>
           </div>
-          <div className="text-[10px] uppercase tracking-[0.18em] text-[#60A5FA]">
+          <div className="text-[10px] uppercase tracking-[0.18em] text-blue-600">
             {mode === "signin" ? "Staff sign in" : "New staff account"}
           </div>
-          <h1 className="text-2xl font-semibold text-white mt-1 mb-1">
+          <h1 className="text-2xl font-semibold text-slate-900 mt-1 mb-1">
             {mode === "signin" ? "Welcome back" : "Create your account"}
           </h1>
-          <p className="text-sm text-slate-400 mb-6">
+          <p className="text-sm text-slate-500 mb-6">
             {mode === "signin"
               ? "Admin & instructor access."
               : "First account becomes the school admin."}
