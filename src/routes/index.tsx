@@ -606,18 +606,15 @@ function SummaryCard({
   const ready = !!(lesson && date && time && form.full_name && form.phone && form.pickup_address);
 
   return (
-    <section className="rounded-2xl overflow-hidden border border-[#1E2D4A] bg-[#111827] shadow-[0_8px_40px_rgba(0,0,0,0.5)]">
-      {/* Navy header strip */}
-      <div className="bg-[#0D1424] border-b border-[#1E2D4A] text-white px-5 sm:px-6 py-4 flex items-center justify-between">
+    <section className="glass-card overflow-hidden">
+      {/* Header strip */}
+      <div className="bg-[rgba(13,20,36,0.6)] border-b border-[rgba(59,130,246,0.18)] text-white px-5 sm:px-6 py-4">
         <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#60A5FA]">
           Live summary
         </div>
-        <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold text-[#F59E0B] bg-[#F59E0B]/15 rounded-full px-2.5 py-1">
-          <Hourglass className="size-3" /> Pending school approval
-        </span>
       </div>
 
-      <div className="p-5 sm:p-6 border-b border-[#1E2D4A]">
+      <div className="p-5 sm:p-6 border-b border-[rgba(59,130,246,0.12)]">
         <div className="text-lg font-semibold tracking-tight text-[#F1F5F9]">
           {lesson ? lesson.name.replace(" Driving Lesson", " Lesson") : "Select a service"}
         </div>
@@ -655,19 +652,20 @@ function SummaryCard({
           disabled={!ready || submitting}
           className={`w-full inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-sm font-semibold transition-all ${
             ready && !submitting
-              ? "bg-[#3B82F6] text-white hover:bg-[#2563EB] shadow-[0_0_24px_rgba(59,130,246,0.4)] active:scale-[0.98]"
-              : "bg-[#1E2D4A] text-[#64748B] cursor-not-allowed"
+              ? "bg-[#3B82F6] text-white hover:bg-[#2563EB] active:scale-[0.98] pulse-glow"
+              : "bg-[#1E2D4A]/70 text-[#64748B] cursor-not-allowed"
           }`}
         >
           {submitting ? "Sending…" : "Request Lesson Time"}
           {!submitting && <ArrowRight className="size-4" />}
         </button>
         <p className="text-[11px] text-[#94A3B8] text-center mt-3">
-          The school will confirm by phone, text, or email.
+          Your spot is held for 10 minutes after submitting.
         </p>
       </div>
     </section>
   );
+
 }
 
 function Row({
