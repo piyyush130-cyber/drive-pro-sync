@@ -8,32 +8,32 @@
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
   /* Dark luxury palette */
-  --color-bg: #0A0F1E;
-  --color-surface: #111827;
-  --color-surface-2: #0D1424;
-  --color-line: #1E2D4A;
+  --color-bg: #F8FAFC;
+  --color-surface: #FFFFFF;
+  --color-surface-2: #F1F5F9;
+  --color-line: #E2E8F0;
   --color-electric: #3B82F6;
   --color-electric-hover: #2563EB;
   --color-electric-glow: #60A5FA;
-  --color-text: #F1F5F9;
-  --color-text-muted: #94A3B8;
+  --color-text: #0F172A;
+  --color-text-muted: #64748B;
   --color-success: #10B981;
   --color-warn: #F59E0B;
   --color-danger: #EF4444;
   --color-gold: #D4AF37;
 
   /* Legacy aliases kept so existing utilities still resolve */
-  --color-ink: #0A0F1E;
-  --color-navy: #0D1424;
-  --color-navy-2: #111827;
-  --color-steel: #1E2D4A;
+  --color-ink: #0F172A;
+  --color-navy: #F1F5F9;
+  --color-navy-2: #FFFFFF;
+  --color-steel: #E2E8F0;
   --color-electric-bright: #60A5FA;
   --color-electric-soft: rgba(59,130,246,0.12);
   --color-success-soft: rgba(16,185,129,0.15);
   --color-warn-soft: rgba(245,158,11,0.15);
   --color-danger-soft: rgba(239,68,68,0.15);
-  --color-silver: #1E2D4A;
-  --color-mist: #0A0F1E;
+  --color-silver: #E2E8F0;
+  --color-mist: #F8FAFC;
 }
 
 @theme inline {
@@ -72,32 +72,32 @@
 
 :root {
   --radius: 0.75rem;
-  --background: #0A0F1E;
-  --foreground: #F1F5F9;
-  --card: #111827;
-  --card-foreground: #F1F5F9;
-  --popover: #111827;
-  --popover-foreground: #F1F5F9;
+  --background: #F8FAFC;
+  --foreground: #0F172A;
+  --card: #FFFFFF;
+  --card-foreground: #0F172A;
+  --popover: #FFFFFF;
+  --popover-foreground: #0F172A;
   --primary: #3B82F6;
   --primary-foreground: #FFFFFF;
-  --secondary: #1E2D4A;
-  --secondary-foreground: #F1F5F9;
-  --muted: #1E2D4A;
-  --muted-foreground: #94A3B8;
-  --accent: #1E2D4A;
-  --accent-foreground: #F1F5F9;
+  --secondary: #F1F5F9;
+  --secondary-foreground: #0F172A;
+  --muted: #F1F5F9;
+  --muted-foreground: #64748B;
+  --accent: #F1F5F9;
+  --accent-foreground: #0F172A;
   --destructive: #EF4444;
   --destructive-foreground: #FFFFFF;
-  --border: #1E2D4A;
-  --input: #1E2D4A;
+  --border: #E2E8F0;
+  --input: #E2E8F0;
   --ring: #3B82F6;
-  --sidebar: #0D1424;
-  --sidebar-foreground: #F1F5F9;
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #0F172A;
   --sidebar-primary: #3B82F6;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #1E2D4A;
-  --sidebar-accent-foreground: #F1F5F9;
-  --sidebar-border: #1E2D4A;
+  --sidebar-accent: #F1F5F9;
+  --sidebar-accent-foreground: #0F172A;
+  --sidebar-border: #E2E8F0;
   --sidebar-ring: #3B82F6;
 }
 
@@ -112,16 +112,7 @@
     -webkit-font-smoothing: antialiased;
     font-feature-settings: "ss01", "cv11";
   }
-  ::selection { background: rgba(59,130,246,0.35); color: #fff; }
-
-  /* Dark-theme remap for hard-coded Tailwind slate classes so legacy pages stay legible */
-  .text-slate-900 { color: #F1F5F9 !important; }
-  .text-slate-800 { color: #E2E8F0 !important; }
-  .text-slate-700 { color: #CBD5E1 !important; }
-  .text-slate-600 { color: #94A3B8 !important; }
-  .text-slate-500 { color: #94A3B8 !important; }
-  .text-slate-400 { color: #64748B !important; }
-  .text-slate-300 { color: #475569 !important; }
+  ::selection { background: rgba(59,130,246,0.25); color: #0F172A; }
 
   .bg-white { background-color: var(--color-surface) !important; }
   .bg-slate-50 { background-color: var(--color-surface-2) !important; }
@@ -137,15 +128,15 @@
 
 @utility brand-gradient {
   background:
-    radial-gradient(80% 60% at 80% 0%, rgba(59,130,246,0.18) 0%, transparent 60%),
-    radial-gradient(60% 60% at 0% 100%, rgba(96,165,250,0.10) 0%, transparent 55%),
-    linear-gradient(135deg, #0A0F1E 0%, #0D1424 55%, #111827 100%);
+    radial-gradient(80% 60% at 80% 0%, rgba(59,130,246,0.12) 0%, transparent 60%),
+    radial-gradient(60% 60% at 0% 100%, rgba(96,165,250,0.08) 0%, transparent 55%),
+    linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 55%, #FFFFFF 100%);
 }
 
 @utility brand-grid-bg {
   background-image:
-    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    linear-gradient(rgba(15,23,42,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15,23,42,0.06) 1px, transparent 1px);
   background-size: 48px 48px;
 }
 
@@ -162,13 +153,13 @@
   background: var(--color-surface);
   border: 1px solid var(--color-line);
   border-radius: 12px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.06);
   transition: border-color 160ms ease, box-shadow 160ms ease;
 }
 
 @utility card-premium-hover {
   border-color: rgba(59,130,246,0.55);
-  box-shadow: 0 0 0 1px rgba(59,130,246,0.45), 0 8px 32px rgba(0,0,0,0.5);
+  box-shadow: 0 0 0 1px rgba(59,130,246,0.45), 0 8px 32px rgba(0,0,0,0.08);
 }
 
 @utility stat-card {
@@ -176,7 +167,7 @@
   border: 1px solid var(--color-line);
   border-top: 2px solid var(--color-electric);
   border-radius: 12px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.06);
 }
 
 @utility input-premium {
@@ -268,21 +259,20 @@
 }
 
 @utility glass-card {
-  background:
-    linear-gradient(140deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 45%, rgba(17, 24, 39, 0.55) 100%);
+  background: rgba(255,255,255,0.85);
   backdrop-filter: blur(24px) saturate(140%);
-  border: 1px solid rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(226,232,240,0.8);
   border-radius: 20px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.08);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.6);
 }
 
 @utility glass-input {
   width: 100%;
-  background: rgba(13, 20, 36, 0.8);
-  border: 1px solid rgba(30, 45, 74, 0.8);
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
   border-radius: 10px;
   padding: 11px 14px;
-  color: #F1F5F9;
+  color: #0F172A;
   font-size: 14px;
   outline: none;
   transition: border-color 150ms, box-shadow 150ms;
@@ -290,7 +280,7 @@
 
 @utility glass-bg {
   position: relative;
-  background: #0A0F1E;
+  background: #F8FAFC;
   min-height: 100vh;
   overflow: hidden;
 }
