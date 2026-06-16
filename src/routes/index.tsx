@@ -165,15 +165,11 @@ function BookingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0A0F1E] text-[#F1F5F9] relative">
-      {/* Ambient luxury glow */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-[520px] overflow-hidden">
-        <div className="absolute -top-40 left-0 size-[700px] rounded-full bg-[#3B82F6]/15 blur-[140px]" />
-        <div className="absolute -top-32 right-0 size-[520px] rounded-full bg-[#60A5FA]/10 blur-[120px]" />
-      </div>
+    <div className="glass-bg text-[#F1F5F9]">
+      <div className="glow-blob-tl" />
+      <div className="glow-blob-br" />
 
       <TopBar school={school} />
-
 
       <main className="relative max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-10 pb-24">
         <div className="grid gap-6 lg:grid-cols-[1.15fr_1fr]">
@@ -226,12 +222,12 @@ function BookingPage() {
                   placeholder="123 Street Name, City"
                 />
               </Field>
-              <label className="flex items-center gap-2.5 text-sm text-slate-700 select-none">
+              <label className="flex items-center gap-2.5 text-sm text-[#CBD5E1] select-none">
                 <input
                   type="checkbox"
                   checked={form.dropoff_same}
                   onChange={(e) => setForm({ ...form, dropoff_same: e.target.checked })}
-                  className="size-4 accent-blue-600"
+                  className="size-4 accent-blue-500"
                 />
                 Drop-off same as pickup
               </label>
@@ -288,12 +284,12 @@ function BookingPage() {
         </div>
 
         <div className="text-center mt-10 space-y-2">
-          <p className="text-xs text-slate-500">
-            Powered by <span className="font-semibold text-slate-700">DriveProSync</span>
+          <p className="text-xs text-[#64748B]">
+            Powered by <span className="font-semibold text-[#94A3B8]">DriveProSync</span>
           </p>
           <Link
             to="/login"
-            className="inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-400 hover:text-blue-600 transition-colors"
+            className="inline-flex items-center gap-1.5 text-[11px] font-medium text-[#64748B] hover:text-[#60A5FA] transition-colors"
           >
             <LogIn className="size-3" />
             Staff login
@@ -308,30 +304,31 @@ function BookingPage() {
 
 function TopBar({ school }: { school: string }) {
   return (
-    <header className="relative bg-gradient-to-r from-[#0b1220] via-[#0f1b3d] to-[#16234f] text-white">
-      <div className="absolute inset-0 opacity-[0.08] [background-image:linear-gradient(rgba(255,255,255,0.6)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.6)_1px,transparent_1px)] [background-size:48px_48px]" />
-      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="size-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 ring-1 ring-white/20 grid place-items-center shrink-0 shadow-[0_8px_24px_-8px_rgba(59,130,246,0.7)]">
+    <header className="relative bg-gradient-to-r from-[#0b1220] via-[#0f1b3d] to-[#16234f] text-white overflow-hidden">
+      <div className="absolute inset-0 brand-grid-bg opacity-40" />
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#0A0F1E]/40" />
+      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-7 sm:py-8 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3.5 min-w-0">
+          <div className="size-11 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 ring-1 ring-white/20 grid place-items-center shrink-0 shadow-[0_0_32px_rgba(59,130,246,0.55),0_8px_24px_-8px_rgba(59,130,246,0.7)]">
             <CarFront className="size-5 text-white" />
           </div>
           <div className="min-w-0">
-            <div className="text-sm font-semibold tracking-tight leading-none truncate">
+            <div className="text-base font-semibold tracking-tight leading-none truncate">
               DriveProSync Booking
             </div>
-            <div className="text-[10px] text-blue-200/80 uppercase tracking-[0.18em] mt-1.5 truncate">
+            <div className="text-[10px] text-blue-200/80 uppercase tracking-[0.18em] mt-2 truncate">
               For {school}
             </div>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-semibold text-blue-50 bg-white/10 ring-1 ring-white/15 rounded-full px-3 py-1.5 whitespace-nowrap">
+          <span className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-semibold text-blue-50 bg-white/10 ring-1 ring-white/15 rounded-full px-3 py-1.5 whitespace-nowrap backdrop-blur-sm">
             <ShieldCheck className="size-3" />
             Secure booking
           </span>
           <Link
             to="/login"
-            className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-blue-100 hover:text-white bg-white/5 hover:bg-white/10 ring-1 ring-white/15 rounded-full px-3 py-1.5 transition-colors whitespace-nowrap"
+            className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-blue-100 hover:text-white bg-white/5 hover:bg-white/10 ring-1 ring-white/15 rounded-full px-3 py-1.5 transition-colors whitespace-nowrap backdrop-blur-sm"
           >
             <LogIn className="size-3" />
             Staff
@@ -356,7 +353,7 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-2xl bg-[#111827] border border-[#1E2D4A] p-5 sm:p-6 shadow-[0_4px_24px_rgba(0,0,0,0.4)] transition-colors hover:border-[#3B82F6]/50">
+    <section className="glass-card p-5 sm:p-6 transition-colors hover:border-[#3B82F6]/40">
       <div className="flex items-center gap-2.5 mb-4">
         {Icon && (
           <div className="size-7 rounded-lg bg-[#3B82F6]/15 border border-[#3B82F6]/30 grid place-items-center">
@@ -376,6 +373,7 @@ function Panel({
     </section>
   );
 }
+
 
 
 /* ---------------- Service picker ---------------- */
