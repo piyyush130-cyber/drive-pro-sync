@@ -112,16 +112,7 @@
     -webkit-font-smoothing: antialiased;
     font-feature-settings: "ss01", "cv11";
   }
-  ::selection { background: rgba(59,130,246,0.35); color: #fff; }
-
-  /* Dark-theme remap for hard-coded Tailwind slate classes so legacy pages stay legible */
-  .text-slate-900 { color: #F1F5F9 !important; }
-  .text-slate-800 { color: #E2E8F0 !important; }
-  .text-slate-700 { color: #CBD5E1 !important; }
-  .text-slate-600 { color: #94A3B8 !important; }
-  .text-slate-500 { color: #94A3B8 !important; }
-  .text-slate-400 { color: #64748B !important; }
-  .text-slate-300 { color: #475569 !important; }
+  ::selection { background: rgba(59,130,246,0.25); color: #0F172A; }
 
   .bg-white { background-color: var(--color-surface) !important; }
   .bg-slate-50 { background-color: var(--color-surface-2) !important; }
