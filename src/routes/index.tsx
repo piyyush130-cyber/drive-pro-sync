@@ -411,28 +411,28 @@ function ServicePicker({
             onClick={() => onSelect(t)}
             className={`group relative text-left rounded-xl p-3.5 transition-all overflow-hidden ${
               active
-                ? "bg-blue-50 ring-2 ring-blue-500 shadow-[0_0_0_4px_rgba(59,130,246,0.10),0_18px_40px_-22px_rgba(59,130,246,0.55)]"
-                : "bg-white ring-1 ring-slate-200 hover:ring-blue-300 hover:bg-slate-50"
+                ? "bg-[#3B82F6]/10 border-2 border-[#3B82F6] shadow-[0_0_0_4px_rgba(59,130,246,0.10),0_0_24px_rgba(59,130,246,0.25)]"
+                : "bg-[#0D1424] border border-[#1E2D4A] hover:border-[#3B82F6]/50"
             }`}
           >
             {active && (
-              <div className="absolute top-2.5 right-2.5 size-5 rounded-full bg-blue-600 grid place-items-center text-white shadow-md">
+              <div className="absolute top-2.5 right-2.5 size-5 rounded-full bg-[#3B82F6] grid place-items-center text-white shadow-md">
                 <Check className="size-3" strokeWidth={3} />
               </div>
             )}
-            <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-blue-700/80">
+            <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#60A5FA] font-mono">
               <Clock className="size-3" />
               {t.duration_minutes} min
             </div>
-            <div className="mt-1.5 font-semibold tracking-tight text-slate-900 text-sm pr-6">
+            <div className="mt-1.5 font-semibold tracking-tight text-[#F1F5F9] text-sm pr-6">
               {name}
             </div>
-            <div className="text-[11px] text-slate-500 mt-0.5 line-clamp-1">
+            <div className="text-[11px] text-[#94A3B8] mt-0.5 line-clamp-1">
               {blurbs[t.name] ?? t.description ?? ""}
             </div>
             <div
-              className={`mt-2 text-base font-semibold tracking-tight ${
-                active ? "text-blue-700" : "text-slate-900"
+              className={`mt-2 text-base font-semibold tracking-tight font-mono ${
+                active ? "text-[#60A5FA]" : "text-[#F1F5F9]"
               }`}
             >
               {t.price_cents > 0 ? money(t.price_cents) : "Custom Quote"}
@@ -443,6 +443,7 @@ function ServicePicker({
     </div>
   );
 }
+
 
 /* ---------------- Scheduler ---------------- */
 
