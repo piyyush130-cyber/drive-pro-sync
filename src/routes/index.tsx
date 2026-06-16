@@ -13,8 +13,8 @@ import {
   User,
   ArrowRight,
   ShieldCheck,
-  Hourglass,
   Sparkles,
+
   LogIn,
 } from "lucide-react";
 import {
@@ -165,15 +165,11 @@ function BookingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0A0F1E] text-[#F1F5F9] relative">
-      {/* Ambient luxury glow */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-[520px] overflow-hidden">
-        <div className="absolute -top-40 left-0 size-[700px] rounded-full bg-[#3B82F6]/15 blur-[140px]" />
-        <div className="absolute -top-32 right-0 size-[520px] rounded-full bg-[#60A5FA]/10 blur-[120px]" />
-      </div>
+    <div className="glass-bg text-[#F1F5F9]">
+      <div className="glow-blob-tl" />
+      <div className="glow-blob-br" />
 
       <TopBar school={school} />
-
 
       <main className="relative max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-10 pb-24">
         <div className="grid gap-6 lg:grid-cols-[1.15fr_1fr]">
@@ -226,12 +222,12 @@ function BookingPage() {
                   placeholder="123 Street Name, City"
                 />
               </Field>
-              <label className="flex items-center gap-2.5 text-sm text-slate-700 select-none">
+              <label className="flex items-center gap-2.5 text-sm text-[#CBD5E1] select-none">
                 <input
                   type="checkbox"
                   checked={form.dropoff_same}
                   onChange={(e) => setForm({ ...form, dropoff_same: e.target.checked })}
-                  className="size-4 accent-blue-600"
+                  className="size-4 accent-blue-500"
                 />
                 Drop-off same as pickup
               </label>
@@ -288,12 +284,12 @@ function BookingPage() {
         </div>
 
         <div className="text-center mt-10 space-y-2">
-          <p className="text-xs text-slate-500">
-            Powered by <span className="font-semibold text-slate-700">DriveProSync</span>
+          <p className="text-xs text-[#64748B]">
+            Powered by <span className="font-semibold text-[#94A3B8]">DriveProSync</span>
           </p>
           <Link
             to="/login"
-            className="inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-400 hover:text-blue-600 transition-colors"
+            className="inline-flex items-center gap-1.5 text-[11px] font-medium text-[#64748B] hover:text-[#60A5FA] transition-colors"
           >
             <LogIn className="size-3" />
             Staff login
@@ -308,30 +304,31 @@ function BookingPage() {
 
 function TopBar({ school }: { school: string }) {
   return (
-    <header className="relative bg-gradient-to-r from-[#0b1220] via-[#0f1b3d] to-[#16234f] text-white">
-      <div className="absolute inset-0 opacity-[0.08] [background-image:linear-gradient(rgba(255,255,255,0.6)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.6)_1px,transparent_1px)] [background-size:48px_48px]" />
-      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="size-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 ring-1 ring-white/20 grid place-items-center shrink-0 shadow-[0_8px_24px_-8px_rgba(59,130,246,0.7)]">
+    <header className="relative bg-gradient-to-r from-[#0b1220] via-[#0f1b3d] to-[#16234f] text-white overflow-hidden">
+      <div className="absolute inset-0 brand-grid-bg opacity-40" />
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#0A0F1E]/40" />
+      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-7 sm:py-8 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3.5 min-w-0">
+          <div className="size-11 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 ring-1 ring-white/20 grid place-items-center shrink-0 shadow-[0_0_32px_rgba(59,130,246,0.55),0_8px_24px_-8px_rgba(59,130,246,0.7)]">
             <CarFront className="size-5 text-white" />
           </div>
           <div className="min-w-0">
-            <div className="text-sm font-semibold tracking-tight leading-none truncate">
+            <div className="text-base font-semibold tracking-tight leading-none truncate">
               DriveProSync Booking
             </div>
-            <div className="text-[10px] text-blue-200/80 uppercase tracking-[0.18em] mt-1.5 truncate">
+            <div className="text-[10px] text-blue-200/80 uppercase tracking-[0.18em] mt-2 truncate">
               For {school}
             </div>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-semibold text-blue-50 bg-white/10 ring-1 ring-white/15 rounded-full px-3 py-1.5 whitespace-nowrap">
+          <span className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-semibold text-blue-50 bg-white/10 ring-1 ring-white/15 rounded-full px-3 py-1.5 whitespace-nowrap backdrop-blur-sm">
             <ShieldCheck className="size-3" />
             Secure booking
           </span>
           <Link
             to="/login"
-            className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-blue-100 hover:text-white bg-white/5 hover:bg-white/10 ring-1 ring-white/15 rounded-full px-3 py-1.5 transition-colors whitespace-nowrap"
+            className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-blue-100 hover:text-white bg-white/5 hover:bg-white/10 ring-1 ring-white/15 rounded-full px-3 py-1.5 transition-colors whitespace-nowrap backdrop-blur-sm"
           >
             <LogIn className="size-3" />
             Staff
@@ -356,7 +353,7 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-2xl bg-[#111827] border border-[#1E2D4A] p-5 sm:p-6 shadow-[0_4px_24px_rgba(0,0,0,0.4)] transition-colors hover:border-[#3B82F6]/50">
+    <section className="glass-card p-5 sm:p-6 transition-colors hover:border-[#3B82F6]/40">
       <div className="flex items-center gap-2.5 mb-4">
         {Icon && (
           <div className="size-7 rounded-lg bg-[#3B82F6]/15 border border-[#3B82F6]/30 grid place-items-center">
@@ -376,6 +373,7 @@ function Panel({
     </section>
   );
 }
+
 
 
 /* ---------------- Service picker ---------------- */
@@ -409,35 +407,36 @@ function ServicePicker({
             key={t.id}
             type="button"
             onClick={() => onSelect(t)}
-            className={`group relative text-left rounded-xl p-3.5 transition-all overflow-hidden ${
+            className={`group relative text-left rounded-2xl p-4 transition-all overflow-hidden backdrop-blur-xl ${
               active
-                ? "bg-[#3B82F6]/10 border-2 border-[#3B82F6] shadow-[0_0_0_4px_rgba(59,130,246,0.10),0_0_24px_rgba(59,130,246,0.25)]"
-                : "bg-[#0D1424] border border-[#1E2D4A] hover:border-[#3B82F6]/50"
+                ? "bg-[#3B82F6]/15 border-2 border-[#3B82F6] shadow-[0_0_0_4px_rgba(59,130,246,0.12),0_0_28px_rgba(59,130,246,0.35)]"
+                : "bg-[rgba(17,24,39,0.55)] border border-[rgba(59,130,246,0.18)] hover:border-[rgba(59,130,246,0.5)] hover:shadow-[0_0_24px_rgba(59,130,246,0.2)]"
             }`}
           >
             {active && (
-              <div className="absolute top-2.5 right-2.5 size-5 rounded-full bg-[#3B82F6] grid place-items-center text-white shadow-md">
-                <Check className="size-3" strokeWidth={3} />
+              <div className="absolute top-2.5 right-2.5 size-6 rounded-full bg-[#3B82F6] grid place-items-center text-white shadow-[0_0_16px_rgba(59,130,246,0.7)]">
+                <Check className="size-3.5" strokeWidth={3} />
               </div>
             )}
-            <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#60A5FA] font-mono">
+            <div className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#60A5FA] font-mono bg-[#3B82F6]/15 border border-[#3B82F6]/30 rounded-full px-2.5 py-1">
               <Clock className="size-3" />
-              {t.duration_minutes} min
+              {t.duration_minutes} MIN
             </div>
-            <div className="mt-1.5 font-semibold tracking-tight text-[#F1F5F9] text-sm pr-6">
+            <div className="mt-2.5 font-semibold tracking-tight text-[#F1F5F9] text-sm pr-7">
               {name}
             </div>
             <div className="text-[11px] text-[#94A3B8] mt-0.5 line-clamp-1">
               {blurbs[t.name] ?? t.description ?? ""}
             </div>
             <div
-              className={`mt-2 text-base font-semibold tracking-tight font-mono ${
-                active ? "text-[#60A5FA]" : "text-[#F1F5F9]"
+              className={`mt-3 text-xl font-bold tracking-tight font-mono ${
+                active ? "text-[#60A5FA] drop-shadow-[0_0_8px_rgba(96,165,250,0.5)]" : "text-[#F1F5F9]"
               }`}
             >
               {t.price_cents > 0 ? money(t.price_cents) : "Custom Quote"}
             </div>
           </button>
+
         );
       })}
     </div>
@@ -466,7 +465,7 @@ function Scheduler({
   return (
     <div className="space-y-5">
       {/* Calendar */}
-      <div className="rounded-xl bg-[#0D1424] border border-[#1E2D4A] p-4">
+      <div className="rounded-xl bg-[rgba(13,20,36,0.8)] border border-[rgba(59,130,246,0.18)] backdrop-blur-xl p-4">
         <div className="flex items-center justify-between mb-4">
           <div className="font-semibold tracking-tight text-[#F1F5F9] text-sm">
             {format(month, "MMMM yyyy")}
@@ -511,13 +510,13 @@ function Scheduler({
                 type="button"
                 disabled={disabled}
                 onClick={() => onDate(d)}
-                className={`relative h-10 rounded-lg text-sm font-medium font-mono transition-all ${
+                className={`relative h-10 rounded-full text-sm font-medium font-mono transition-all ${
                   isSel
-                    ? "bg-[#3B82F6] text-white shadow-[0_0_0_2px_rgba(59,130,246,0.30),0_0_18px_rgba(59,130,246,0.45)]"
+                    ? "bg-[#3B82F6] text-white shadow-[0_0_0_2px_rgba(59,130,246,0.30),0_0_22px_rgba(59,130,246,0.65)]"
                     : disabled
                       ? "text-[#334155] cursor-not-allowed"
                       : isToday
-                        ? "text-[#60A5FA] border border-[#3B82F6]/40 hover:bg-[#3B82F6]/10"
+                        ? "text-[#60A5FA] border border-[#3B82F6]/60 hover:bg-[#3B82F6]/10"
                         : "text-[#CBD5E1] hover:bg-[#1E2D4A]"
                 }`}
               >
@@ -539,7 +538,7 @@ function Scheduler({
           </div>
         </div>
         {!date ? (
-          <div className="text-sm text-[#94A3B8] py-6 text-center rounded-lg bg-[#0D1424] border border-[#1E2D4A]">
+          <div className="text-sm text-[#94A3B8] py-6 text-center rounded-xl bg-[rgba(13,20,36,0.8)] border border-[rgba(59,130,246,0.15)] backdrop-blur-xl">
             Choose a date to see open slots.
           </div>
         ) : (
@@ -553,12 +552,12 @@ function Scheduler({
                   type="button"
                   disabled={unavailable}
                   onClick={() => onTime(s.time)}
-                  className={`rounded-lg px-2 py-2 text-xs font-semibold font-mono transition-all ${
+                  className={`rounded-lg px-2 py-2.5 text-xs font-semibold font-mono transition-all backdrop-blur-xl ${
                     active
-                      ? "bg-[#3B82F6] text-white shadow-[0_0_0_2px_rgba(59,130,246,0.30),0_0_18px_rgba(59,130,246,0.45)]"
+                      ? "bg-[#3B82F6] text-white border border-[#3B82F6] shadow-[0_0_0_2px_rgba(59,130,246,0.30),0_0_22px_rgba(59,130,246,0.65)]"
                       : unavailable
-                        ? "bg-[#0D1424] text-[#334155] border border-[#1E2D4A] cursor-not-allowed line-through"
-                        : "bg-[#0D1424] text-[#CBD5E1] border border-[#1E2D4A] hover:border-[#3B82F6] hover:bg-[#3B82F6]/10"
+                        ? "bg-[rgba(13,20,36,0.6)] text-[#334155] border border-[rgba(30,45,74,0.6)] cursor-not-allowed line-through"
+                        : "bg-[rgba(13,20,36,0.8)] text-[#CBD5E1] border border-[rgba(59,130,246,0.18)] hover:border-[#3B82F6] hover:bg-[#3B82F6]/15 hover:shadow-[0_0_16px_rgba(59,130,246,0.25)]"
                   }`}
                 >
                   {s.label}
@@ -607,18 +606,15 @@ function SummaryCard({
   const ready = !!(lesson && date && time && form.full_name && form.phone && form.pickup_address);
 
   return (
-    <section className="rounded-2xl overflow-hidden border border-[#1E2D4A] bg-[#111827] shadow-[0_8px_40px_rgba(0,0,0,0.5)]">
-      {/* Navy header strip */}
-      <div className="bg-[#0D1424] border-b border-[#1E2D4A] text-white px-5 sm:px-6 py-4 flex items-center justify-between">
+    <section className="glass-card overflow-hidden">
+      {/* Header strip */}
+      <div className="bg-[rgba(13,20,36,0.6)] border-b border-[rgba(59,130,246,0.18)] text-white px-5 sm:px-6 py-4">
         <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#60A5FA]">
           Live summary
         </div>
-        <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold text-[#F59E0B] bg-[#F59E0B]/15 rounded-full px-2.5 py-1">
-          <Hourglass className="size-3" /> Pending school approval
-        </span>
       </div>
 
-      <div className="p-5 sm:p-6 border-b border-[#1E2D4A]">
+      <div className="p-5 sm:p-6 border-b border-[rgba(59,130,246,0.12)]">
         <div className="text-lg font-semibold tracking-tight text-[#F1F5F9]">
           {lesson ? lesson.name.replace(" Driving Lesson", " Lesson") : "Select a service"}
         </div>
@@ -656,19 +652,20 @@ function SummaryCard({
           disabled={!ready || submitting}
           className={`w-full inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-sm font-semibold transition-all ${
             ready && !submitting
-              ? "bg-[#3B82F6] text-white hover:bg-[#2563EB] shadow-[0_0_24px_rgba(59,130,246,0.4)] active:scale-[0.98]"
-              : "bg-[#1E2D4A] text-[#64748B] cursor-not-allowed"
+              ? "bg-[#3B82F6] text-white hover:bg-[#2563EB] active:scale-[0.98] pulse-glow"
+              : "bg-[#1E2D4A]/70 text-[#64748B] cursor-not-allowed"
           }`}
         >
           {submitting ? "Sending…" : "Request Lesson Time"}
           {!submitting && <ArrowRight className="size-4" />}
         </button>
         <p className="text-[11px] text-[#94A3B8] text-center mt-3">
-          The school will confirm by phone, text, or email.
+          Your spot is held for 10 minutes after submitting.
         </p>
       </div>
     </section>
   );
+
 }
 
 function Row({
@@ -704,7 +701,7 @@ function Field({
 }) {
   return (
     <div>
-      <label className="block text-xs font-medium text-slate-700 mb-1.5">
+      <label className="block text-xs font-medium text-[#94A3B8] mb-1.5">
         {label}
         {required && <span className="text-rose-500"> *</span>}
       </label>
@@ -730,7 +727,7 @@ function LuxInput({
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      className="w-full rounded-lg bg-[#0D1424] border border-[#1E2D4A] focus:border-[#3B82F6] focus:shadow-[0_0_0_4px_rgba(59,130,246,0.18)] outline-none px-3.5 py-2.5 text-sm text-[#F1F5F9] placeholder:text-[#64748B] transition-all"
+      className="glass-input"
     />
   );
 }
@@ -749,7 +746,7 @@ function LuxTextarea({
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      className="w-full rounded-lg bg-[#0D1424] border border-[#1E2D4A] focus:border-[#3B82F6] focus:shadow-[0_0_0_4px_rgba(59,130,246,0.18)] outline-none px-3.5 py-2.5 text-sm text-[#F1F5F9] placeholder:text-[#64748B] min-h-[80px] transition-all"
+      className="glass-input min-h-[80px] resize-y"
     />
   );
 }
@@ -772,16 +769,16 @@ function ConfirmationScreen({
   name: string;
 }) {
   return (
-    <div className="min-h-screen bg-[#0A0F1E] text-[#F1F5F9] relative">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-[520px] overflow-hidden">
-        <div className="absolute -top-40 left-1/2 -translate-x-1/2 size-[700px] rounded-full bg-[#10B981]/15 blur-[140px]" />
+    <div className="glass-bg text-[#F1F5F9]">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-[700px] rounded-full bg-[#10B981]/15 blur-[140px]" />
       </div>
       <TopBar school={school} />
       <main className="relative max-w-xl mx-auto px-4 sm:px-6 py-12">
-        <div className="rounded-2xl overflow-hidden border border-[#1E2D4A] bg-[#111827] shadow-[0_8px_40px_rgba(0,0,0,0.5)]">
+        <div className="glass-card overflow-hidden">
           <div className="p-8 text-center">
-            <div className="mx-auto size-14 rounded-full bg-[#10B981]/15 border border-[#10B981]/40 grid place-items-center">
-              <CircleCheck className="size-7 text-[#10B981]" />
+            <div className="mx-auto size-16 rounded-full bg-[#10B981]/15 border border-[#10B981]/50 grid place-items-center shadow-[0_0_32px_rgba(16,185,129,0.45)]">
+              <CircleCheck className="size-8 text-[#10B981]" />
             </div>
             <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#10B981] mt-5">
               Booking request received
@@ -792,11 +789,8 @@ function ConfirmationScreen({
             <p className="text-[#94A3B8] mt-2 text-pretty max-w-md mx-auto text-sm">
               {school} will review your request and confirm by phone, text, or email.
             </p>
-            <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-[#F59E0B] bg-[#F59E0B]/15 rounded-full px-3 py-1">
-              <Hourglass className="size-3" /> Pending school approval
-            </span>
           </div>
-          <div className="border-t border-[#1E2D4A] p-6 grid sm:grid-cols-2 gap-x-8 gap-y-4">
+          <div className="border-t border-[rgba(59,130,246,0.15)] p-6 grid sm:grid-cols-2 gap-x-8 gap-y-4">
             <Row label="Lesson">{lesson.name.replace(" Driving Lesson", " Lesson")}</Row>
             <Row label="Date">{format(date, "EEEE, MMM d")}</Row>
             <Row label="Time">{time}</Row>
@@ -805,6 +799,7 @@ function ConfirmationScreen({
             </Row>
           </div>
         </div>
+
         <div className="text-center mt-6">
           <Link to="/" className="text-sm font-medium text-[#60A5FA] hover:text-white">
             Book another lesson
