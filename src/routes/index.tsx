@@ -465,7 +465,7 @@ function Scheduler({
   return (
     <div className="space-y-5">
       {/* Calendar */}
-      <div className="rounded-xl bg-[#0D1424] border border-[#1E2D4A] p-4">
+      <div className="rounded-xl bg-[rgba(13,20,36,0.8)] border border-[rgba(59,130,246,0.18)] backdrop-blur-xl p-4">
         <div className="flex items-center justify-between mb-4">
           <div className="font-semibold tracking-tight text-[#F1F5F9] text-sm">
             {format(month, "MMMM yyyy")}
