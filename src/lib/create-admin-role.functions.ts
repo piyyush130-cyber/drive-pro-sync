@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 
 export const createAdminRole = createServerFn({ method: "POST" })
-  .inputValidator((d: { userId: string; schoolName: string }) => d)
+  .inputValidator((d: { userId: string; fullName: string }) => d)
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { count } = await supabaseAdmin
@@ -11,7 +11,11 @@ export const createAdminRole = createServerFn({ method: "POST" })
       await supabaseAdmin.from("user_roles").insert({ user_id: data.userId, role: "admin" });
       await supabaseAdmin
         .from("school_settings")
-        .upsert({ id: 1, school_name: data.schoolName });
+        .upsert({ id: 1, school_name: "My Driving School" }, { onConflict: "id" });
+      await supabaseAdmin
+        .from("profiles")
+        .update({ full_name: data.fullName })
+        .eq("id", data.userId);
       return { role: "admin" as const };
     }
     return { role: "none" as const };

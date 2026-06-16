@@ -267,6 +267,55 @@
   font-family: var(--font-mono);
 }
 
+@utility glass-card {
+  background: rgba(17, 24, 39, 0.65);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(59, 130, 246, 0.18);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+@utility glass-input {
+  width: 100%;
+  background: rgba(13, 20, 36, 0.8);
+  border: 1px solid rgba(30, 45, 74, 0.8);
+  border-radius: 10px;
+  padding: 11px 14px;
+  color: #F1F5F9;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 150ms, box-shadow 150ms;
+}
+
+@utility glass-bg {
+  position: relative;
+  background: #0A0F1E;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+@utility glow-blob-tl {
+  position: absolute;
+  top: -200px;
+  left: -200px;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(59,130,246,0.15) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+@utility glow-blob-br {
+  position: absolute;
+  bottom: -200px;
+  right: -200px;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(96,165,250,0.10) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
 @layer components {
   .input-premium:focus { @apply input-premium-focus; }
   .card-premium:hover { @apply card-premium-hover; }
@@ -275,4 +324,5 @@
   .btn-secondary:hover { background: rgba(59,130,246,0.12); border-color: var(--color-electric); }
   .btn-danger:hover { background: #dc2626; }
   .btn-danger:active { transform: scale(0.97); }
+  .glass-input:focus { border-color: #3B82F6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15); }
 }

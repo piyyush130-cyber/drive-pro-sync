@@ -380,39 +380,60 @@ export type Database = {
       }
       school_settings: {
         Row: {
+          cancellation_fee_cents: number
+          cancellation_notice_hours: number
           cancellation_policy: string | null
+          city: string | null
           contact_email: string | null
           contact_phone: string | null
           default_buffer_minutes: number
           default_duration_minutes: number
+          deposit_cents: number
+          deposit_required: boolean
           id: number
           logo_url: string | null
+          onboarding_complete: boolean
+          province: string | null
           require_approval: boolean
           school_name: string
           service_area: string | null
           updated_at: string
         }
         Insert: {
+          cancellation_fee_cents?: number
+          cancellation_notice_hours?: number
           cancellation_policy?: string | null
+          city?: string | null
           contact_email?: string | null
           contact_phone?: string | null
           default_buffer_minutes?: number
           default_duration_minutes?: number
+          deposit_cents?: number
+          deposit_required?: boolean
           id?: number
           logo_url?: string | null
+          onboarding_complete?: boolean
+          province?: string | null
           require_approval?: boolean
           school_name?: string
           service_area?: string | null
           updated_at?: string
         }
         Update: {
+          cancellation_fee_cents?: number
+          cancellation_notice_hours?: number
           cancellation_policy?: string | null
+          city?: string | null
           contact_email?: string | null
           contact_phone?: string | null
           default_buffer_minutes?: number
           default_duration_minutes?: number
+          deposit_cents?: number
+          deposit_required?: boolean
           id?: number
           logo_url?: string | null
+          onboarding_complete?: boolean
+          province?: string | null
           require_approval?: boolean
           school_name?: string
           service_area?: string | null

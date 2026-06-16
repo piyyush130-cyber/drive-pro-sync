@@ -10,9 +10,18 @@ import { toast } from "sonner";
 async function redirectByRole(navigate: ReturnType<typeof useNavigate>, userId: string) {
   const { data } = await supabase.from("user_roles").select("role").eq("user_id", userId);
   const roles = (data ?? []).map((r) => r.role);
-  if (roles.includes("admin")) navigate({ to: "/dashboard", replace: true });
-  else if (roles.includes("instructor")) navigate({ to: "/instructor", replace: true });
-  else navigate({ to: "/dashboard", replace: true });
+  if (roles.includes("admin")) {
+    const { data: s } = await supabase
+      .from("school_settings")
+      .select("onboarding_complete")
+      .eq("id", 1)
+      .maybeSingle();
+    navigate({ to: s?.onboarding_complete ? "/dashboard" : "/onboarding", replace: true });
+  } else if (roles.includes("instructor")) {
+    navigate({ to: "/instructor", replace: true });
+  } else {
+    navigate({ to: "/dashboard", replace: true });
+  }
 }
 
 export const Route = createFileRoute("/auth")({
@@ -25,7 +34,6 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const [schoolName, setSchoolName] = useState("");
   const [loading, setLoading] = useState(false);
 
   const seed = useServerFn(seedDemoAccounts);
@@ -47,19 +55,19 @@ function AuthPage() {
           password,
           options: {
             data: { full_name: fullName },
-            emailRedirectTo: window.location.origin + "/dashboard",
+            emailRedirectTo: window.location.origin + "/onboarding",
           },
         });
         if (error) throw error;
         if (data.user) {
           const result = await assignAdminRole({
-            data: { userId: data.user.id, schoolName },
+            data: { userId: data.user.id, fullName },
           });
           if (result.role === "admin") {
-            toast.success("Welcome! You're the school admin.");
-            navigate({ to: "/dashboard", replace: true });
+            toast.success("Welcome! Let's set up your school.");
+            navigate({ to: "/onboarding", replace: true });
           } else {
-            toast.message("Account created. Contact your admin to get access.");
+            toast.message("Account created. Ask your school admin for access.");
           }
         }
       } else {
@@ -93,66 +101,41 @@ function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen grid lg:grid-cols-2">
-      {/* Left brand panel */}
-      <div className="hidden lg:flex brand-gradient brand-grid-bg text-white p-12 flex-col justify-between">
-        <div className="flex items-center gap-2.5">
-          <div className="size-9 rounded-xl bg-white/10 ring-1 ring-white/15 grid place-items-center">
-            <CarFront className="size-4.5 text-blue-300" />
-          </div>
-          <div className="text-sm font-semibold tracking-tight">DriveProSync</div>
-        </div>
-        <div>
-          <div className="eyebrow text-blue-300">Operations Console</div>
-          <h2 className="text-3xl xl:text-4xl font-semibold tracking-tight mt-3 max-w-[24ch] text-balance">
-            Run the dispatch board, not the inbox.
-          </h2>
-          <p className="text-slate-300 mt-4 max-w-[42ch]">
-            Bookings, pickups, instructor scheduling, and payments — all in one premium control
-            center built for small driving schools.
-          </p>
-        </div>
-        <div className="text-xs text-slate-400">© DriveProSync</div>
-      </div>
-
-      {/* Right form */}
-      <div className="flex items-center justify-center p-6 bg-[color:var(--color-mist)]">
-        <div className="w-full max-w-sm card-premium p-8">
-          <Link to="/" className="text-xs text-slate-500 hover:text-slate-900">
+    <div className="glass-bg">
+      <div className="glow-blob-tl" />
+      <div className="glow-blob-br" />
+      <div className="relative z-10 min-h-screen flex items-center justify-center p-4 py-12">
+        <div className="w-full max-w-md glass-card p-8">
+          <Link to="/" className="text-xs text-slate-500 hover:text-slate-300">
             ← Back to booking
           </Link>
-          <div className="eyebrow text-blue-700 mt-3">
+          <div className="flex items-center gap-2.5 mt-4 mb-4">
+            <div className="size-9 rounded-xl bg-[#3B82F6]/20 grid place-items-center">
+              <CarFront className="size-4.5 text-[#60A5FA]" />
+            </div>
+            <div className="text-sm font-semibold text-white">DriveProSync</div>
+          </div>
+          <div className="text-[10px] uppercase tracking-[0.18em] text-[#60A5FA]">
             {mode === "signin" ? "Staff sign in" : "New staff account"}
           </div>
-          <h1 className="text-2xl font-semibold tracking-tight mt-1 mb-1">
+          <h1 className="text-2xl font-semibold text-white mt-1 mb-1">
             {mode === "signin" ? "Welcome back" : "Create your account"}
           </h1>
-          <p className="text-sm text-slate-500 mb-6">
+          <p className="text-sm text-slate-400 mb-6">
             {mode === "signin"
               ? "Admin & instructor access."
               : "First account becomes the school admin."}
           </p>
           <form onSubmit={handleSubmit} className="space-y-4">
             {mode === "signup" && (
-              <>
-                <Field label="School name">
-                  <input
-                    required
-                    value={schoolName}
-                    onChange={(e) => setSchoolName(e.target.value)}
-                    placeholder="e.g. Winnipeg Pro Driving School"
-                    className="input-premium"
-                  />
-                </Field>
-                <Field label="Full name">
-                  <input
-                    required
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    className="input-premium"
-                  />
-                </Field>
-              </>
+              <Field label="Full name">
+                <input
+                  required
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="glass-input"
+                />
+              </Field>
             )}
             <Field label="Email">
               <input
@@ -160,7 +143,7 @@ function AuthPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="input-premium"
+                className="glass-input"
               />
             </Field>
             <Field label="Password">
@@ -170,17 +153,33 @@ function AuthPage() {
                 minLength={6}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="input-premium"
+                className="glass-input"
               />
+              <p className="text-[11px] text-slate-500 mt-1">Minimum 6 characters.</p>
             </Field>
             <button disabled={loading} className="btn-primary w-full">
               {loading ? "…" : mode === "signin" ? "Sign in" : "Create account"}
             </button>
           </form>
-          <div className="my-5 flex items-center gap-3 text-[10px] uppercase tracking-widest text-slate-400">
-            <div className="h-px flex-1 bg-slate-200" />
-            Try the demo
-            <div className="h-px flex-1 bg-slate-200" />
+          <button
+            onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
+            className="mt-4 text-xs text-slate-400 hover:text-white w-full text-center"
+          >
+            {mode === "signin"
+              ? "Need an account? Create one"
+              : "Already have an account? Sign in"}
+          </button>
+          <Link
+            to="/instructor-signup"
+            className="block mt-2 text-xs text-[#60A5FA] hover:text-white w-full text-center"
+          >
+            Are you an instructor? Create your account with an invite code →
+          </Link>
+
+          <div className="my-5 flex items-center gap-3 text-[10px] uppercase tracking-widest text-slate-500">
+            <div className="h-px flex-1 bg-slate-700" />
+            or explore a live demo
+            <div className="h-px flex-1 bg-slate-700" />
           </div>
           <div className="grid grid-cols-2 gap-2">
             <button
@@ -200,14 +199,6 @@ function AuthPage() {
               Instructor demo
             </button>
           </div>
-          <button
-            onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
-            className="mt-4 text-xs text-slate-500 hover:text-slate-900 w-full text-center"
-          >
-            {mode === "signin"
-              ? "Need an account? Create one"
-              : "Already have an account? Sign in"}
-          </button>
         </div>
       </div>
     </div>
@@ -217,7 +208,7 @@ function AuthPage() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-slate-700 mb-1.5">{label}</label>
+      <label className="block text-sm font-medium text-slate-300 mb-1.5">{label}</label>
       {children}
     </div>
   );
