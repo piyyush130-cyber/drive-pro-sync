@@ -538,7 +538,7 @@ function Scheduler({
           </div>
         </div>
         {!date ? (
-          <div className="text-sm text-[#94A3B8] py-6 text-center rounded-lg bg-[#0D1424] border border-[#1E2D4A]">
+          <div className="text-sm text-[#94A3B8] py-6 text-center rounded-xl bg-[rgba(13,20,36,0.8)] border border-[rgba(59,130,246,0.15)] backdrop-blur-xl">
             Choose a date to see open slots.
           </div>
         ) : (
@@ -552,12 +552,12 @@ function Scheduler({
                   type="button"
                   disabled={unavailable}
                   onClick={() => onTime(s.time)}
-                  className={`rounded-lg px-2 py-2 text-xs font-semibold font-mono transition-all ${
+                  className={`rounded-lg px-2 py-2.5 text-xs font-semibold font-mono transition-all backdrop-blur-xl ${
                     active
-                      ? "bg-[#3B82F6] text-white shadow-[0_0_0_2px_rgba(59,130,246,0.30),0_0_18px_rgba(59,130,246,0.45)]"
+                      ? "bg-[#3B82F6] text-white border border-[#3B82F6] shadow-[0_0_0_2px_rgba(59,130,246,0.30),0_0_22px_rgba(59,130,246,0.65)]"
                       : unavailable
-                        ? "bg-[#0D1424] text-[#334155] border border-[#1E2D4A] cursor-not-allowed line-through"
-                        : "bg-[#0D1424] text-[#CBD5E1] border border-[#1E2D4A] hover:border-[#3B82F6] hover:bg-[#3B82F6]/10"
+                        ? "bg-[rgba(13,20,36,0.6)] text-[#334155] border border-[rgba(30,45,74,0.6)] cursor-not-allowed line-through"
+                        : "bg-[rgba(13,20,36,0.8)] text-[#CBD5E1] border border-[rgba(59,130,246,0.18)] hover:border-[#3B82F6] hover:bg-[#3B82F6]/15 hover:shadow-[0_0_16px_rgba(59,130,246,0.25)]"
                   }`}
                 >
                   {s.label}
