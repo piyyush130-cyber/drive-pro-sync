@@ -324,4 +324,5 @@
   .btn-secondary:hover { background: rgba(59,130,246,0.12); border-color: var(--color-electric); }
   .btn-danger:hover { background: #dc2626; }
   .btn-danger:active { transform: scale(0.97); }
+  .glass-input:focus { border-color: #3B82F6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15); }
 }
