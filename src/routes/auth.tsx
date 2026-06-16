@@ -102,22 +102,22 @@ function AuthPage() {
       <div className="glow-blob-br" />
       <div className="relative z-10 min-h-screen flex items-center justify-center p-4 py-12">
         <div className="w-full max-w-md glass-card p-8">
-          <Link to="/" className="text-xs text-slate-500 hover:text-slate-300">
+          <Link to="/" className="text-xs text-slate-500 hover:text-slate-700">
             ← Back to booking
           </Link>
           <div className="flex items-center gap-2.5 mt-4 mb-4">
-            <div className="size-9 rounded-xl bg-[#3B82F6]/20 grid place-items-center">
-              <CarFront className="size-4.5 text-[#60A5FA]" />
+            <div className="size-9 rounded-xl bg-blue-50 border border-blue-100 grid place-items-center">
+              <CarFront className="size-4.5 text-blue-600" />
             </div>
-            <div className="text-sm font-semibold text-white">DriveProSync</div>
+            <div className="text-sm font-semibold text-slate-900">DriveProSync</div>
           </div>
-          <div className="text-[10px] uppercase tracking-[0.18em] text-[#60A5FA]">
+          <div className="text-[10px] uppercase tracking-[0.18em] text-blue-600">
             {mode === "signin" ? "Staff sign in" : "New staff account"}
           </div>
-          <h1 className="text-2xl font-semibold text-white mt-1 mb-1">
+          <h1 className="text-2xl font-semibold text-slate-900 mt-1 mb-1">
             {mode === "signin" ? "Welcome back" : "Create your account"}
           </h1>
-          <p className="text-sm text-slate-400 mb-6">
+          <p className="text-sm text-slate-500 mb-6">
             {mode === "signin"
               ? "Admin & instructor access."
               : "First account becomes the school admin."}
@@ -159,7 +159,7 @@ function AuthPage() {
           </form>
           <button
             onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
-            className="mt-4 text-xs text-slate-400 hover:text-white w-full text-center"
+            className="mt-4 text-xs text-slate-500 hover:text-slate-900 w-full text-center"
           >
             {mode === "signin"
               ? "Need an account? Create one"
@@ -167,15 +167,15 @@ function AuthPage() {
           </button>
           <Link
             to="/instructor-signup"
-            className="block mt-2 text-xs text-[#60A5FA] hover:text-white w-full text-center"
+            className="block mt-2 text-xs text-blue-600 hover:text-blue-700 w-full text-center"
           >
             Are you an instructor? Create your account with an invite code →
           </Link>
 
-          <div className="my-5 flex items-center gap-3 text-[10px] uppercase tracking-widest text-slate-500">
-            <div className="h-px flex-1 bg-slate-700" />
+          <div className="my-5 flex items-center gap-3 text-[10px] uppercase tracking-widest text-slate-400">
+            <div className="h-px flex-1 bg-slate-200" />
             or explore a live demo
-            <div className="h-px flex-1 bg-slate-700" />
+            <div className="h-px flex-1 bg-slate-200" />
           </div>
           <div className="grid grid-cols-2 gap-2">
             <button
@@ -204,7 +204,7 @@ function AuthPage() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-slate-300 mb-1.5">{label}</label>
+      <label className="block text-sm font-medium text-slate-700 mb-1.5">{label}</label>
       {children}
     </div>
   );
