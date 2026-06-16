@@ -23,17 +23,17 @@
   --color-gold: #D4AF37;
 
   /* Legacy aliases kept so existing utilities still resolve */
-  --color-ink: #0A0F1E;
-  --color-navy: #0D1424;
-  --color-navy-2: #111827;
-  --color-steel: #1E2D4A;
+  --color-ink: #0F172A;
+  --color-navy: #F1F5F9;
+  --color-navy-2: #FFFFFF;
+  --color-steel: #E2E8F0;
   --color-electric-bright: #60A5FA;
   --color-electric-soft: rgba(59,130,246,0.12);
   --color-success-soft: rgba(16,185,129,0.15);
   --color-warn-soft: rgba(245,158,11,0.15);
   --color-danger-soft: rgba(239,68,68,0.15);
-  --color-silver: #1E2D4A;
-  --color-mist: #0A0F1E;
+  --color-silver: #E2E8F0;
+  --color-mist: #F8FAFC;
 }
 
 @theme inline {
