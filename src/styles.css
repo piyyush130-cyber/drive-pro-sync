@@ -128,9 +128,9 @@
 
 @utility brand-gradient {
   background:
-    radial-gradient(80% 60% at 80% 0%, rgba(59,130,246,0.18) 0%, transparent 60%),
-    radial-gradient(60% 60% at 0% 100%, rgba(96,165,250,0.10) 0%, transparent 55%),
-    linear-gradient(135deg, #0A0F1E 0%, #0D1424 55%, #111827 100%);
+    radial-gradient(80% 60% at 80% 0%, rgba(59,130,246,0.12) 0%, transparent 60%),
+    radial-gradient(60% 60% at 0% 100%, rgba(96,165,250,0.08) 0%, transparent 55%),
+    linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 55%, #FFFFFF 100%);
 }
 
 @utility brand-grid-bg {
