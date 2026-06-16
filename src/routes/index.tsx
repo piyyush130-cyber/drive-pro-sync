@@ -510,13 +510,13 @@ function Scheduler({
                 type="button"
                 disabled={disabled}
                 onClick={() => onDate(d)}
-                className={`relative h-10 rounded-lg text-sm font-medium font-mono transition-all ${
+                className={`relative h-10 rounded-full text-sm font-medium font-mono transition-all ${
                   isSel
-                    ? "bg-[#3B82F6] text-white shadow-[0_0_0_2px_rgba(59,130,246,0.30),0_0_18px_rgba(59,130,246,0.45)]"
+                    ? "bg-[#3B82F6] text-white shadow-[0_0_0_2px_rgba(59,130,246,0.30),0_0_22px_rgba(59,130,246,0.65)]"
                     : disabled
                       ? "text-[#334155] cursor-not-allowed"
                       : isToday
-                        ? "text-[#60A5FA] border border-[#3B82F6]/40 hover:bg-[#3B82F6]/10"
+                        ? "text-[#60A5FA] border border-[#3B82F6]/60 hover:bg-[#3B82F6]/10"
                         : "text-[#CBD5E1] hover:bg-[#1E2D4A]"
                 }`}
               >
