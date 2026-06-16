@@ -14,7 +14,7 @@ import {
   ArrowRight,
   ShieldCheck,
   Sparkles,
-  Sparkles,
+
   LogIn,
 } from "lucide-react";
 import {
