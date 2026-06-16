@@ -165,11 +165,19 @@ function BookingPage() {
   }
 
   return (
-    <div className="glass-bg text-[#F1F5F9]">
-      <div className="glow-blob-tl" />
-      <div className="glow-blob-br" />
+    <div className="relative min-h-screen overflow-hidden bg-[#0A0F1E] text-[#F1F5F9]">
+      {/* Multi-hue ambient backdrop */}
+      <div className="pointer-events-none absolute -top-40 -left-32 w-[600px] h-[600px] rounded-full blur-3xl opacity-60"
+           style={{ background: "radial-gradient(circle, rgba(59,130,246,0.22), transparent 70%)" }} />
+      <div className="pointer-events-none absolute top-1/3 -right-40 w-[520px] h-[520px] rounded-full blur-3xl opacity-50"
+           style={{ background: "radial-gradient(circle, rgba(212,175,55,0.16), transparent 70%)" }} />
+      <div className="pointer-events-none absolute -bottom-32 left-1/4 w-[560px] h-[560px] rounded-full blur-3xl opacity-50"
+           style={{ background: "radial-gradient(circle, rgba(167,139,250,0.16), transparent 70%)" }} />
+      <div className="pointer-events-none absolute bottom-0 right-1/3 w-[420px] h-[420px] rounded-full blur-3xl opacity-40"
+           style={{ background: "radial-gradient(circle, rgba(16,185,129,0.14), transparent 70%)" }} />
 
       <TopBar school={school} />
+
 
       <main className="relative max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-10 pb-24">
         <div className="grid gap-6 lg:grid-cols-[1.15fr_1fr]">
