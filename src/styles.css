@@ -280,7 +280,7 @@
 
 @utility glass-bg {
   position: relative;
-  background: #0A0F1E;
+  background: #F8FAFC;
   min-height: 100vh;
   overflow: hidden;
 }
