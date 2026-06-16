@@ -14,7 +14,6 @@ import {
   ArrowRight,
   ShieldCheck,
   Sparkles,
-
   LogIn,
 } from "lucide-react";
 import {
@@ -165,19 +164,22 @@ function BookingPage() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#0A0F1E] text-[#F1F5F9]">
-      {/* Multi-hue ambient backdrop */}
-      <div className="pointer-events-none absolute -top-40 -left-32 w-[600px] h-[600px] rounded-full blur-3xl opacity-60"
-           style={{ background: "radial-gradient(circle, rgba(59,130,246,0.22), transparent 70%)" }} />
-      <div className="pointer-events-none absolute top-1/3 -right-40 w-[520px] h-[520px] rounded-full blur-3xl opacity-50"
-           style={{ background: "radial-gradient(circle, rgba(212,175,55,0.16), transparent 70%)" }} />
-      <div className="pointer-events-none absolute -bottom-32 left-1/4 w-[560px] h-[560px] rounded-full blur-3xl opacity-50"
-           style={{ background: "radial-gradient(circle, rgba(167,139,250,0.16), transparent 70%)" }} />
-      <div className="pointer-events-none absolute bottom-0 right-1/3 w-[420px] h-[420px] rounded-full blur-3xl opacity-40"
-           style={{ background: "radial-gradient(circle, rgba(16,185,129,0.14), transparent 70%)" }} />
+    <div className="relative min-h-screen overflow-hidden bg-[#F8FAFC] text-[#0F172A]">
+      {/* Subtle ambient pastel wash */}
+      <div
+        className="pointer-events-none absolute -top-40 -left-32 w-[600px] h-[600px] rounded-full blur-3xl"
+        style={{ background: "radial-gradient(circle, rgba(59,130,246,0.08), transparent 70%)" }}
+      />
+      <div
+        className="pointer-events-none absolute top-1/3 -right-40 w-[520px] h-[520px] rounded-full blur-3xl"
+        style={{ background: "radial-gradient(circle, rgba(212,175,55,0.08), transparent 70%)" }}
+      />
+      <div
+        className="pointer-events-none absolute -bottom-32 left-1/4 w-[560px] h-[560px] rounded-full blur-3xl"
+        style={{ background: "radial-gradient(circle, rgba(167,139,250,0.08), transparent 70%)" }}
+      />
 
       <TopBar school={school} />
-
 
       <main className="relative max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-10 pb-24">
         <div className="grid gap-6 lg:grid-cols-[1.15fr_1fr]">
@@ -230,7 +232,7 @@ function BookingPage() {
                   placeholder="123 Street Name, City"
                 />
               </Field>
-              <label className="flex items-center gap-2.5 text-sm text-[#CBD5E1] select-none">
+              <label className="flex items-center gap-2.5 text-sm text-[#475569] select-none">
                 <input
                   type="checkbox"
                   checked={form.dropoff_same}
@@ -293,11 +295,11 @@ function BookingPage() {
 
         <div className="text-center mt-10 space-y-2">
           <p className="text-xs text-[#64748B]">
-            Powered by <span className="font-semibold text-[#94A3B8]">DriveProSync</span>
+            Powered by <span className="font-semibold text-[#475569]">DriveProSync</span>
           </p>
           <Link
             to="/login"
-            className="inline-flex items-center gap-1.5 text-[11px] font-medium text-[#64748B] hover:text-[#60A5FA] transition-colors"
+            className="inline-flex items-center gap-1.5 text-[11px] font-medium text-[#64748B] hover:text-[#2563EB] transition-colors"
           >
             <LogIn className="size-3" />
             Staff login
@@ -312,31 +314,29 @@ function BookingPage() {
 
 function TopBar({ school }: { school: string }) {
   return (
-    <header className="relative bg-gradient-to-r from-[#0b1220] via-[#0f1b3d] to-[#16234f] text-white overflow-hidden">
-      <div className="absolute inset-0 brand-grid-bg opacity-40" />
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#0A0F1E]/40" />
-      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-7 sm:py-8 flex items-center justify-between gap-3">
+    <header className="relative bg-white border-b border-slate-200">
+      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-7 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3.5 min-w-0">
-          <div className="size-11 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 ring-1 ring-white/20 grid place-items-center shrink-0 shadow-[0_0_32px_rgba(59,130,246,0.55),0_8px_24px_-8px_rgba(59,130,246,0.7)]">
+          <div className="size-11 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 grid place-items-center shrink-0 shadow-[0_8px_20px_-8px_rgba(59,130,246,0.55)]">
             <CarFront className="size-5 text-white" />
           </div>
           <div className="min-w-0">
-            <div className="text-base font-semibold tracking-tight leading-none truncate">
+            <div className="text-base font-semibold tracking-tight leading-none truncate text-[#0F172A]">
               DriveProSync Booking
             </div>
-            <div className="text-[10px] text-blue-200/80 uppercase tracking-[0.18em] mt-2 truncate">
+            <div className="text-[10px] text-[#64748B] uppercase tracking-[0.18em] mt-2 truncate">
               For {school}
             </div>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-semibold text-blue-50 bg-white/10 ring-1 ring-white/15 rounded-full px-3 py-1.5 whitespace-nowrap backdrop-blur-sm">
+          <span className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-semibold text-[#1E40AF] bg-blue-50 ring-1 ring-blue-200 rounded-full px-3 py-1.5 whitespace-nowrap">
             <ShieldCheck className="size-3" />
             Secure booking
           </span>
           <Link
             to="/login"
-            className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-blue-100 hover:text-white bg-white/5 hover:bg-white/10 ring-1 ring-white/15 rounded-full px-3 py-1.5 transition-colors whitespace-nowrap backdrop-blur-sm"
+            className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-[#475569] hover:text-[#0F172A] bg-slate-50 hover:bg-slate-100 ring-1 ring-slate-200 rounded-full px-3 py-1.5 transition-colors whitespace-nowrap"
           >
             <LogIn className="size-3" />
             Staff
@@ -361,18 +361,18 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <section className="glass-card p-5 sm:p-6 transition-colors hover:border-[#3B82F6]/40">
+    <section className="bg-white border border-slate-200 rounded-2xl shadow-[0_4px_24px_rgba(15,23,42,0.04)] p-5 sm:p-6 transition-colors hover:border-blue-300">
       <div className="flex items-center gap-2.5 mb-4">
         {Icon && (
-          <div className="size-7 rounded-lg bg-[#3B82F6]/15 border border-[#3B82F6]/30 grid place-items-center">
-            <Icon className="size-3.5 text-[#60A5FA]" />
+          <div className="size-7 rounded-lg bg-blue-50 border border-blue-100 grid place-items-center">
+            <Icon className="size-3.5 text-blue-600" />
           </div>
         )}
         <div>
-          <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#60A5FA]">
+          <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-blue-600">
             {eyebrow}
           </div>
-          <div className="font-semibold tracking-tight text-[#F1F5F9] text-base mt-0.5">
+          <div className="font-semibold tracking-tight text-[#0F172A] text-base mt-0.5">
             {title}
           </div>
         </div>
@@ -381,8 +381,6 @@ function Panel({
     </section>
   );
 }
-
-
 
 /* ---------------- Service picker ---------------- */
 
@@ -402,13 +400,13 @@ function ServicePicker({
     "Road Test Package": "Warm-up, test support, vehicle use.",
     "Custom / Not Sure": "Let the school help you decide.",
   };
-  // Different accent per card so the grid isn't monotone blue.
+  // Subtle accent per card for an elegant, multi-hue feel on white.
   const accents = [
-    { ring: "rgba(96,165,250,0.55)",  glow: "rgba(96,165,250,0.35)",  chipBg: "rgba(96,165,250,0.14)", chipTx: "#93C5FD", price: "#BFDBFE" },   // sky blue
-    { ring: "rgba(212,175,55,0.55)",  glow: "rgba(212,175,55,0.30)",  chipBg: "rgba(212,175,55,0.14)", chipTx: "#F4D67A", price: "#F4D67A" },   // champagne gold
-    { ring: "rgba(52,211,153,0.55)",  glow: "rgba(52,211,153,0.30)",  chipBg: "rgba(52,211,153,0.14)", chipTx: "#6EE7B7", price: "#A7F3D0" },   // emerald
-    { ring: "rgba(167,139,250,0.55)", glow: "rgba(167,139,250,0.30)", chipBg: "rgba(167,139,250,0.14)", chipTx: "#C4B5FD", price: "#DDD6FE" },  // violet
-    { ring: "rgba(244,114,182,0.50)", glow: "rgba(244,114,182,0.28)", chipBg: "rgba(244,114,182,0.14)", chipTx: "#F9A8D4", price: "#FBCFE8" },  // rose
+    { chipBg: "#EFF6FF", chipTx: "#2563EB", border: "#BFDBFE", dot: "#3B82F6" },
+    { chipBg: "#FEF7E6", chipTx: "#A16207", border: "#FDE68A", dot: "#D4AF37" },
+    { chipBg: "#ECFDF5", chipTx: "#047857", border: "#A7F3D0", dot: "#10B981" },
+    { chipBg: "#F5F3FF", chipTx: "#6D28D9", border: "#DDD6FE", dot: "#8B5CF6" },
+    { chipBg: "#FDF2F8", chipTx: "#BE185D", border: "#FBCFE8", dot: "#EC4899" },
   ];
   if (!types.length) {
     return <div className="text-sm text-slate-500">Loading services…</div>;
@@ -424,43 +422,33 @@ function ServicePicker({
             key={t.id}
             type="button"
             onClick={() => onSelect(t)}
-            className="group relative text-left rounded-2xl p-4 overflow-hidden transition-all"
-            style={{
-              background: active
-                ? "linear-gradient(140deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.04) 50%, rgba(17,24,39,0.55) 100%)"
-                : "linear-gradient(140deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 55%, rgba(17,24,39,0.45) 100%)",
-              backdropFilter: "blur(18px) saturate(140%)",
-              border: `1px solid ${active ? a.ring : "rgba(255,255,255,0.10)"}`,
-              boxShadow: active
-                ? `0 0 0 1px ${a.ring}, 0 12px 40px -10px ${a.glow}, inset 0 1px 0 rgba(255,255,255,0.10)`
-                : "0 8px 28px -14px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06)",
-            }}
+            className={`group relative text-left rounded-2xl p-4 overflow-hidden transition-all ${
+              active
+                ? "bg-blue-50 border-2 border-blue-500 shadow-[0_8px_24px_-12px_rgba(59,130,246,0.45)]"
+                : "bg-white border border-slate-200 hover:border-slate-300 hover:shadow-[0_6px_20px_-12px_rgba(15,23,42,0.18)]"
+            }`}
           >
-            {/* soft top-left sheen */}
-            <div className="pointer-events-none absolute -top-12 -left-10 w-40 h-40 rounded-full opacity-50 blur-2xl"
-                 style={{ background: `radial-gradient(circle, ${a.glow}, transparent 70%)` }} />
             {active && (
-              <div className="absolute top-2.5 right-2.5 size-6 rounded-full grid place-items-center text-white"
-                   style={{ background: a.chipTx, boxShadow: `0 0 14px ${a.glow}` }}>
+              <div className="absolute top-2.5 right-2.5 size-6 rounded-full grid place-items-center text-white bg-blue-600 shadow-[0_4px_10px_-2px_rgba(59,130,246,0.55)]">
                 <Check className="size-3.5" strokeWidth={3} />
               </div>
             )}
             <div
               className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider font-mono rounded-full px-2.5 py-1"
-              style={{ background: a.chipBg, color: a.chipTx, border: `1px solid ${a.ring}` }}
+              style={{ background: a.chipBg, color: a.chipTx, border: `1px solid ${a.border}` }}
             >
               <Clock className="size-3" />
               {t.duration_minutes} MIN
             </div>
-            <div className="mt-2.5 font-semibold tracking-tight text-white text-[15px] pr-7">
+            <div className="mt-2.5 font-semibold tracking-tight text-[#0F172A] text-[15px] pr-7">
               {name}
             </div>
-            <div className="text-[11px] text-slate-300/80 mt-1 line-clamp-1">
+            <div className="text-[11px] text-[#64748B] mt-1 line-clamp-1">
               {blurbs[t.name] ?? t.description ?? ""}
             </div>
             <div
               className="mt-3 text-xl font-bold tracking-tight font-mono"
-              style={{ color: active ? a.price : "#F1F5F9", textShadow: active ? `0 0 10px ${a.glow}` : "none" }}
+              style={{ color: active ? "#1D4ED8" : "#0F172A" }}
             >
               {t.price_cents > 0 ? money(t.price_cents) : "Custom Quote"}
             </div>
@@ -470,8 +458,6 @@ function ServicePicker({
     </div>
   );
 }
-
-
 
 /* ---------------- Scheduler ---------------- */
 
@@ -494,9 +480,9 @@ function Scheduler({
   return (
     <div className="space-y-5">
       {/* Calendar */}
-      <div className="rounded-xl bg-[rgba(13,20,36,0.8)] border border-[rgba(59,130,246,0.18)] backdrop-blur-xl p-4">
+      <div className="rounded-xl bg-white border border-slate-200 p-4">
         <div className="flex items-center justify-between mb-4">
-          <div className="font-semibold tracking-tight text-[#F1F5F9] text-sm">
+          <div className="font-semibold tracking-tight text-[#0F172A] text-sm">
             {format(month, "MMMM yyyy")}
           </div>
           <div className="flex items-center gap-1">
@@ -504,7 +490,7 @@ function Scheduler({
               type="button"
               onClick={() => setMonth(addMonths(month, -1))}
               disabled={isSameMonth(month, today)}
-              className="size-8 rounded-lg grid place-items-center text-[#94A3B8] hover:bg-[#1E2D4A] hover:text-[#F1F5F9] border border-[#1E2D4A] disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed transition-colors"
+              className="size-8 rounded-lg grid place-items-center text-[#64748B] hover:bg-slate-100 hover:text-[#0F172A] border border-slate-200 disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed transition-colors"
               aria-label="Previous month"
             >
               <ChevronLeft className="size-4" />
@@ -512,14 +498,14 @@ function Scheduler({
             <button
               type="button"
               onClick={() => setMonth(addMonths(month, 1))}
-              className="size-8 rounded-lg grid place-items-center text-[#94A3B8] hover:bg-[#1E2D4A] hover:text-[#F1F5F9] border border-[#1E2D4A] transition-colors"
+              className="size-8 rounded-lg grid place-items-center text-[#64748B] hover:bg-slate-100 hover:text-[#0F172A] border border-slate-200 transition-colors"
               aria-label="Next month"
             >
               <ChevronRight className="size-4" />
             </button>
           </div>
         </div>
-        <div className="grid grid-cols-7 gap-1 text-[10px] text-[#64748B] mb-1">
+        <div className="grid grid-cols-7 gap-1 text-[10px] text-[#94A3B8] mb-1">
           {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
             <div key={i} className="text-center py-1 font-semibold tracking-wider uppercase">
               {d}
@@ -541,12 +527,12 @@ function Scheduler({
                 onClick={() => onDate(d)}
                 className={`relative h-10 rounded-full text-sm font-medium font-mono transition-all ${
                   isSel
-                    ? "bg-[#3B82F6] text-white shadow-[0_0_0_2px_rgba(59,130,246,0.30),0_0_22px_rgba(59,130,246,0.65)]"
+                    ? "bg-blue-600 text-white shadow-[0_4px_14px_-4px_rgba(59,130,246,0.55)]"
                     : disabled
-                      ? "text-[#334155] cursor-not-allowed"
+                      ? "text-slate-300 cursor-not-allowed"
                       : isToday
-                        ? "text-[#60A5FA] border border-[#3B82F6]/60 hover:bg-[#3B82F6]/10"
-                        : "text-[#CBD5E1] hover:bg-[#1E2D4A]"
+                        ? "text-blue-600 border border-blue-300 hover:bg-blue-50"
+                        : "text-[#475569] hover:bg-slate-100"
                 }`}
               >
                 {d.getDate()}
@@ -559,15 +545,15 @@ function Scheduler({
       {/* Slots */}
       <div>
         <div className="flex items-center justify-between mb-2.5">
-          <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#60A5FA]">
+          <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-blue-600">
             Available times
           </div>
-          <div className="text-xs text-[#94A3B8]">
+          <div className="text-xs text-[#64748B]">
             {date ? format(date, "EEE, MMM d") : "Pick a date"}
           </div>
         </div>
         {!date ? (
-          <div className="text-sm text-[#94A3B8] py-6 text-center rounded-xl bg-[rgba(13,20,36,0.8)] border border-[rgba(59,130,246,0.15)] backdrop-blur-xl">
+          <div className="text-sm text-[#64748B] py-6 text-center rounded-xl bg-slate-50 border border-slate-200">
             Choose a date to see open slots.
           </div>
         ) : (
@@ -581,12 +567,12 @@ function Scheduler({
                   type="button"
                   disabled={unavailable}
                   onClick={() => onTime(s.time)}
-                  className={`rounded-lg px-2 py-2.5 text-xs font-semibold font-mono transition-all backdrop-blur-xl ${
+                  className={`rounded-lg px-2 py-2.5 text-xs font-semibold font-mono transition-all ${
                     active
-                      ? "bg-[#3B82F6] text-white border border-[#3B82F6] shadow-[0_0_0_2px_rgba(59,130,246,0.30),0_0_22px_rgba(59,130,246,0.65)]"
+                      ? "bg-blue-50 text-blue-700 border border-blue-500 shadow-[0_4px_12px_-4px_rgba(59,130,246,0.45)]"
                       : unavailable
-                        ? "bg-[rgba(13,20,36,0.6)] text-[#334155] border border-[rgba(30,45,74,0.6)] cursor-not-allowed line-through"
-                        : "bg-[rgba(13,20,36,0.8)] text-[#CBD5E1] border border-[rgba(59,130,246,0.18)] hover:border-[#3B82F6] hover:bg-[#3B82F6]/15 hover:shadow-[0_0_16px_rgba(59,130,246,0.25)]"
+                        ? "bg-slate-50 text-slate-300 border border-slate-200 cursor-not-allowed line-through"
+                        : "bg-white text-[#475569] border border-slate-200 hover:border-blue-400 hover:bg-blue-50/50"
                   }`}
                 >
                   {s.label}
@@ -599,7 +585,6 @@ function Scheduler({
     </div>
   );
 }
-
 
 function buildMonthGrid(month: Date): Date[] {
   const first = startOfWeek(startOfMonth(month), { weekStartsOn: 0 });
@@ -635,19 +620,18 @@ function SummaryCard({
   const ready = !!(lesson && date && time && form.full_name && form.phone && form.pickup_address);
 
   return (
-    <section className="glass-card overflow-hidden">
-      {/* Header strip */}
-      <div className="bg-[rgba(13,20,36,0.6)] border-b border-[rgba(59,130,246,0.18)] text-white px-5 sm:px-6 py-4">
-        <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#60A5FA]">
+    <section className="bg-white border border-slate-200 rounded-2xl shadow-[0_4px_24px_rgba(15,23,42,0.04)] overflow-hidden">
+      <div className="bg-slate-50 border-b border-slate-200 px-5 sm:px-6 py-4">
+        <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-blue-600">
           Live summary
         </div>
       </div>
 
-      <div className="p-5 sm:p-6 border-b border-[rgba(59,130,246,0.12)]">
-        <div className="text-lg font-semibold tracking-tight text-[#F1F5F9]">
+      <div className="p-5 sm:p-6 border-b border-slate-200">
+        <div className="text-lg font-semibold tracking-tight text-[#0F172A]">
           {lesson ? lesson.name.replace(" Driving Lesson", " Lesson") : "Select a service"}
         </div>
-        <div className="text-sm text-[#94A3B8] mt-0.5">
+        <div className="text-sm text-[#64748B] mt-0.5">
           {lesson ? `${lesson.duration_minutes} min` : "—"}
           {date && time && (
             <>
@@ -656,7 +640,7 @@ function SummaryCard({
             </>
           )}
         </div>
-        <div className="mt-3 text-2xl font-semibold tracking-tight text-[#F1F5F9] font-mono">
+        <div className="mt-3 text-2xl font-semibold tracking-tight text-[#0F172A] font-mono">
           {lesson ? (lesson.price_cents > 0 ? money(lesson.price_cents) : "Custom Quote") : "—"}
         </div>
       </div>
@@ -681,20 +665,19 @@ function SummaryCard({
           disabled={!ready || submitting}
           className={`w-full inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-sm font-semibold transition-all ${
             ready && !submitting
-              ? "bg-[#3B82F6] text-white hover:bg-[#2563EB] active:scale-[0.98] pulse-glow"
-              : "bg-[#1E2D4A]/70 text-[#64748B] cursor-not-allowed"
+              ? "bg-blue-600 text-white hover:bg-blue-700 active:scale-[0.98] shadow-[0_8px_24px_-8px_rgba(59,130,246,0.65)]"
+              : "bg-slate-100 text-slate-400 cursor-not-allowed"
           }`}
         >
           {submitting ? "Sending…" : "Request Lesson Time"}
           {!submitting && <ArrowRight className="size-4" />}
         </button>
-        <p className="text-[11px] text-[#94A3B8] text-center mt-3">
+        <p className="text-[11px] text-[#64748B] text-center mt-3">
           Your spot is held for 10 minutes after submitting.
         </p>
       </div>
     </section>
   );
-
 }
 
 function Row({
@@ -708,14 +691,13 @@ function Row({
 }) {
   return (
     <div className={full ? "col-span-2" : ""}>
-      <div className="text-[10px] uppercase tracking-wider text-[#64748B] font-semibold">
+      <div className="text-[10px] uppercase tracking-wider text-[#94A3B8] font-semibold">
         {label}
       </div>
-      <div className="text-sm text-[#E2E8F0] mt-0.5 truncate">{children}</div>
+      <div className="text-sm text-[#0F172A] mt-0.5 truncate">{children}</div>
     </div>
   );
 }
-
 
 /* ---------------- Inputs ---------------- */
 
@@ -730,7 +712,7 @@ function Field({
 }) {
   return (
     <div>
-      <label className="block text-xs font-medium text-[#94A3B8] mb-1.5">
+      <label className="block text-xs font-medium text-[#475569] mb-1.5">
         {label}
         {required && <span className="text-rose-500"> *</span>}
       </label>
@@ -756,7 +738,7 @@ function LuxInput({
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      className="glass-input"
+      className="w-full bg-white border border-slate-200 rounded-lg px-3.5 py-2.5 text-sm text-[#0F172A] placeholder:text-slate-400 outline-none transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
     />
   );
 }
@@ -775,7 +757,7 @@ function LuxTextarea({
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      className="glass-input min-h-[80px] resize-y"
+      className="w-full bg-white border border-slate-200 rounded-lg px-3.5 py-2.5 text-sm text-[#0F172A] placeholder:text-slate-400 outline-none transition-all focus:border-blue-500 focus:ring-4 focus:ring-blue-100 min-h-[80px] resize-y"
     />
   );
 }
@@ -798,28 +780,28 @@ function ConfirmationScreen({
   name: string;
 }) {
   return (
-    <div className="glass-bg text-[#F1F5F9]">
+    <div className="relative min-h-screen overflow-hidden bg-[#F8FAFC] text-[#0F172A]">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-[700px] rounded-full bg-[#10B981]/15 blur-[140px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-[700px] rounded-full bg-emerald-200/30 blur-[140px]" />
       </div>
       <TopBar school={school} />
       <main className="relative max-w-xl mx-auto px-4 sm:px-6 py-12">
-        <div className="glass-card overflow-hidden">
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-[0_4px_24px_rgba(15,23,42,0.04)] overflow-hidden">
           <div className="p-8 text-center">
-            <div className="mx-auto size-16 rounded-full bg-[#10B981]/15 border border-[#10B981]/50 grid place-items-center shadow-[0_0_32px_rgba(16,185,129,0.45)]">
-              <CircleCheck className="size-8 text-[#10B981]" />
+            <div className="mx-auto size-16 rounded-full bg-emerald-50 border border-emerald-200 grid place-items-center shadow-[0_8px_24px_-8px_rgba(16,185,129,0.45)]">
+              <CircleCheck className="size-8 text-emerald-600" />
             </div>
-            <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#10B981] mt-5">
+            <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-600 mt-5">
               Booking request received
             </div>
-            <h1 className="text-2xl font-semibold tracking-tight mt-2 text-[#F1F5F9]">
+            <h1 className="text-2xl font-semibold tracking-tight mt-2 text-[#0F172A]">
               Thanks, {name.split(" ")[0] || "driver"}!
             </h1>
-            <p className="text-[#94A3B8] mt-2 text-pretty max-w-md mx-auto text-sm">
+            <p className="text-[#64748B] mt-2 text-pretty max-w-md mx-auto text-sm">
               {school} will review your request and confirm by phone, text, or email.
             </p>
           </div>
-          <div className="border-t border-[rgba(59,130,246,0.15)] p-6 grid sm:grid-cols-2 gap-x-8 gap-y-4">
+          <div className="border-t border-slate-200 p-6 grid sm:grid-cols-2 gap-x-8 gap-y-4">
             <Row label="Lesson">{lesson.name.replace(" Driving Lesson", " Lesson")}</Row>
             <Row label="Date">{format(date, "EEEE, MMM d")}</Row>
             <Row label="Time">{time}</Row>
@@ -830,12 +812,12 @@ function ConfirmationScreen({
         </div>
 
         <div className="text-center mt-6">
-          <Link to="/" className="text-sm font-medium text-[#60A5FA] hover:text-white">
+          <Link to="/" className="text-sm font-medium text-blue-600 hover:text-blue-700">
             Book another lesson
           </Link>
         </div>
         <p className="text-center text-xs text-[#64748B] mt-8">
-          Powered by <span className="font-semibold text-[#94A3B8]">DriveProSync</span>
+          Powered by <span className="font-semibold text-[#475569]">DriveProSync</span>
         </p>
       </main>
     </div>
