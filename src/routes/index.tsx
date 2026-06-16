@@ -356,18 +356,18 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-2xl bg-white/90 backdrop-blur-xl ring-1 ring-slate-200/80 p-5 sm:p-6 shadow-[0_1px_0_rgba(15,27,61,0.02),0_24px_60px_-32px_rgba(15,27,61,0.18)]">
+    <section className="rounded-2xl bg-[#111827] border border-[#1E2D4A] p-5 sm:p-6 shadow-[0_4px_24px_rgba(0,0,0,0.4)] transition-colors hover:border-[#3B82F6]/50">
       <div className="flex items-center gap-2.5 mb-4">
         {Icon && (
-          <div className="size-7 rounded-lg bg-blue-50 ring-1 ring-blue-100 grid place-items-center">
-            <Icon className="size-3.5 text-blue-600" />
+          <div className="size-7 rounded-lg bg-[#3B82F6]/15 border border-[#3B82F6]/30 grid place-items-center">
+            <Icon className="size-3.5 text-[#60A5FA]" />
           </div>
         )}
         <div>
-          <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-blue-700/80">
+          <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#60A5FA]">
             {eyebrow}
           </div>
-          <div className="font-semibold tracking-tight text-slate-900 text-base mt-0.5">
+          <div className="font-semibold tracking-tight text-[#F1F5F9] text-base mt-0.5">
             {title}
           </div>
         </div>
@@ -376,6 +376,7 @@ function Panel({
     </section>
   );
 }
+
 
 /* ---------------- Service picker ---------------- */
 
