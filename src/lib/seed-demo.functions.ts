@@ -17,6 +17,15 @@ const EXTRA_INSTRUCTORS = [
 ];
 
 export const seedDemoAccounts = createServerFn({ method: "POST" }).handler(async () => {
+  try {
+    return await runSeed();
+  } catch (err: any) {
+    console.error("[seedDemoAccounts] failed:", err);
+    throw new Error(`Demo seed failed: ${err?.message || String(err)}`);
+  }
+});
+
+async function runSeed() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
   async function ensureUser(email: string, password: string, fullName: string) {
@@ -207,4 +216,5 @@ export const seedDemoAccounts = createServerFn({ method: "POST" }).handler(async
   }
 
   return { ok: true };
-});
+}
+

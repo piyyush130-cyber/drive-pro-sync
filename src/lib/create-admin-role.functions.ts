@@ -4,19 +4,31 @@ export const createAdminRole = createServerFn({ method: "POST" })
   .inputValidator((d: { userId: string; fullName: string; schoolName?: string }) => d)
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { count } = await supabaseAdmin
+    // Every public signup on /auth is the school admin. Instructors use /instructor-signup with an invite code.
+    await supabaseAdmin
       .from("user_roles")
-      .select("*", { count: "exact", head: true });
-    if ((count ?? 0) === 0) {
-      await supabaseAdmin.from("user_roles").insert({ user_id: data.userId, role: "admin" });
+      .upsert({ user_id: data.userId, role: "admin" }, { onConflict: "user_id,role" });
+    // Ensure a school_settings row exists so onboarding has something to update.
+    const { data: existing } = await supabaseAdmin
+      .from("school_settings")
+      .select("id, school_name")
+      .eq("id", 1)
+      .maybeSingle();
+    if (!existing) {
+      await supabaseAdmin.from("school_settings").insert({
+        id: 1,
+        school_name: data.schoolName?.trim() || "My Driving School",
+        onboarding_complete: false,
+      });
+    } else if (data.schoolName?.trim()) {
       await supabaseAdmin
         .from("school_settings")
-        .upsert({ id: 1, school_name: "My Driving School" }, { onConflict: "id" });
-      await supabaseAdmin
-        .from("profiles")
-        .update({ full_name: data.fullName })
-        .eq("id", data.userId);
-      return { role: "admin" as const };
+        .update({ school_name: data.schoolName.trim() })
+        .eq("id", 1);
     }
-    return { role: "none" as const };
+    await supabaseAdmin
+      .from("profiles")
+      .update({ full_name: data.fullName })
+      .eq("id", data.userId);
+    return { role: "admin" as const };
   });

@@ -60,15 +60,11 @@ function AuthPage() {
         });
         if (error) throw error;
         if (data.user) {
-          const result = await assignAdminRole({
+          await assignAdminRole({
             data: { userId: data.user.id, fullName, schoolName: "" },
           });
-          if (result.role === "admin") {
-            toast.success("Welcome! Let's set up your school.");
-            navigate({ to: "/onboarding", replace: true });
-          } else {
-            toast.message("Account created. Ask your school admin for access.");
-          }
+          toast.success("Welcome! Let's set up your school.");
+          navigate({ to: "/onboarding", replace: true });
         }
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });

@@ -165,11 +165,19 @@ function BookingPage() {
   }
 
   return (
-    <div className="glass-bg text-[#F1F5F9]">
-      <div className="glow-blob-tl" />
-      <div className="glow-blob-br" />
+    <div className="relative min-h-screen overflow-hidden bg-[#0A0F1E] text-[#F1F5F9]">
+      {/* Multi-hue ambient backdrop */}
+      <div className="pointer-events-none absolute -top-40 -left-32 w-[600px] h-[600px] rounded-full blur-3xl opacity-60"
+           style={{ background: "radial-gradient(circle, rgba(59,130,246,0.22), transparent 70%)" }} />
+      <div className="pointer-events-none absolute top-1/3 -right-40 w-[520px] h-[520px] rounded-full blur-3xl opacity-50"
+           style={{ background: "radial-gradient(circle, rgba(212,175,55,0.16), transparent 70%)" }} />
+      <div className="pointer-events-none absolute -bottom-32 left-1/4 w-[560px] h-[560px] rounded-full blur-3xl opacity-50"
+           style={{ background: "radial-gradient(circle, rgba(167,139,250,0.16), transparent 70%)" }} />
+      <div className="pointer-events-none absolute bottom-0 right-1/3 w-[420px] h-[420px] rounded-full blur-3xl opacity-40"
+           style={{ background: "radial-gradient(circle, rgba(16,185,129,0.14), transparent 70%)" }} />
 
       <TopBar school={school} />
+
 
       <main className="relative max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-10 pb-24">
         <div className="grid gap-6 lg:grid-cols-[1.15fr_1fr]">
@@ -394,12 +402,21 @@ function ServicePicker({
     "Road Test Package": "Warm-up, test support, vehicle use.",
     "Custom / Not Sure": "Let the school help you decide.",
   };
+  // Different accent per card so the grid isn't monotone blue.
+  const accents = [
+    { ring: "rgba(96,165,250,0.55)",  glow: "rgba(96,165,250,0.35)",  chipBg: "rgba(96,165,250,0.14)", chipTx: "#93C5FD", price: "#BFDBFE" },   // sky blue
+    { ring: "rgba(212,175,55,0.55)",  glow: "rgba(212,175,55,0.30)",  chipBg: "rgba(212,175,55,0.14)", chipTx: "#F4D67A", price: "#F4D67A" },   // champagne gold
+    { ring: "rgba(52,211,153,0.55)",  glow: "rgba(52,211,153,0.30)",  chipBg: "rgba(52,211,153,0.14)", chipTx: "#6EE7B7", price: "#A7F3D0" },   // emerald
+    { ring: "rgba(167,139,250,0.55)", glow: "rgba(167,139,250,0.30)", chipBg: "rgba(167,139,250,0.14)", chipTx: "#C4B5FD", price: "#DDD6FE" },  // violet
+    { ring: "rgba(244,114,182,0.50)", glow: "rgba(244,114,182,0.28)", chipBg: "rgba(244,114,182,0.14)", chipTx: "#F9A8D4", price: "#FBCFE8" },  // rose
+  ];
   if (!types.length) {
     return <div className="text-sm text-slate-500">Loading services…</div>;
   }
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-      {types.map((t) => {
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      {types.map((t, idx) => {
+        const a = accents[idx % accents.length];
         const active = selected?.id === t.id;
         const name = t.name.replace(" Driving Lesson", " Lesson");
         return (
@@ -407,41 +424,53 @@ function ServicePicker({
             key={t.id}
             type="button"
             onClick={() => onSelect(t)}
-            className={`group relative text-left rounded-2xl p-4 transition-all overflow-hidden backdrop-blur-xl ${
-              active
-                ? "bg-[#3B82F6]/15 border-2 border-[#3B82F6] shadow-[0_0_0_4px_rgba(59,130,246,0.12),0_0_28px_rgba(59,130,246,0.35)]"
-                : "bg-[rgba(17,24,39,0.55)] border border-[rgba(59,130,246,0.18)] hover:border-[rgba(59,130,246,0.5)] hover:shadow-[0_0_24px_rgba(59,130,246,0.2)]"
-            }`}
+            className="group relative text-left rounded-2xl p-4 overflow-hidden transition-all"
+            style={{
+              background: active
+                ? "linear-gradient(140deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.04) 50%, rgba(17,24,39,0.55) 100%)"
+                : "linear-gradient(140deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 55%, rgba(17,24,39,0.45) 100%)",
+              backdropFilter: "blur(18px) saturate(140%)",
+              border: `1px solid ${active ? a.ring : "rgba(255,255,255,0.10)"}`,
+              boxShadow: active
+                ? `0 0 0 1px ${a.ring}, 0 12px 40px -10px ${a.glow}, inset 0 1px 0 rgba(255,255,255,0.10)`
+                : "0 8px 28px -14px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06)",
+            }}
           >
+            {/* soft top-left sheen */}
+            <div className="pointer-events-none absolute -top-12 -left-10 w-40 h-40 rounded-full opacity-50 blur-2xl"
+                 style={{ background: `radial-gradient(circle, ${a.glow}, transparent 70%)` }} />
             {active && (
-              <div className="absolute top-2.5 right-2.5 size-6 rounded-full bg-[#3B82F6] grid place-items-center text-white shadow-[0_0_16px_rgba(59,130,246,0.7)]">
+              <div className="absolute top-2.5 right-2.5 size-6 rounded-full grid place-items-center text-white"
+                   style={{ background: a.chipTx, boxShadow: `0 0 14px ${a.glow}` }}>
                 <Check className="size-3.5" strokeWidth={3} />
               </div>
             )}
-            <div className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#60A5FA] font-mono bg-[#3B82F6]/15 border border-[#3B82F6]/30 rounded-full px-2.5 py-1">
+            <div
+              className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider font-mono rounded-full px-2.5 py-1"
+              style={{ background: a.chipBg, color: a.chipTx, border: `1px solid ${a.ring}` }}
+            >
               <Clock className="size-3" />
               {t.duration_minutes} MIN
             </div>
-            <div className="mt-2.5 font-semibold tracking-tight text-[#F1F5F9] text-sm pr-7">
+            <div className="mt-2.5 font-semibold tracking-tight text-white text-[15px] pr-7">
               {name}
             </div>
-            <div className="text-[11px] text-[#94A3B8] mt-0.5 line-clamp-1">
+            <div className="text-[11px] text-slate-300/80 mt-1 line-clamp-1">
               {blurbs[t.name] ?? t.description ?? ""}
             </div>
             <div
-              className={`mt-3 text-xl font-bold tracking-tight font-mono ${
-                active ? "text-[#60A5FA] drop-shadow-[0_0_8px_rgba(96,165,250,0.5)]" : "text-[#F1F5F9]"
-              }`}
+              className="mt-3 text-xl font-bold tracking-tight font-mono"
+              style={{ color: active ? a.price : "#F1F5F9", textShadow: active ? `0 0 10px ${a.glow}` : "none" }}
             >
               {t.price_cents > 0 ? money(t.price_cents) : "Custom Quote"}
             </div>
           </button>
-
         );
       })}
     </div>
   );
 }
+
 
 
 /* ---------------- Scheduler ---------------- */
