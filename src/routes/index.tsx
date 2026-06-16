@@ -466,9 +466,9 @@ function Scheduler({
   return (
     <div className="space-y-5">
       {/* Calendar */}
-      <div className="rounded-xl bg-white ring-1 ring-slate-200 p-4 shadow-[0_1px_0_rgba(15,27,61,0.02),0_12px_28px_-20px_rgba(15,27,61,0.18)]">
+      <div className="rounded-xl bg-[#0D1424] border border-[#1E2D4A] p-4">
         <div className="flex items-center justify-between mb-4">
-          <div className="font-semibold tracking-tight text-slate-900 text-sm">
+          <div className="font-semibold tracking-tight text-[#F1F5F9] text-sm">
             {format(month, "MMMM yyyy")}
           </div>
           <div className="flex items-center gap-1">
@@ -476,7 +476,7 @@ function Scheduler({
               type="button"
               onClick={() => setMonth(addMonths(month, -1))}
               disabled={isSameMonth(month, today)}
-              className="size-8 rounded-lg grid place-items-center text-slate-600 hover:bg-slate-100 hover:text-slate-900 ring-1 ring-slate-200 disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed transition-colors"
+              className="size-8 rounded-lg grid place-items-center text-[#94A3B8] hover:bg-[#1E2D4A] hover:text-[#F1F5F9] border border-[#1E2D4A] disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed transition-colors"
               aria-label="Previous month"
             >
               <ChevronLeft className="size-4" />
@@ -484,14 +484,14 @@ function Scheduler({
             <button
               type="button"
               onClick={() => setMonth(addMonths(month, 1))}
-              className="size-8 rounded-lg grid place-items-center text-slate-600 hover:bg-slate-100 hover:text-slate-900 ring-1 ring-slate-200 transition-colors"
+              className="size-8 rounded-lg grid place-items-center text-[#94A3B8] hover:bg-[#1E2D4A] hover:text-[#F1F5F9] border border-[#1E2D4A] transition-colors"
               aria-label="Next month"
             >
               <ChevronRight className="size-4" />
             </button>
           </div>
         </div>
-        <div className="grid grid-cols-7 gap-1 text-[10px] text-slate-400 mb-1">
+        <div className="grid grid-cols-7 gap-1 text-[10px] text-[#64748B] mb-1">
           {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
             <div key={i} className="text-center py-1 font-semibold tracking-wider uppercase">
               {d}
@@ -511,14 +511,14 @@ function Scheduler({
                 type="button"
                 disabled={disabled}
                 onClick={() => onDate(d)}
-                className={`relative h-10 rounded-lg text-sm font-medium transition-all ${
+                className={`relative h-10 rounded-lg text-sm font-medium font-mono transition-all ${
                   isSel
-                    ? "bg-blue-600 text-white shadow-[0_0_0_2px_rgba(59,130,246,0.20),0_10px_24px_-8px_rgba(59,130,246,0.55)]"
+                    ? "bg-[#3B82F6] text-white shadow-[0_0_0_2px_rgba(59,130,246,0.30),0_0_18px_rgba(59,130,246,0.45)]"
                     : disabled
-                      ? "text-slate-300 cursor-not-allowed"
+                      ? "text-[#334155] cursor-not-allowed"
                       : isToday
-                        ? "text-blue-700 ring-1 ring-blue-300 hover:bg-blue-50"
-                        : "text-slate-700 hover:bg-slate-100"
+                        ? "text-[#60A5FA] border border-[#3B82F6]/40 hover:bg-[#3B82F6]/10"
+                        : "text-[#CBD5E1] hover:bg-[#1E2D4A]"
                 }`}
               >
                 {d.getDate()}
@@ -531,15 +531,15 @@ function Scheduler({
       {/* Slots */}
       <div>
         <div className="flex items-center justify-between mb-2.5">
-          <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-blue-700/80">
+          <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#60A5FA]">
             Available times
           </div>
-          <div className="text-xs text-slate-500">
+          <div className="text-xs text-[#94A3B8]">
             {date ? format(date, "EEE, MMM d") : "Pick a date"}
           </div>
         </div>
         {!date ? (
-          <div className="text-sm text-slate-500 py-6 text-center rounded-lg bg-slate-50 ring-1 ring-slate-200">
+          <div className="text-sm text-[#94A3B8] py-6 text-center rounded-lg bg-[#0D1424] border border-[#1E2D4A]">
             Choose a date to see open slots.
           </div>
         ) : (
@@ -553,12 +553,12 @@ function Scheduler({
                   type="button"
                   disabled={unavailable}
                   onClick={() => onTime(s.time)}
-                  className={`rounded-lg px-2 py-2 text-xs font-semibold transition-all ${
+                  className={`rounded-lg px-2 py-2 text-xs font-semibold font-mono transition-all ${
                     active
-                      ? "bg-blue-600 text-white shadow-[0_0_0_2px_rgba(59,130,246,0.20),0_8px_20px_-8px_rgba(59,130,246,0.55)]"
+                      ? "bg-[#3B82F6] text-white shadow-[0_0_0_2px_rgba(59,130,246,0.30),0_0_18px_rgba(59,130,246,0.45)]"
                       : unavailable
-                        ? "bg-slate-50 text-slate-300 ring-1 ring-slate-100 cursor-not-allowed line-through"
-                        : "bg-white text-slate-700 ring-1 ring-slate-200 hover:ring-blue-400 hover:bg-blue-50"
+                        ? "bg-[#0D1424] text-[#334155] border border-[#1E2D4A] cursor-not-allowed line-through"
+                        : "bg-[#0D1424] text-[#CBD5E1] border border-[#1E2D4A] hover:border-[#3B82F6] hover:bg-[#3B82F6]/10"
                   }`}
                 >
                   {s.label}
@@ -571,6 +571,7 @@ function Scheduler({
     </div>
   );
 }
+
 
 function buildMonthGrid(month: Date): Date[] {
   const first = startOfWeek(startOfMonth(month), { weekStartsOn: 0 });
