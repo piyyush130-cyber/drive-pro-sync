@@ -165,14 +165,15 @@ function BookingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f5f7fb] text-slate-900 relative">
-      {/* Subtle ambient light */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-[420px] overflow-hidden">
-        <div className="absolute -top-40 left-1/2 -translate-x-1/2 size-[900px] rounded-full bg-blue-400/10 blur-[140px]" />
-        <div className="absolute top-10 right-0 size-[420px] rounded-full bg-indigo-300/10 blur-[120px]" />
+    <div className="min-h-screen bg-[#0A0F1E] text-[#F1F5F9] relative">
+      {/* Ambient luxury glow */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[520px] overflow-hidden">
+        <div className="absolute -top-40 left-0 size-[700px] rounded-full bg-[#3B82F6]/15 blur-[140px]" />
+        <div className="absolute -top-32 right-0 size-[520px] rounded-full bg-[#60A5FA]/10 blur-[120px]" />
       </div>
 
       <TopBar school={school} />
+
 
       <main className="relative max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-10 pb-24">
         <div className="grid gap-6 lg:grid-cols-[1.15fr_1fr]">
@@ -355,18 +356,18 @@ function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-2xl bg-white/90 backdrop-blur-xl ring-1 ring-slate-200/80 p-5 sm:p-6 shadow-[0_1px_0_rgba(15,27,61,0.02),0_24px_60px_-32px_rgba(15,27,61,0.18)]">
+    <section className="rounded-2xl bg-[#111827] border border-[#1E2D4A] p-5 sm:p-6 shadow-[0_4px_24px_rgba(0,0,0,0.4)] transition-colors hover:border-[#3B82F6]/50">
       <div className="flex items-center gap-2.5 mb-4">
         {Icon && (
-          <div className="size-7 rounded-lg bg-blue-50 ring-1 ring-blue-100 grid place-items-center">
-            <Icon className="size-3.5 text-blue-600" />
+          <div className="size-7 rounded-lg bg-[#3B82F6]/15 border border-[#3B82F6]/30 grid place-items-center">
+            <Icon className="size-3.5 text-[#60A5FA]" />
           </div>
         )}
         <div>
-          <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-blue-700/80">
+          <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#60A5FA]">
             {eyebrow}
           </div>
-          <div className="font-semibold tracking-tight text-slate-900 text-base mt-0.5">
+          <div className="font-semibold tracking-tight text-[#F1F5F9] text-base mt-0.5">
             {title}
           </div>
         </div>
@@ -375,6 +376,7 @@ function Panel({
     </section>
   );
 }
+
 
 /* ---------------- Service picker ---------------- */
 
@@ -409,28 +411,28 @@ function ServicePicker({
             onClick={() => onSelect(t)}
             className={`group relative text-left rounded-xl p-3.5 transition-all overflow-hidden ${
               active
-                ? "bg-blue-50 ring-2 ring-blue-500 shadow-[0_0_0_4px_rgba(59,130,246,0.10),0_18px_40px_-22px_rgba(59,130,246,0.55)]"
-                : "bg-white ring-1 ring-slate-200 hover:ring-blue-300 hover:bg-slate-50"
+                ? "bg-[#3B82F6]/10 border-2 border-[#3B82F6] shadow-[0_0_0_4px_rgba(59,130,246,0.10),0_0_24px_rgba(59,130,246,0.25)]"
+                : "bg-[#0D1424] border border-[#1E2D4A] hover:border-[#3B82F6]/50"
             }`}
           >
             {active && (
-              <div className="absolute top-2.5 right-2.5 size-5 rounded-full bg-blue-600 grid place-items-center text-white shadow-md">
+              <div className="absolute top-2.5 right-2.5 size-5 rounded-full bg-[#3B82F6] grid place-items-center text-white shadow-md">
                 <Check className="size-3" strokeWidth={3} />
               </div>
             )}
-            <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-blue-700/80">
+            <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#60A5FA] font-mono">
               <Clock className="size-3" />
               {t.duration_minutes} min
             </div>
-            <div className="mt-1.5 font-semibold tracking-tight text-slate-900 text-sm pr-6">
+            <div className="mt-1.5 font-semibold tracking-tight text-[#F1F5F9] text-sm pr-6">
               {name}
             </div>
-            <div className="text-[11px] text-slate-500 mt-0.5 line-clamp-1">
+            <div className="text-[11px] text-[#94A3B8] mt-0.5 line-clamp-1">
               {blurbs[t.name] ?? t.description ?? ""}
             </div>
             <div
-              className={`mt-2 text-base font-semibold tracking-tight ${
-                active ? "text-blue-700" : "text-slate-900"
+              className={`mt-2 text-base font-semibold tracking-tight font-mono ${
+                active ? "text-[#60A5FA]" : "text-[#F1F5F9]"
               }`}
             >
               {t.price_cents > 0 ? money(t.price_cents) : "Custom Quote"}
@@ -441,6 +443,7 @@ function ServicePicker({
     </div>
   );
 }
+
 
 /* ---------------- Scheduler ---------------- */
 
@@ -463,9 +466,9 @@ function Scheduler({
   return (
     <div className="space-y-5">
       {/* Calendar */}
-      <div className="rounded-xl bg-white ring-1 ring-slate-200 p-4 shadow-[0_1px_0_rgba(15,27,61,0.02),0_12px_28px_-20px_rgba(15,27,61,0.18)]">
+      <div className="rounded-xl bg-[#0D1424] border border-[#1E2D4A] p-4">
         <div className="flex items-center justify-between mb-4">
-          <div className="font-semibold tracking-tight text-slate-900 text-sm">
+          <div className="font-semibold tracking-tight text-[#F1F5F9] text-sm">
             {format(month, "MMMM yyyy")}
           </div>
           <div className="flex items-center gap-1">
@@ -473,7 +476,7 @@ function Scheduler({
               type="button"
               onClick={() => setMonth(addMonths(month, -1))}
               disabled={isSameMonth(month, today)}
-              className="size-8 rounded-lg grid place-items-center text-slate-600 hover:bg-slate-100 hover:text-slate-900 ring-1 ring-slate-200 disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed transition-colors"
+              className="size-8 rounded-lg grid place-items-center text-[#94A3B8] hover:bg-[#1E2D4A] hover:text-[#F1F5F9] border border-[#1E2D4A] disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed transition-colors"
               aria-label="Previous month"
             >
               <ChevronLeft className="size-4" />
@@ -481,14 +484,14 @@ function Scheduler({
             <button
               type="button"
               onClick={() => setMonth(addMonths(month, 1))}
-              className="size-8 rounded-lg grid place-items-center text-slate-600 hover:bg-slate-100 hover:text-slate-900 ring-1 ring-slate-200 transition-colors"
+              className="size-8 rounded-lg grid place-items-center text-[#94A3B8] hover:bg-[#1E2D4A] hover:text-[#F1F5F9] border border-[#1E2D4A] transition-colors"
               aria-label="Next month"
             >
               <ChevronRight className="size-4" />
             </button>
           </div>
         </div>
-        <div className="grid grid-cols-7 gap-1 text-[10px] text-slate-400 mb-1">
+        <div className="grid grid-cols-7 gap-1 text-[10px] text-[#64748B] mb-1">
           {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
             <div key={i} className="text-center py-1 font-semibold tracking-wider uppercase">
               {d}
@@ -508,14 +511,14 @@ function Scheduler({
                 type="button"
                 disabled={disabled}
                 onClick={() => onDate(d)}
-                className={`relative h-10 rounded-lg text-sm font-medium transition-all ${
+                className={`relative h-10 rounded-lg text-sm font-medium font-mono transition-all ${
                   isSel
-                    ? "bg-blue-600 text-white shadow-[0_0_0_2px_rgba(59,130,246,0.20),0_10px_24px_-8px_rgba(59,130,246,0.55)]"
+                    ? "bg-[#3B82F6] text-white shadow-[0_0_0_2px_rgba(59,130,246,0.30),0_0_18px_rgba(59,130,246,0.45)]"
                     : disabled
-                      ? "text-slate-300 cursor-not-allowed"
+                      ? "text-[#334155] cursor-not-allowed"
                       : isToday
-                        ? "text-blue-700 ring-1 ring-blue-300 hover:bg-blue-50"
-                        : "text-slate-700 hover:bg-slate-100"
+                        ? "text-[#60A5FA] border border-[#3B82F6]/40 hover:bg-[#3B82F6]/10"
+                        : "text-[#CBD5E1] hover:bg-[#1E2D4A]"
                 }`}
               >
                 {d.getDate()}
@@ -528,15 +531,15 @@ function Scheduler({
       {/* Slots */}
       <div>
         <div className="flex items-center justify-between mb-2.5">
-          <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-blue-700/80">
+          <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#60A5FA]">
             Available times
           </div>
-          <div className="text-xs text-slate-500">
+          <div className="text-xs text-[#94A3B8]">
             {date ? format(date, "EEE, MMM d") : "Pick a date"}
           </div>
         </div>
         {!date ? (
-          <div className="text-sm text-slate-500 py-6 text-center rounded-lg bg-slate-50 ring-1 ring-slate-200">
+          <div className="text-sm text-[#94A3B8] py-6 text-center rounded-lg bg-[#0D1424] border border-[#1E2D4A]">
             Choose a date to see open slots.
           </div>
         ) : (
@@ -550,12 +553,12 @@ function Scheduler({
                   type="button"
                   disabled={unavailable}
                   onClick={() => onTime(s.time)}
-                  className={`rounded-lg px-2 py-2 text-xs font-semibold transition-all ${
+                  className={`rounded-lg px-2 py-2 text-xs font-semibold font-mono transition-all ${
                     active
-                      ? "bg-blue-600 text-white shadow-[0_0_0_2px_rgba(59,130,246,0.20),0_8px_20px_-8px_rgba(59,130,246,0.55)]"
+                      ? "bg-[#3B82F6] text-white shadow-[0_0_0_2px_rgba(59,130,246,0.30),0_0_18px_rgba(59,130,246,0.45)]"
                       : unavailable
-                        ? "bg-slate-50 text-slate-300 ring-1 ring-slate-100 cursor-not-allowed line-through"
-                        : "bg-white text-slate-700 ring-1 ring-slate-200 hover:ring-blue-400 hover:bg-blue-50"
+                        ? "bg-[#0D1424] text-[#334155] border border-[#1E2D4A] cursor-not-allowed line-through"
+                        : "bg-[#0D1424] text-[#CBD5E1] border border-[#1E2D4A] hover:border-[#3B82F6] hover:bg-[#3B82F6]/10"
                   }`}
                 >
                   {s.label}
@@ -568,6 +571,7 @@ function Scheduler({
     </div>
   );
 }
+
 
 function buildMonthGrid(month: Date): Date[] {
   const first = startOfWeek(startOfMonth(month), { weekStartsOn: 0 });
@@ -603,22 +607,22 @@ function SummaryCard({
   const ready = !!(lesson && date && time && form.full_name && form.phone && form.pickup_address);
 
   return (
-    <section className="rounded-2xl overflow-hidden ring-1 ring-slate-200 bg-white shadow-[0_1px_0_rgba(15,27,61,0.02),0_30px_70px_-32px_rgba(15,27,61,0.25)]">
+    <section className="rounded-2xl overflow-hidden border border-[#1E2D4A] bg-[#111827] shadow-[0_8px_40px_rgba(0,0,0,0.5)]">
       {/* Navy header strip */}
-      <div className="bg-gradient-to-r from-[#0b1220] via-[#0f1b3d] to-[#16234f] text-white px-5 sm:px-6 py-4 flex items-center justify-between">
-        <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-blue-200/90">
+      <div className="bg-[#0D1424] border-b border-[#1E2D4A] text-white px-5 sm:px-6 py-4 flex items-center justify-between">
+        <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#60A5FA]">
           Live summary
         </div>
-        <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold text-amber-200 bg-amber-400/15 ring-1 ring-amber-300/40 rounded-full px-2.5 py-1">
+        <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold text-[#F59E0B] bg-[#F59E0B]/15 rounded-full px-2.5 py-1">
           <Hourglass className="size-3" /> Pending school approval
         </span>
       </div>
 
-      <div className="p-5 sm:p-6 border-b border-slate-100">
-        <div className="text-lg font-semibold tracking-tight text-slate-900">
+      <div className="p-5 sm:p-6 border-b border-[#1E2D4A]">
+        <div className="text-lg font-semibold tracking-tight text-[#F1F5F9]">
           {lesson ? lesson.name.replace(" Driving Lesson", " Lesson") : "Select a service"}
         </div>
-        <div className="text-sm text-slate-500 mt-0.5">
+        <div className="text-sm text-[#94A3B8] mt-0.5">
           {lesson ? `${lesson.duration_minutes} min` : "—"}
           {date && time && (
             <>
@@ -627,7 +631,7 @@ function SummaryCard({
             </>
           )}
         </div>
-        <div className="mt-3 text-2xl font-semibold tracking-tight text-slate-900">
+        <div className="mt-3 text-2xl font-semibold tracking-tight text-[#F1F5F9] font-mono">
           {lesson ? (lesson.price_cents > 0 ? money(lesson.price_cents) : "Custom Quote") : "—"}
         </div>
       </div>
@@ -652,14 +656,14 @@ function SummaryCard({
           disabled={!ready || submitting}
           className={`w-full inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-sm font-semibold transition-all ${
             ready && !submitting
-              ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-500 hover:to-indigo-500 shadow-[0_12px_30px_-10px_rgba(37,99,235,0.55)]"
-              : "bg-slate-100 text-slate-400 ring-1 ring-slate-200 cursor-not-allowed"
+              ? "bg-[#3B82F6] text-white hover:bg-[#2563EB] shadow-[0_0_24px_rgba(59,130,246,0.4)] active:scale-[0.98]"
+              : "bg-[#1E2D4A] text-[#64748B] cursor-not-allowed"
           }`}
         >
           {submitting ? "Sending…" : "Request Lesson Time"}
           {!submitting && <ArrowRight className="size-4" />}
         </button>
-        <p className="text-[11px] text-slate-500 text-center mt-3">
+        <p className="text-[11px] text-[#94A3B8] text-center mt-3">
           The school will confirm by phone, text, or email.
         </p>
       </div>
@@ -678,13 +682,14 @@ function Row({
 }) {
   return (
     <div className={full ? "col-span-2" : ""}>
-      <div className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">
+      <div className="text-[10px] uppercase tracking-wider text-[#64748B] font-semibold">
         {label}
       </div>
-      <div className="text-sm text-slate-800 mt-0.5 truncate">{children}</div>
+      <div className="text-sm text-[#E2E8F0] mt-0.5 truncate">{children}</div>
     </div>
   );
 }
+
 
 /* ---------------- Inputs ---------------- */
 
@@ -725,7 +730,7 @@ function LuxInput({
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      className="w-full rounded-lg bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 focus:shadow-[0_0_0_4px_rgba(37,99,235,0.10)] outline-none px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition-all"
+      className="w-full rounded-lg bg-[#0D1424] border border-[#1E2D4A] focus:border-[#3B82F6] focus:shadow-[0_0_0_4px_rgba(59,130,246,0.18)] outline-none px-3.5 py-2.5 text-sm text-[#F1F5F9] placeholder:text-[#64748B] transition-all"
     />
   );
 }
@@ -744,7 +749,7 @@ function LuxTextarea({
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      className="w-full rounded-lg bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 focus:shadow-[0_0_0_4px_rgba(37,99,235,0.10)] outline-none px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 min-h-[80px] transition-all"
+      className="w-full rounded-lg bg-[#0D1424] border border-[#1E2D4A] focus:border-[#3B82F6] focus:shadow-[0_0_0_4px_rgba(59,130,246,0.18)] outline-none px-3.5 py-2.5 text-sm text-[#F1F5F9] placeholder:text-[#64748B] min-h-[80px] transition-all"
     />
   );
 }
@@ -767,31 +772,31 @@ function ConfirmationScreen({
   name: string;
 }) {
   return (
-    <div className="min-h-screen bg-[#f5f7fb] text-slate-900 relative">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-[420px] overflow-hidden">
-        <div className="absolute -top-40 left-1/2 -translate-x-1/2 size-[700px] rounded-full bg-emerald-300/15 blur-[140px]" />
+    <div className="min-h-screen bg-[#0A0F1E] text-[#F1F5F9] relative">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[520px] overflow-hidden">
+        <div className="absolute -top-40 left-1/2 -translate-x-1/2 size-[700px] rounded-full bg-[#10B981]/15 blur-[140px]" />
       </div>
       <TopBar school={school} />
       <main className="relative max-w-xl mx-auto px-4 sm:px-6 py-12">
-        <div className="rounded-2xl overflow-hidden ring-1 ring-slate-200 bg-white shadow-[0_1px_0_rgba(15,27,61,0.02),0_30px_80px_-30px_rgba(16,185,129,0.25)]">
+        <div className="rounded-2xl overflow-hidden border border-[#1E2D4A] bg-[#111827] shadow-[0_8px_40px_rgba(0,0,0,0.5)]">
           <div className="p-8 text-center">
-            <div className="mx-auto size-14 rounded-full bg-emerald-50 ring-1 ring-emerald-200 grid place-items-center">
-              <CircleCheck className="size-7 text-emerald-600" />
+            <div className="mx-auto size-14 rounded-full bg-[#10B981]/15 border border-[#10B981]/40 grid place-items-center">
+              <CircleCheck className="size-7 text-[#10B981]" />
             </div>
-            <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-700 mt-5">
+            <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#10B981] mt-5">
               Booking request received
             </div>
-            <h1 className="text-2xl font-semibold tracking-tight mt-2 text-slate-900">
+            <h1 className="text-2xl font-semibold tracking-tight mt-2 text-[#F1F5F9]">
               Thanks, {name.split(" ")[0] || "driver"}!
             </h1>
-            <p className="text-slate-500 mt-2 text-pretty max-w-md mx-auto text-sm">
+            <p className="text-[#94A3B8] mt-2 text-pretty max-w-md mx-auto text-sm">
               {school} will review your request and confirm by phone, text, or email.
             </p>
-            <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-amber-700 bg-amber-50 ring-1 ring-amber-200 rounded-full px-3 py-1">
+            <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-[#F59E0B] bg-[#F59E0B]/15 rounded-full px-3 py-1">
               <Hourglass className="size-3" /> Pending school approval
             </span>
           </div>
-          <div className="border-t border-slate-100 p-6 grid sm:grid-cols-2 gap-x-8 gap-y-4">
+          <div className="border-t border-[#1E2D4A] p-6 grid sm:grid-cols-2 gap-x-8 gap-y-4">
             <Row label="Lesson">{lesson.name.replace(" Driving Lesson", " Lesson")}</Row>
             <Row label="Date">{format(date, "EEEE, MMM d")}</Row>
             <Row label="Time">{time}</Row>
@@ -801,12 +806,12 @@ function ConfirmationScreen({
           </div>
         </div>
         <div className="text-center mt-6">
-          <Link to="/" className="text-sm font-medium text-blue-700 hover:text-blue-800">
+          <Link to="/" className="text-sm font-medium text-[#60A5FA] hover:text-white">
             Book another lesson
           </Link>
         </div>
-        <p className="text-center text-xs text-slate-500 mt-8">
-          Powered by <span className="font-semibold text-slate-700">DriveProSync</span>
+        <p className="text-center text-xs text-[#64748B] mt-8">
+          Powered by <span className="font-semibold text-[#94A3B8]">DriveProSync</span>
         </p>
       </main>
     </div>

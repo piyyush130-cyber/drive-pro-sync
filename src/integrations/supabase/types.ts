@@ -225,40 +225,88 @@ export type Database = {
           },
         ]
       }
+      instructor_invite_codes: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          max_uses: number | null
+          updated_at: string
+          used_count: number
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          updated_at?: string
+          used_count?: number
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          updated_at?: string
+          used_count?: number
+        }
+        Relationships: []
+      }
       instructors: {
         Row: {
           active: boolean
+          approved_at: string | null
+          approved_by: string | null
           created_at: string
           email: string | null
           full_name: string
           id: string
+          invite_code_used: string | null
           notes: string | null
           phone: string | null
           profile_id: string | null
+          status: Database["public"]["Enums"]["instructor_status"]
           updated_at: string
           weekly_availability: Json
         }
         Insert: {
           active?: boolean
+          approved_at?: string | null
+          approved_by?: string | null
           created_at?: string
           email?: string | null
           full_name: string
           id?: string
+          invite_code_used?: string | null
           notes?: string | null
           phone?: string | null
           profile_id?: string | null
+          status?: Database["public"]["Enums"]["instructor_status"]
           updated_at?: string
           weekly_availability?: Json
         }
         Update: {
           active?: boolean
+          approved_at?: string | null
+          approved_by?: string | null
           created_at?: string
           email?: string | null
           full_name?: string
           id?: string
+          invite_code_used?: string | null
           notes?: string | null
           phone?: string | null
           profile_id?: string | null
+          status?: Database["public"]["Enums"]["instructor_status"]
           updated_at?: string
           weekly_availability?: Json
         }
@@ -497,6 +545,11 @@ export type Database = {
         | "completed"
         | "no_show"
       cancel_status: "requested" | "approved" | "rejected"
+      instructor_status:
+        | "pending_approval"
+        | "active"
+        | "deactivated"
+        | "rejected"
       payment_method: "cash" | "etransfer" | "card" | "other"
       payment_status: "unpaid" | "deposit_paid" | "paid" | "refunded"
     }
@@ -637,6 +690,12 @@ export const Constants = {
         "no_show",
       ],
       cancel_status: ["requested", "approved", "rejected"],
+      instructor_status: [
+        "pending_approval",
+        "active",
+        "deactivated",
+        "rejected",
+      ],
       payment_method: ["cash", "etransfer", "card", "other"],
       payment_status: ["unpaid", "deposit_paid", "paid", "refunded"],
     },

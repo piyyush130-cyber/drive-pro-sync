@@ -30,25 +30,25 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "stylesheet", href: appCss },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" },
+      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" },
     ],
   }),
   shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: () => (
-    <div className="min-h-screen flex items-center justify-center bg-zinc-50">
+    <div className="min-h-screen flex items-center justify-center bg-[#0A0F1E]">
       <div className="text-center">
-        <div className="text-5xl font-semibold">404</div>
-        <p className="text-zinc-500 mt-2">Page not found</p>
-        <a href="/" className="mt-4 inline-block text-emerald-800 underline">Go home</a>
+        <div className="text-5xl font-semibold text-[#F1F5F9]">404</div>
+        <p className="text-[#94A3B8] mt-2">Page not found</p>
+        <a href="/" className="mt-4 inline-block text-[#60A5FA] underline">Go home</a>
       </div>
     </div>
   ),
   errorComponent: ({ error }) => (
-    <div className="min-h-screen flex items-center justify-center bg-zinc-50 p-6">
+    <div className="min-h-screen flex items-center justify-center bg-[#0A0F1E] p-6">
       <div className="text-center max-w-md">
-        <div className="text-xl font-semibold">Something went wrong</div>
-        <p className="text-sm text-zinc-500 mt-2">{error.message}</p>
+        <div className="text-xl font-semibold text-[#F1F5F9]">Something went wrong</div>
+        <p className="text-sm text-[#94A3B8] mt-2">{error.message}</p>
       </div>
     </div>
   ),
