@@ -159,7 +159,7 @@ function AuthPage() {
           </form>
           <button
             onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
-            className="mt-4 text-xs text-slate-400 hover:text-white w-full text-center"
+            className="mt-4 text-xs text-slate-500 hover:text-slate-900 w-full text-center"
           >
             {mode === "signin"
               ? "Need an account? Create one"
@@ -167,15 +167,15 @@ function AuthPage() {
           </button>
           <Link
             to="/instructor-signup"
-            className="block mt-2 text-xs text-[#60A5FA] hover:text-white w-full text-center"
+            className="block mt-2 text-xs text-blue-600 hover:text-blue-700 w-full text-center"
           >
             Are you an instructor? Create your account with an invite code →
           </Link>
 
-          <div className="my-5 flex items-center gap-3 text-[10px] uppercase tracking-widest text-slate-500">
-            <div className="h-px flex-1 bg-slate-700" />
+          <div className="my-5 flex items-center gap-3 text-[10px] uppercase tracking-widest text-slate-400">
+            <div className="h-px flex-1 bg-slate-200" />
             or explore a live demo
-            <div className="h-px flex-1 bg-slate-700" />
+            <div className="h-px flex-1 bg-slate-200" />
           </div>
           <div className="grid grid-cols-2 gap-2">
             <button
