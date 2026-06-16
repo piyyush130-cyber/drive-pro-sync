@@ -4,6 +4,7 @@ import { CarFront } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
 import { seedDemoAccounts } from "@/lib/seed-demo.functions";
+import { createAdminRole } from "@/lib/create-admin-role.functions";
 import { toast } from "sonner";
 
 async function redirectByRole(navigate: ReturnType<typeof useNavigate>, userId: string) {
@@ -24,9 +25,11 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [schoolName, setSchoolName] = useState("");
   const [loading, setLoading] = useState(false);
 
   const seed = useServerFn(seedDemoAccounts);
+  const assignAdminRole = useServerFn(createAdminRole);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -49,16 +52,15 @@ function AuthPage() {
         });
         if (error) throw error;
         if (data.user) {
-          const { count } = await supabase
-            .from("user_roles")
-            .select("*", { count: "exact", head: true });
-          if ((count ?? 0) === 0) {
-            await supabase.from("user_roles").insert({ user_id: data.user.id, role: "admin" });
+          const result = await assignAdminRole({
+            data: { userId: data.user.id, schoolName },
+          });
+          if (result.role === "admin") {
             toast.success("Welcome! You're the school admin.");
+            navigate({ to: "/dashboard", replace: true });
           } else {
-            toast.success("Account created. Ask the admin to assign your role.");
+            toast.message("Account created. Contact your admin to get access.");
           }
-          await redirectByRole(navigate, data.user.id);
         }
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
@@ -132,14 +134,25 @@ function AuthPage() {
           </p>
           <form onSubmit={handleSubmit} className="space-y-4">
             {mode === "signup" && (
-              <Field label="Full name">
-                <input
-                  required
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  className="input-premium"
-                />
-              </Field>
+              <>
+                <Field label="School name">
+                  <input
+                    required
+                    value={schoolName}
+                    onChange={(e) => setSchoolName(e.target.value)}
+                    placeholder="e.g. Winnipeg Pro Driving School"
+                    className="input-premium"
+                  />
+                </Field>
+                <Field label="Full name">
+                  <input
+                    required
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    className="input-premium"
+                  />
+                </Field>
+              </>
             )}
             <Field label="Email">
               <input
