@@ -84,10 +84,10 @@ function SettingsPage() {
 
   return (
     <div className="p-6 lg:p-10 max-w-3xl">
-      <h1 className="text-2xl font-semibold text-white mb-6">Settings</h1>
+      <h1 className="text-2xl font-semibold text-slate-900 mb-6">Settings</h1>
 
       <section className="glass-card p-6 mb-6 space-y-4">
-        <h2 className="font-semibold text-white">School details</h2>
+        <h2 className="font-semibold text-slate-900">School details</h2>
         <Field label="School name">
           <input value={form.school_name || ""} onChange={(e) => setForm({ ...form, school_name: e.target.value })} className="glass-input" />
         </Field>
@@ -121,7 +121,7 @@ function SettingsPage() {
             <input type="number" value={(form.cancellation_fee_cents ?? 0) / 100} onChange={(e) => setForm({ ...form, cancellation_fee_cents: Math.round(Number(e.target.value) * 100) })} className="glass-input" />
           </Field>
         </div>
-        <label className="flex items-center gap-2 text-sm text-slate-300">
+        <label className="flex items-center gap-2 text-sm text-slate-700">
           <input type="checkbox" checked={!!form.deposit_required} onChange={(e) => setForm({ ...form, deposit_required: e.target.checked })} className="accent-[#3B82F6]" />
           Require deposit at booking
         </label>
@@ -130,7 +130,7 @@ function SettingsPage() {
             <input type="number" value={(form.deposit_cents ?? 0) / 100} onChange={(e) => setForm({ ...form, deposit_cents: Math.round(Number(e.target.value) * 100) })} className="glass-input" />
           </Field>
         )}
-        <label className="flex items-center gap-2 text-sm text-slate-300">
+        <label className="flex items-center gap-2 text-sm text-slate-700">
           <input type="checkbox" checked={!!form.require_approval} onChange={(e) => setForm({ ...form, require_approval: e.target.checked })} className="accent-[#3B82F6]" />
           Require admin approval for new bookings
         </label>
@@ -138,7 +138,7 @@ function SettingsPage() {
       </section>
 
       <section className="glass-card p-6">
-        <h2 className="font-semibold text-white mb-4">Lesson types & prices</h2>
+        <h2 className="font-semibold text-slate-900 mb-4">Lesson types & prices</h2>
         <div className="space-y-3">
           {(typesQ.data ?? []).map((t: any) => (
             <LessonTypeRow key={t.id} initial={t} onSave={saveType} />
@@ -152,7 +152,7 @@ function SettingsPage() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-slate-300 mb-1.5">{label}</label>
+      <label className="block text-sm font-medium text-slate-700 mb-1.5">{label}</label>
       {children}
     </div>
   );
@@ -165,7 +165,7 @@ function LessonTypeRow({ initial, onSave }: { initial: any; onSave: (t: any) => 
       <input value={t.name} onChange={(e) => setT({ ...t, name: e.target.value })} className="glass-input col-span-5 text-sm" />
       <input type="number" value={t.duration_minutes} onChange={(e) => setT({ ...t, duration_minutes: e.target.value })} className="glass-input col-span-2 text-sm" />
       <input type="number" value={(t.price_cents ?? 0) / 100} onChange={(e) => setT({ ...t, price_cents: Math.round(Number(e.target.value) * 100) })} className="glass-input col-span-2 text-sm" />
-      <label className="flex items-center gap-1 text-xs col-span-1 text-slate-300">
+      <label className="flex items-center gap-1 text-xs col-span-1 text-slate-700">
         <input type="checkbox" checked={t.active} onChange={(e) => setT({ ...t, active: e.target.checked })} className="accent-[#3B82F6]" />
         On
       </label>

@@ -113,7 +113,7 @@ function InstructorsPage() {
     <div className="p-6 lg:p-10 max-w-5xl">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-semibold text-white">Instructors</h1>
+          <h1 className="text-2xl font-semibold text-slate-900">Instructors</h1>
           <p className="text-sm text-slate-400 mt-1">Manage your teaching team.</p>
         </div>
         <button onClick={() => setAdding(!adding)} className="btn-primary text-sm">
@@ -128,7 +128,7 @@ function InstructorsPage() {
             <Key className="size-4 text-[#60A5FA]" />
           </div>
           <div>
-            <h2 className="font-semibold text-white">Instructor Invite Code</h2>
+            <h2 className="font-semibold text-slate-900">Instructor Invite Code</h2>
             <p className="text-sm text-slate-400">Share this code with instructors so they can create their login account.</p>
           </div>
         </div>
@@ -174,7 +174,7 @@ function InstructorsPage() {
             <div key={i.id} className="glass-card p-5">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <div className="font-semibold text-white">
+                  <div className="font-semibold text-slate-900">
                     {i.full_name}
                     {!i.active && <span className="ml-2 text-[10px] uppercase tracking-wider bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full">Inactive</span>}
                     {i.status === "pending_approval" && <span className="ml-2 text-[10px] uppercase tracking-wider bg-amber-500/15 text-amber-400 px-2 py-0.5 rounded-full">Pending</span>}
