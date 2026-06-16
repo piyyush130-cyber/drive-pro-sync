@@ -730,7 +730,7 @@ function LuxInput({
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      className="w-full rounded-lg bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 focus:shadow-[0_0_0_4px_rgba(37,99,235,0.10)] outline-none px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 transition-all"
+      className="w-full rounded-lg bg-[#0D1424] border border-[#1E2D4A] focus:border-[#3B82F6] focus:shadow-[0_0_0_4px_rgba(59,130,246,0.18)] outline-none px-3.5 py-2.5 text-sm text-[#F1F5F9] placeholder:text-[#64748B] transition-all"
     />
   );
 }
@@ -749,7 +749,7 @@ function LuxTextarea({
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      className="w-full rounded-lg bg-white ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 focus:shadow-[0_0_0_4px_rgba(37,99,235,0.10)] outline-none px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 min-h-[80px] transition-all"
+      className="w-full rounded-lg bg-[#0D1424] border border-[#1E2D4A] focus:border-[#3B82F6] focus:shadow-[0_0_0_4px_rgba(59,130,246,0.18)] outline-none px-3.5 py-2.5 text-sm text-[#F1F5F9] placeholder:text-[#64748B] min-h-[80px] transition-all"
     />
   );
 }
