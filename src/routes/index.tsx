@@ -165,14 +165,15 @@ function BookingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f5f7fb] text-slate-900 relative">
-      {/* Subtle ambient light */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-[420px] overflow-hidden">
-        <div className="absolute -top-40 left-1/2 -translate-x-1/2 size-[900px] rounded-full bg-blue-400/10 blur-[140px]" />
-        <div className="absolute top-10 right-0 size-[420px] rounded-full bg-indigo-300/10 blur-[120px]" />
+    <div className="min-h-screen bg-[#0A0F1E] text-[#F1F5F9] relative">
+      {/* Ambient luxury glow */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[520px] overflow-hidden">
+        <div className="absolute -top-40 left-0 size-[700px] rounded-full bg-[#3B82F6]/15 blur-[140px]" />
+        <div className="absolute -top-32 right-0 size-[520px] rounded-full bg-[#60A5FA]/10 blur-[120px]" />
       </div>
 
       <TopBar school={school} />
+
 
       <main className="relative max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-10 pb-24">
         <div className="grid gap-6 lg:grid-cols-[1.15fr_1fr]">
