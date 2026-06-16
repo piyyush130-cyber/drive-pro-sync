@@ -167,7 +167,7 @@
   border: 1px solid var(--color-line);
   border-top: 2px solid var(--color-electric);
   border-radius: 12px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.06);
 }
 
 @utility input-premium {
