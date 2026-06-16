@@ -13,7 +13,7 @@ import {
   User,
   ArrowRight,
   ShieldCheck,
-  Hourglass,
+  Sparkles,
   Sparkles,
   LogIn,
 } from "lucide-react";
