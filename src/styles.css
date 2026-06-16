@@ -8,15 +8,15 @@
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
   /* Dark luxury palette */
-  --color-bg: #0A0F1E;
-  --color-surface: #111827;
-  --color-surface-2: #0D1424;
-  --color-line: #1E2D4A;
+  --color-bg: #F8FAFC;
+  --color-surface: #FFFFFF;
+  --color-surface-2: #F1F5F9;
+  --color-line: #E2E8F0;
   --color-electric: #3B82F6;
   --color-electric-hover: #2563EB;
   --color-electric-glow: #60A5FA;
-  --color-text: #F1F5F9;
-  --color-text-muted: #94A3B8;
+  --color-text: #0F172A;
+  --color-text-muted: #64748B;
   --color-success: #10B981;
   --color-warn: #F59E0B;
   --color-danger: #EF4444;
