@@ -1,16 +1,39 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import { Copy, Check, Key, RefreshCw, Link as LinkIcon } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
+import { generateInviteCode } from "@/lib/invite-code.functions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/instructors")({
   component: InstructorsPage,
 });
 
+const DAYS: { key: string; label: string }[] = [
+  { key: "monday", label: "Mon" },
+  { key: "tuesday", label: "Tue" },
+  { key: "wednesday", label: "Wed" },
+  { key: "thursday", label: "Thu" },
+  { key: "friday", label: "Fri" },
+  { key: "saturday", label: "Sat" },
+  { key: "sunday", label: "Sun" },
+];
+const TIMES = (() => {
+  const out: string[] = [];
+  for (let h = 6; h <= 22; h++)
+    for (const m of [0, 30]) out.push(`${String(h).padStart(2, "0")}:${m === 0 ? "00" : "30"}`);
+  return out;
+})();
+
 function InstructorsPage() {
   const qc = useQueryClient();
+  const genCode = useServerFn(generateInviteCode);
   const [adding, setAdding] = useState(false);
+  const [editing, setEditing] = useState<string | null>(null);
+  const [copied, setCopied] = useState<string | null>(null);
+
   const instructorsQ = useQuery({
     queryKey: ["instructors-all"],
     queryFn: async () => {
@@ -22,6 +45,36 @@ function InstructorsPage() {
       return data ?? [];
     },
   });
+
+  const codeQ = useQuery({
+    queryKey: ["invite-code"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("instructor_invite_codes")
+        .select("*")
+        .eq("is_active", true)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
+  });
+
+  async function generate() {
+    try {
+      await genCode({});
+      qc.invalidateQueries({ queryKey: ["invite-code"] });
+      toast.success("New invite code generated");
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+  }
+
+  function copy(text: string, id: string) {
+    navigator.clipboard.writeText(text);
+    setCopied(id);
+    setTimeout(() => setCopied(null), 1500);
+  }
 
   async function add(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -42,125 +95,166 @@ function InstructorsPage() {
     qc.invalidateQueries({ queryKey: ["instructors-all"] });
   }
 
-  async function linkUser(id: string, email: string) {
-    // Find user by email via auth → not possible directly from client. Use profiles.
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("id")
-      .eq("email", email)
-      .maybeSingle();
-    if (!profile) return toast.error("No staff account with that email. Ask them to sign up first.");
-    const [{ error: e1 }, { error: e2 }] = await Promise.all([
-      supabase.from("instructors").update({ profile_id: profile.id }).eq("id", id),
-      supabase.from("user_roles").upsert(
-        { user_id: profile.id, role: "instructor" },
-        { onConflict: "user_id,role" },
-      ),
-    ]);
-    if (e1 || e2) return toast.error((e1 || e2)!.message);
+  async function saveAvailability(id: string, avail: any) {
+    const { error } = await supabase
+      .from("instructors")
+      .update({ weekly_availability: avail })
+      .eq("id", id);
+    if (error) return toast.error(error.message);
+    setEditing(null);
     qc.invalidateQueries({ queryKey: ["instructors-all"] });
-    toast.success("Linked");
+    toast.success("Availability saved");
   }
+
+  const signupUrl = typeof window !== "undefined" ? window.location.origin + "/instructor-signup" : "";
+  const code = codeQ.data?.code;
 
   return (
     <div className="p-6 lg:p-10 max-w-5xl">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-medium">Instructors</h1>
-          <p className="text-sm text-zinc-500 mt-1">Manage your teaching team.</p>
+          <h1 className="text-2xl font-semibold text-white">Instructors</h1>
+          <p className="text-sm text-slate-400 mt-1">Manage your teaching team.</p>
         </div>
-        <button
-          onClick={() => setAdding(!adding)}
-          className="bg-emerald-800 text-white text-sm font-medium px-3 py-2 rounded-md"
-        >
+        <button onClick={() => setAdding(!adding)} className="btn-primary text-sm">
           {adding ? "Cancel" : "+ Add instructor"}
         </button>
       </div>
 
-      {adding && (
-        <form
-          onSubmit={add}
-          className="bg-white ring-1 ring-black/5 rounded-xl p-5 mb-6 grid sm:grid-cols-3 gap-3"
-        >
-          <input name="full_name" required placeholder="Full name" className="input" />
-          <input name="phone" placeholder="Phone" className="input" />
-          <input name="email" type="email" placeholder="Email" className="input" />
-          <button className="bg-emerald-800 text-white py-2 rounded-md text-sm font-medium sm:col-span-3">
-            Save
+      {/* Invite Code Card */}
+      <div className="glass-card p-6 mb-6">
+        <div className="flex items-start gap-3 mb-4">
+          <div className="size-9 rounded-lg bg-[#3B82F6]/15 grid place-items-center shrink-0">
+            <Key className="size-4 text-[#60A5FA]" />
+          </div>
+          <div>
+            <h2 className="font-semibold text-white">Instructor Invite Code</h2>
+            <p className="text-sm text-slate-400">Share this code with instructors so they can create their login account.</p>
+          </div>
+        </div>
+        {code ? (
+          <>
+            <div className="bg-[#0D1424] border border-slate-700 rounded-xl p-4 mb-3">
+              <div className="font-mono text-2xl text-[#60A5FA] tracking-wider">{code}</div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button onClick={() => copy(code, "code")} className="btn-secondary text-xs">
+                {copied === "code" ? <><Check className="size-3.5" /> Copied!</> : <><Copy className="size-3.5" /> Copy code</>}
+              </button>
+              <button onClick={() => copy(signupUrl, "link")} className="btn-secondary text-xs">
+                {copied === "link" ? <><Check className="size-3.5" /> Copied!</> : <><LinkIcon className="size-3.5" /> Copy signup link</>}
+              </button>
+              <button onClick={generate} className="btn-secondary text-xs">
+                <RefreshCw className="size-3.5" /> Generate new code
+              </button>
+            </div>
+            <p className="text-xs text-slate-500 mt-3">{codeQ.data?.used_count ?? 0} instructors have used this code</p>
+          </>
+        ) : (
+          <button onClick={generate} className="btn-primary text-sm">
+            <Key className="size-4" /> Generate invite code
           </button>
+        )}
+      </div>
+
+      {adding && (
+        <form onSubmit={add} className="glass-card p-5 mb-6 grid sm:grid-cols-3 gap-3">
+          <input name="full_name" required placeholder="Full name" className="glass-input" />
+          <input name="phone" placeholder="Phone" className="glass-input" />
+          <input name="email" type="email" placeholder="Email" className="glass-input" />
+          <button className="btn-primary sm:col-span-3 text-sm">Save</button>
         </form>
       )}
 
       <div className="space-y-3">
         {(instructorsQ.data ?? []).map((i: any) => {
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
-          const todayCount = (i.bookings ?? []).filter((b: any) => {
-            const d = new Date(b.created_at);
-            return d >= today;
-          }).length;
+          const summary = formatAvail(i.weekly_availability);
+          const isEditing = editing === i.id;
           return (
-            <div key={i.id} className="bg-white ring-1 ring-black/5 rounded-xl p-5">
+            <div key={i.id} className="glass-card p-5">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <div className="font-medium">
+                  <div className="font-semibold text-white">
                     {i.full_name}
-                    {!i.active && (
-                      <span className="ml-2 text-xs bg-zinc-100 text-zinc-500 px-2 py-0.5 rounded-full">
-                        Inactive
-                      </span>
-                    )}
-                    {i.profile_id && (
-                      <span className="ml-2 text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">
-                        Login linked
-                      </span>
-                    )}
+                    {!i.active && <span className="ml-2 text-[10px] uppercase tracking-wider bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full">Inactive</span>}
+                    {i.status === "pending_approval" && <span className="ml-2 text-[10px] uppercase tracking-wider bg-amber-500/15 text-amber-400 px-2 py-0.5 rounded-full">Pending</span>}
+                    {i.profile_id && <span className="ml-2 text-[10px] uppercase tracking-wider bg-[#3B82F6]/15 text-[#60A5FA] px-2 py-0.5 rounded-full">Login linked</span>}
                   </div>
-                  <div className="text-xs text-zinc-500 mt-1">
+                  <div className="text-xs text-slate-400 mt-1">
                     {i.phone ?? "—"} · {i.email ?? "—"}
                   </div>
-                  {i.notes && <div className="text-xs text-zinc-600 mt-2">{i.notes}</div>}
+                  <div className="text-xs text-slate-500 mt-2 font-mono">{summary}</div>
                 </div>
-                <div className="text-right text-xs text-zinc-500">
-                  {(i.bookings ?? []).length} total lessons
-                </div>
+                <div className="text-right text-xs text-slate-500">{(i.bookings ?? []).length} lessons</div>
               </div>
-              <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-zinc-100">
-                <button
-                  onClick={() => toggle(i.id, i.active)}
-                  className="text-xs border border-zinc-200 px-3 py-1.5 rounded font-medium"
-                >
+              <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-slate-800">
+                <button onClick={() => setEditing(isEditing ? null : i.id)} className="btn-secondary text-xs">
+                  {isEditing ? "Close" : "Edit availability"}
+                </button>
+                <button onClick={() => toggle(i.id, i.active)} className="btn-secondary text-xs">
                   {i.active ? "Deactivate" : "Activate"}
                 </button>
-                {!i.profile_id && (
-                  <button
-                    onClick={() => {
-                      const email = prompt("Enter the instructor's login email (they must sign up first):");
-                      if (email) linkUser(i.id, email);
-                    }}
-                    className="text-xs bg-zinc-100 text-zinc-700 px-3 py-1.5 rounded font-medium"
-                  >
-                    Link login
-                  </button>
-                )}
               </div>
+
+              {isEditing && (
+                <AvailabilityEditor
+                  initial={i.weekly_availability}
+                  onSave={(v) => saveAvailability(i.id, v)}
+                />
+              )}
             </div>
           );
         })}
       </div>
+    </div>
+  );
+}
 
-      <style>{`
-        .input {
-          width: 100%;
-          background: #fafafa;
-          border: 1px solid #e4e4e7;
-          border-radius: 6px;
-          padding: 8px 12px;
-          font-size: 14px;
-          outline: none;
-        }
-        .input:focus { border-color: #064e3b; background: #fff; }
-      `}</style>
+function formatAvail(avail: any): string {
+  if (!avail || Object.keys(avail).length === 0) return "Availability not set";
+  const days = DAYS.filter((d) => avail[d.key]?.enabled);
+  if (days.length === 0) return "No days enabled";
+  const first = avail[days[0].key];
+  const allSame = days.every((d) => avail[d.key].start === first.start && avail[d.key].end === first.end);
+  if (allSame) return `${days[0].label}–${days[days.length - 1].label}, ${first.start} – ${first.end}`;
+  return `${days.length} days configured`;
+}
+
+function AvailabilityEditor({ initial, onSave }: { initial: any; onSave: (v: any) => void }) {
+  const [v, setV] = useState<Record<string, { enabled: boolean; start: string; end: string }>>(() => {
+    const base: any = {};
+    for (const d of DAYS) {
+      base[d.key] = initial?.[d.key] ?? { enabled: false, start: "09:00", end: "17:00" };
+    }
+    return base;
+  });
+  return (
+    <div className="mt-4 pt-4 border-t border-slate-800 space-y-2">
+      {DAYS.map((d) => {
+        const day = v[d.key];
+        return (
+          <div key={d.key} className="flex items-center gap-3">
+            <label className="flex items-center gap-2 w-28 text-sm text-slate-300">
+              <input type="checkbox" checked={day.enabled} onChange={(e) => setV({ ...v, [d.key]: { ...day, enabled: e.target.checked } })} className="accent-[#3B82F6]" />
+              {d.label}
+            </label>
+            {day.enabled ? (
+              <>
+                <select value={day.start} onChange={(e) => setV({ ...v, [d.key]: { ...day, start: e.target.value } })} className="glass-input flex-1 text-sm">
+                  {TIMES.map((t) => <option key={t} value={t} className="bg-[#0D1424]">{t}</option>)}
+                </select>
+                <span className="text-slate-500 text-xs">to</span>
+                <select value={day.end} onChange={(e) => setV({ ...v, [d.key]: { ...day, end: e.target.value } })} className="glass-input flex-1 text-sm">
+                  {TIMES.map((t) => <option key={t} value={t} className="bg-[#0D1424]">{t}</option>)}
+                </select>
+              </>
+            ) : (
+              <span className="text-xs text-slate-500 flex-1">Off</span>
+            )}
+          </div>
+        );
+      })}
+      <button onClick={() => onSave(v)} className="btn-primary text-sm mt-3">Save availability</button>
     </div>
   );
 }
