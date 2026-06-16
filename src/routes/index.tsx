@@ -769,16 +769,16 @@ function ConfirmationScreen({
   name: string;
 }) {
   return (
-    <div className="min-h-screen bg-[#0A0F1E] text-[#F1F5F9] relative">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-[520px] overflow-hidden">
-        <div className="absolute -top-40 left-1/2 -translate-x-1/2 size-[700px] rounded-full bg-[#10B981]/15 blur-[140px]" />
+    <div className="glass-bg text-[#F1F5F9]">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-[700px] rounded-full bg-[#10B981]/15 blur-[140px]" />
       </div>
       <TopBar school={school} />
       <main className="relative max-w-xl mx-auto px-4 sm:px-6 py-12">
-        <div className="rounded-2xl overflow-hidden border border-[#1E2D4A] bg-[#111827] shadow-[0_8px_40px_rgba(0,0,0,0.5)]">
+        <div className="glass-card overflow-hidden">
           <div className="p-8 text-center">
-            <div className="mx-auto size-14 rounded-full bg-[#10B981]/15 border border-[#10B981]/40 grid place-items-center">
-              <CircleCheck className="size-7 text-[#10B981]" />
+            <div className="mx-auto size-16 rounded-full bg-[#10B981]/15 border border-[#10B981]/50 grid place-items-center shadow-[0_0_32px_rgba(16,185,129,0.45)]">
+              <CircleCheck className="size-8 text-[#10B981]" />
             </div>
             <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#10B981] mt-5">
               Booking request received
@@ -789,11 +789,8 @@ function ConfirmationScreen({
             <p className="text-[#94A3B8] mt-2 text-pretty max-w-md mx-auto text-sm">
               {school} will review your request and confirm by phone, text, or email.
             </p>
-            <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-[#F59E0B] bg-[#F59E0B]/15 rounded-full px-3 py-1">
-              <Hourglass className="size-3" /> Pending school approval
-            </span>
           </div>
-          <div className="border-t border-[#1E2D4A] p-6 grid sm:grid-cols-2 gap-x-8 gap-y-4">
+          <div className="border-t border-[rgba(59,130,246,0.15)] p-6 grid sm:grid-cols-2 gap-x-8 gap-y-4">
             <Row label="Lesson">{lesson.name.replace(" Driving Lesson", " Lesson")}</Row>
             <Row label="Date">{format(date, "EEEE, MMM d")}</Row>
             <Row label="Time">{time}</Row>
@@ -802,6 +799,7 @@ function ConfirmationScreen({
             </Row>
           </div>
         </div>
+
         <div className="text-center mt-6">
           <Link to="/" className="text-sm font-medium text-[#60A5FA] hover:text-white">
             Book another lesson
