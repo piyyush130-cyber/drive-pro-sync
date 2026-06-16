@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 
 export const createAdminRole = createServerFn({ method: "POST" })
-  .inputValidator((d: { userId: string; fullName: string }) => d)
+  .inputValidator((d: { userId: string; fullName: string; schoolName?: string }) => d)
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { count } = await supabaseAdmin

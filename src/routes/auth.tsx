@@ -61,7 +61,7 @@ function AuthPage() {
         if (error) throw error;
         if (data.user) {
           const result = await assignAdminRole({
-            data: { userId: data.user.id, fullName },
+            data: { userId: data.user.id, fullName, schoolName: "" },
           });
           if (result.role === "admin") {
             toast.success("Welcome! Let's set up your school.");
