@@ -9,7 +9,9 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as InstructorSignupRouteImport } from './routes/instructor-signup'
 import { Route as CancelRouteImport } from './routes/cancel'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
@@ -25,9 +27,19 @@ import { Route as AuthenticatedCalendarRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedBookingsRouteImport } from './routes/_authenticated/bookings'
 import { Route as AuthenticatedStudentsIdRouteImport } from './routes/_authenticated/students.$id'
 
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InstructorSignupRoute = InstructorSignupRouteImport.update({
+  id: '/instructor-signup',
+  path: '/instructor-signup',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CancelRoute = CancelRouteImport.update({
@@ -105,7 +117,9 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/cancel': typeof CancelRoute
+  '/instructor-signup': typeof InstructorSignupRoute
   '/login': typeof LoginRoute
+  '/onboarding': typeof OnboardingRoute
   '/bookings': typeof AuthenticatedBookingsRoute
   '/calendar': typeof AuthenticatedCalendarRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -121,7 +135,9 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/cancel': typeof CancelRoute
+  '/instructor-signup': typeof InstructorSignupRoute
   '/login': typeof LoginRoute
+  '/onboarding': typeof OnboardingRoute
   '/bookings': typeof AuthenticatedBookingsRoute
   '/calendar': typeof AuthenticatedCalendarRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -139,7 +155,9 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/cancel': typeof CancelRoute
+  '/instructor-signup': typeof InstructorSignupRoute
   '/login': typeof LoginRoute
+  '/onboarding': typeof OnboardingRoute
   '/_authenticated/bookings': typeof AuthenticatedBookingsRoute
   '/_authenticated/calendar': typeof AuthenticatedCalendarRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -157,7 +175,9 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/cancel'
+    | '/instructor-signup'
     | '/login'
+    | '/onboarding'
     | '/bookings'
     | '/calendar'
     | '/dashboard'
@@ -173,7 +193,9 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/cancel'
+    | '/instructor-signup'
     | '/login'
+    | '/onboarding'
     | '/bookings'
     | '/calendar'
     | '/dashboard'
@@ -190,7 +212,9 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/cancel'
+    | '/instructor-signup'
     | '/login'
+    | '/onboarding'
     | '/_authenticated/bookings'
     | '/_authenticated/calendar'
     | '/_authenticated/dashboard'
@@ -208,16 +232,32 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   CancelRoute: typeof CancelRoute
+  InstructorSignupRoute: typeof InstructorSignupRoute
   LoginRoute: typeof LoginRoute
+  OnboardingRoute: typeof OnboardingRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/instructor-signup': {
+      id: '/instructor-signup'
+      path: '/instructor-signup'
+      fullPath: '/instructor-signup'
+      preLoaderRoute: typeof InstructorSignupRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/cancel': {
@@ -366,7 +406,9 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   CancelRoute: CancelRoute,
+  InstructorSignupRoute: InstructorSignupRoute,
   LoginRoute: LoginRoute,
+  OnboardingRoute: OnboardingRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

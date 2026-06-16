@@ -173,7 +173,7 @@ export const seedDemoAccounts = createServerFn({ method: "POST" }).handler(async
       "confirmed", "confirmed",
     ];
     const rows = statuses.map((status, i) => {
-      const dayOffset = i - 6; // -6..+5
+      const dayOffset = i - 6;
       const date = new Date(now);
       date.setDate(date.getDate() + dayOffset);
       date.setHours(9 + (i % 8), (i % 2) * 30, 0, 0);
@@ -186,7 +186,7 @@ export const seedDemoAccounts = createServerFn({ method: "POST" }).handler(async
         duration_minutes: lt.duration_minutes,
         price_cents: lt.price_cents,
         status,
-        payment_status: status === "completed" ? "paid" : "unpaid",
+        payment_status: (status === "completed" ? "paid" : "unpaid") as "paid" | "unpaid",
       };
     });
     await supabaseAdmin.from("bookings").insert(rows);
