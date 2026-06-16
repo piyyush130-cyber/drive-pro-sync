@@ -204,7 +204,7 @@ function AuthPage() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-slate-300 mb-1.5">{label}</label>
+      <label className="block text-sm font-medium text-slate-700 mb-1.5">{label}</label>
       {children}
     </div>
   );
