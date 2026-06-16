@@ -607,22 +607,22 @@ function SummaryCard({
   const ready = !!(lesson && date && time && form.full_name && form.phone && form.pickup_address);
 
   return (
-    <section className="rounded-2xl overflow-hidden ring-1 ring-slate-200 bg-white shadow-[0_1px_0_rgba(15,27,61,0.02),0_30px_70px_-32px_rgba(15,27,61,0.25)]">
+    <section className="rounded-2xl overflow-hidden border border-[#1E2D4A] bg-[#111827] shadow-[0_8px_40px_rgba(0,0,0,0.5)]">
       {/* Navy header strip */}
-      <div className="bg-gradient-to-r from-[#0b1220] via-[#0f1b3d] to-[#16234f] text-white px-5 sm:px-6 py-4 flex items-center justify-between">
-        <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-blue-200/90">
+      <div className="bg-[#0D1424] border-b border-[#1E2D4A] text-white px-5 sm:px-6 py-4 flex items-center justify-between">
+        <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#60A5FA]">
           Live summary
         </div>
-        <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold text-amber-200 bg-amber-400/15 ring-1 ring-amber-300/40 rounded-full px-2.5 py-1">
+        <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold text-[#F59E0B] bg-[#F59E0B]/15 rounded-full px-2.5 py-1">
           <Hourglass className="size-3" /> Pending school approval
         </span>
       </div>
 
-      <div className="p-5 sm:p-6 border-b border-slate-100">
-        <div className="text-lg font-semibold tracking-tight text-slate-900">
+      <div className="p-5 sm:p-6 border-b border-[#1E2D4A]">
+        <div className="text-lg font-semibold tracking-tight text-[#F1F5F9]">
           {lesson ? lesson.name.replace(" Driving Lesson", " Lesson") : "Select a service"}
         </div>
-        <div className="text-sm text-slate-500 mt-0.5">
+        <div className="text-sm text-[#94A3B8] mt-0.5">
           {lesson ? `${lesson.duration_minutes} min` : "—"}
           {date && time && (
             <>
@@ -631,7 +631,7 @@ function SummaryCard({
             </>
           )}
         </div>
-        <div className="mt-3 text-2xl font-semibold tracking-tight text-slate-900">
+        <div className="mt-3 text-2xl font-semibold tracking-tight text-[#F1F5F9] font-mono">
           {lesson ? (lesson.price_cents > 0 ? money(lesson.price_cents) : "Custom Quote") : "—"}
         </div>
       </div>
@@ -656,14 +656,14 @@ function SummaryCard({
           disabled={!ready || submitting}
           className={`w-full inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-sm font-semibold transition-all ${
             ready && !submitting
-              ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-500 hover:to-indigo-500 shadow-[0_12px_30px_-10px_rgba(37,99,235,0.55)]"
-              : "bg-slate-100 text-slate-400 ring-1 ring-slate-200 cursor-not-allowed"
+              ? "bg-[#3B82F6] text-white hover:bg-[#2563EB] shadow-[0_0_24px_rgba(59,130,246,0.4)] active:scale-[0.98]"
+              : "bg-[#1E2D4A] text-[#64748B] cursor-not-allowed"
           }`}
         >
           {submitting ? "Sending…" : "Request Lesson Time"}
           {!submitting && <ArrowRight className="size-4" />}
         </button>
-        <p className="text-[11px] text-slate-500 text-center mt-3">
+        <p className="text-[11px] text-[#94A3B8] text-center mt-3">
           The school will confirm by phone, text, or email.
         </p>
       </div>
@@ -682,13 +682,14 @@ function Row({
 }) {
   return (
     <div className={full ? "col-span-2" : ""}>
-      <div className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">
+      <div className="text-[10px] uppercase tracking-wider text-[#64748B] font-semibold">
         {label}
       </div>
-      <div className="text-sm text-slate-800 mt-0.5 truncate">{children}</div>
+      <div className="text-sm text-[#E2E8F0] mt-0.5 truncate">{children}</div>
     </div>
   );
 }
+
 
 /* ---------------- Inputs ---------------- */
 
