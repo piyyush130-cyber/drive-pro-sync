@@ -407,35 +407,36 @@ function ServicePicker({
             key={t.id}
             type="button"
             onClick={() => onSelect(t)}
-            className={`group relative text-left rounded-xl p-3.5 transition-all overflow-hidden ${
+            className={`group relative text-left rounded-2xl p-4 transition-all overflow-hidden backdrop-blur-xl ${
               active
-                ? "bg-[#3B82F6]/10 border-2 border-[#3B82F6] shadow-[0_0_0_4px_rgba(59,130,246,0.10),0_0_24px_rgba(59,130,246,0.25)]"
-                : "bg-[#0D1424] border border-[#1E2D4A] hover:border-[#3B82F6]/50"
+                ? "bg-[#3B82F6]/15 border-2 border-[#3B82F6] shadow-[0_0_0_4px_rgba(59,130,246,0.12),0_0_28px_rgba(59,130,246,0.35)]"
+                : "bg-[rgba(17,24,39,0.55)] border border-[rgba(59,130,246,0.18)] hover:border-[rgba(59,130,246,0.5)] hover:shadow-[0_0_24px_rgba(59,130,246,0.2)]"
             }`}
           >
             {active && (
-              <div className="absolute top-2.5 right-2.5 size-5 rounded-full bg-[#3B82F6] grid place-items-center text-white shadow-md">
-                <Check className="size-3" strokeWidth={3} />
+              <div className="absolute top-2.5 right-2.5 size-6 rounded-full bg-[#3B82F6] grid place-items-center text-white shadow-[0_0_16px_rgba(59,130,246,0.7)]">
+                <Check className="size-3.5" strokeWidth={3} />
               </div>
             )}
-            <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#60A5FA] font-mono">
+            <div className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#60A5FA] font-mono bg-[#3B82F6]/15 border border-[#3B82F6]/30 rounded-full px-2.5 py-1">
               <Clock className="size-3" />
-              {t.duration_minutes} min
+              {t.duration_minutes} MIN
             </div>
-            <div className="mt-1.5 font-semibold tracking-tight text-[#F1F5F9] text-sm pr-6">
+            <div className="mt-2.5 font-semibold tracking-tight text-[#F1F5F9] text-sm pr-7">
               {name}
             </div>
             <div className="text-[11px] text-[#94A3B8] mt-0.5 line-clamp-1">
               {blurbs[t.name] ?? t.description ?? ""}
             </div>
             <div
-              className={`mt-2 text-base font-semibold tracking-tight font-mono ${
-                active ? "text-[#60A5FA]" : "text-[#F1F5F9]"
+              className={`mt-3 text-xl font-bold tracking-tight font-mono ${
+                active ? "text-[#60A5FA] drop-shadow-[0_0_8px_rgba(96,165,250,0.5)]" : "text-[#F1F5F9]"
               }`}
             >
               {t.price_cents > 0 ? money(t.price_cents) : "Custom Quote"}
             </div>
           </button>
+
         );
       })}
     </div>
