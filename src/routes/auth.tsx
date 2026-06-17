@@ -59,7 +59,7 @@ function AuthPage() {
             data: { userId: data.user.id, fullName, schoolName: "" },
           });
           toast.success("Welcome! Let's set up your school.");
-          navigate({ to: "/onboarding", replace: true });
+          window.location.href = "/onboarding";
         }
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
