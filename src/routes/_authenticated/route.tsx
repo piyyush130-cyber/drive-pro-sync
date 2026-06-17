@@ -21,6 +21,11 @@ function AuthLayout() {
   const rolesQ = useRoles(user?.id);
   const [demoRoleRetrying, setDemoRoleRetrying] = useState(false);
   const [demoRoleRetried, setDemoRoleRetried] = useState(false);
+  const roles = rolesQ.data ?? [];
+  const isDemoUser = user?.email === "admin@demo.com" || user?.email === "instructor@demo.com";
+  const isAdmin = roles.includes("admin");
+  const isInstructor = roles.includes("instructor");
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
   const settingsQ = useQuery({
     queryKey: ["settings"],
     queryFn: async () => {
@@ -37,16 +42,12 @@ function AuthLayout() {
     if (!loading && !user) navigate({ to: "/auth", replace: true });
   }, [loading, user, navigate]);
 
-  if (loading || rolesQ.isLoading) {
-    return <div className="min-h-screen flex items-center justify-center text-slate-500">Loading…</div>;
-  }
-
-  const roles = rolesQ.data ?? [];
-  const isDemoUser = user?.email === "admin@demo.com" || user?.email === "instructor@demo.com";
-  if (roles.length > 0 && (demoRoleRetrying || demoRoleRetried)) {
+  useEffect(() => {
+    if (roles.length === 0 || (!demoRoleRetrying && !demoRoleRetried)) return;
     setDemoRoleRetrying(false);
     setDemoRoleRetried(false);
-  }
+  }, [roles.length, demoRoleRetrying, demoRoleRetried]);
+
   useEffect(() => {
     if (roles.length !== 0 || !isDemoUser || demoRoleRetrying || demoRoleRetried) return;
     setDemoRoleRetrying(true);
@@ -58,6 +59,17 @@ function AuthLayout() {
     }, 2000);
     return () => window.clearTimeout(timer);
   }, [roles.length, isDemoUser, demoRoleRetrying, demoRoleRetried, rolesQ]);
+
+  // Instructor (non-admin) is locked to /instructor
+  useEffect(() => {
+    if (!loading && !rolesQ.isLoading && !isAdmin && isInstructor && pathname !== "/instructor") {
+      navigate({ to: "/instructor", replace: true });
+    }
+  }, [loading, rolesQ.isLoading, isAdmin, isInstructor, pathname, navigate]);
+
+  if (loading || rolesQ.isLoading) {
+    return <div className="min-h-screen flex items-center justify-center text-slate-500">Loading…</div>;
+  }
 
   if (roles.length === 0 && isDemoUser && !demoRoleRetried) {
     return <div className="min-h-screen flex items-center justify-center text-slate-500">Loading…</div>;
@@ -85,17 +97,6 @@ function AuthLayout() {
       </div>
     );
   }
-
-  const isAdmin = roles.includes("admin");
-  const isInstructor = roles.includes("instructor");
-  const pathname = useRouterState({ select: (s) => s.location.pathname });
-
-  // Instructor (non-admin) is locked to /instructor
-  useEffect(() => {
-    if (!isAdmin && isInstructor && pathname !== "/instructor") {
-      navigate({ to: "/instructor", replace: true });
-    }
-  }, [isAdmin, isInstructor, pathname, navigate]);
 
   // Instructor-only view skips the admin sidebar
   if (!isAdmin && isInstructor) {
