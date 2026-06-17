@@ -312,6 +312,70 @@ export type Database = {
         }
         Relationships: []
       }
+      lesson_notes: {
+        Row: {
+          booking_id: string
+          created_at: string
+          id: string
+          instructor_id: string
+          next_focus: string | null
+          practiced_skills: string | null
+          road_test_readiness:
+            | Database["public"]["Enums"]["road_test_readiness"]
+            | null
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          booking_id: string
+          created_at?: string
+          id?: string
+          instructor_id: string
+          next_focus?: string | null
+          practiced_skills?: string | null
+          road_test_readiness?:
+            | Database["public"]["Enums"]["road_test_readiness"]
+            | null
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          booking_id?: string
+          created_at?: string
+          id?: string
+          instructor_id?: string
+          next_focus?: string | null
+          practiced_skills?: string | null
+          road_test_readiness?:
+            | Database["public"]["Enums"]["road_test_readiness"]
+            | null
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_notes_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_notes_instructor_id_fkey"
+            columns: ["instructor_id"]
+            isOneToOne: false
+            referencedRelation: "instructors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_notes_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lesson_types: {
         Row: {
           active: boolean
@@ -573,6 +637,7 @@ export type Database = {
         | "rejected"
       payment_method: "cash" | "etransfer" | "card" | "other"
       payment_status: "unpaid" | "deposit_paid" | "paid" | "refunded"
+      road_test_readiness: "not_ready" | "improving" | "almost_ready" | "ready"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -719,6 +784,7 @@ export const Constants = {
       ],
       payment_method: ["cash", "etransfer", "card", "other"],
       payment_status: ["unpaid", "deposit_paid", "paid", "refunded"],
+      road_test_readiness: ["not_ready", "improving", "almost_ready", "ready"],
     },
   },
 } as const

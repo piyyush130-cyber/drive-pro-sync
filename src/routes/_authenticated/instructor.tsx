@@ -1,7 +1,7 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { CalendarClock, MapPin, Phone, CheckCircle2, XCircle, CarFront, LogOut } from "lucide-react";
+import { CalendarClock, MapPin, Phone, CheckCircle2, XCircle, CarFront, LogOut, NotebookPen } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fmtTime, fmtDate, statusTone, statusLabel } from "@/lib/format";
 import { toast } from "sonner";
@@ -18,6 +18,35 @@ export const Route = createFileRoute("/_authenticated/instructor")({
 function InstructorPage() {
   const qc = useQueryClient();
   const [tab, setTab] = useState<"today" | "upcoming" | "past">("today");
+  const [noteOpen, setNoteOpen] = useState<string | null>(null);
+  const [practiced, setPracticed] = useState("");
+  const [nextFocus, setNextFocus] = useState("");
+  const [readiness, setReadiness] = useState<"not_ready" | "improving" | "almost_ready" | "ready">("improving");
+  const [savingNote, setSavingNote] = useState(false);
+
+  function openNote(id: string) {
+    setNoteOpen(id);
+    setPracticed("");
+    setNextFocus("");
+    setReadiness("improving");
+  }
+
+  async function saveNote(b: any) {
+    if (!meQ.data?.id) return;
+    setSavingNote(true);
+    const { error } = await supabase.from("lesson_notes").insert({
+      booking_id: b.id,
+      student_id: b.student_id,
+      instructor_id: meQ.data.id,
+      practiced_skills: practiced,
+      next_focus: nextFocus,
+      road_test_readiness: readiness,
+    });
+    setSavingNote(false);
+    if (error) return toast.error(error.message);
+    toast.success("Note saved");
+    setNoteOpen(null);
+  }
 
   const meQ = useQuery({
     queryKey: ["instructor-me"],
@@ -190,6 +219,63 @@ function InstructorPage() {
                     >
                       <XCircle className="size-3.5 text-rose-600" /> No-show
                     </button>
+                  </div>
+                )}
+                {(b.status === "confirmed" || b.status === "completed") && (
+                  <div className="mt-3">
+                    <button
+                      onClick={() => (noteOpen === b.id ? setNoteOpen(null) : openNote(b.id))}
+                      className="text-xs btn-secondary"
+                    >
+                      <NotebookPen className="size-3.5 text-blue-600" />
+                      {noteOpen === b.id ? "Close note" : "Add lesson note"}
+                    </button>
+                    {noteOpen === b.id && (
+                      <div className="card-premium mt-3 p-4 bg-blue-50/60 border border-blue-100 space-y-3">
+                        <div>
+                          <label className="text-xs font-medium text-slate-700">Practiced today</label>
+                          <textarea
+                            value={practiced}
+                            onChange={(e) => setPracticed(e.target.value)}
+                            placeholder="What did we practice today?"
+                            rows={2}
+                            className="mt-1 w-full text-sm rounded-md border border-slate-200 bg-white px-3 py-2 outline-none focus:border-blue-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium text-slate-700">Next focus</label>
+                          <textarea
+                            value={nextFocus}
+                            onChange={(e) => setNextFocus(e.target.value)}
+                            placeholder="What should the student focus on next?"
+                            rows={2}
+                            className="mt-1 w-full text-sm rounded-md border border-slate-200 bg-white px-3 py-2 outline-none focus:border-blue-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium text-slate-700">Road-test readiness</label>
+                          <select
+                            value={readiness}
+                            onChange={(e) => setReadiness(e.target.value as typeof readiness)}
+                            className="mt-1 w-full text-sm rounded-md border border-slate-200 bg-white px-3 py-2 outline-none focus:border-blue-500"
+                          >
+                            <option value="not_ready">Not ready</option>
+                            <option value="improving">Improving</option>
+                            <option value="almost_ready">Almost ready</option>
+                            <option value="ready">Ready to test</option>
+                          </select>
+                        </div>
+                        <div className="flex justify-end">
+                          <button
+                            onClick={() => saveNote(b)}
+                            disabled={savingNote}
+                            className="btn-primary text-sm px-3 py-2 rounded-md disabled:opacity-60"
+                          >
+                            {savingNote ? "Saving…" : "Save note"}
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
