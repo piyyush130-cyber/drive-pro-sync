@@ -48,11 +48,11 @@ function StudentsPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-medium">Students</h1>
-          <p className="text-sm text-zinc-500 mt-1">{list.length} students</p>
+          <p className="text-sm text-slate-500 mt-1">{list.length} students</p>
         </div>
         <button
           onClick={() => setAdding(!adding)}
-          className="bg-emerald-800 text-white text-sm font-medium px-3 py-2 rounded-md"
+          className="btn-primary text-sm font-medium px-3 py-2 rounded-md"
         >
           {adding ? "Cancel" : "+ Add student"}
         </button>
@@ -61,13 +61,13 @@ function StudentsPage() {
       {adding && (
         <form
           onSubmit={addStudent}
-          className="bg-white ring-1 ring-black/5 rounded-xl p-5 mb-6 grid sm:grid-cols-2 gap-3"
+          className="bg-white border border-slate-200 rounded-xl p-5 mb-6 grid sm:grid-cols-2 gap-3"
         >
           <input name="full_name" required placeholder="Full name" className="input" />
           <input name="phone" required placeholder="Phone" className="input" />
           <input name="email" type="email" placeholder="Email" className="input" />
           <input name="pickup_address" placeholder="Pickup address" className="input" />
-          <button className="bg-emerald-800 text-white py-2 rounded-md text-sm font-medium sm:col-span-2">
+          <button className="btn-primary py-2 rounded-md text-sm font-medium sm:col-span-2">
             Save
           </button>
         </form>
@@ -80,9 +80,9 @@ function StudentsPage() {
         className="input mb-4 max-w-sm"
       />
 
-      <div className="bg-white ring-1 ring-black/5 rounded-xl overflow-hidden">
+      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-zinc-50 text-xs uppercase text-zinc-500">
+          <thead className="bg-slate-50 text-xs uppercase text-slate-500">
             <tr>
               <th className="text-left px-5 py-3">Name</th>
               <th className="text-left px-5 py-3">Contact</th>
@@ -90,26 +90,26 @@ function StudentsPage() {
               <th className="text-left px-5 py-3">Pickup</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-zinc-100">
+          <tbody className="divide-y divide-slate-100">
             {list.map((s: any) => {
               const completed = s.bookings?.filter((b: any) => b.status === "completed").length ?? 0;
               const remaining = Math.max(0, (s.lessons_purchased ?? 0) - completed);
               return (
-                <tr key={s.id} className="hover:bg-zinc-50">
+                <tr key={s.id} className="hover:bg-slate-50">
                   <td className="px-5 py-3 font-medium">
-                    <Link to="/students/$id" params={{ id: s.id }} className="hover:text-emerald-800">
+                    <Link to="/students/$id" params={{ id: s.id }} className="hover:text-blue-600">
                       {s.full_name}
                     </Link>
                   </td>
-                  <td className="px-5 py-3 text-zinc-600">
+                  <td className="px-5 py-3 text-slate-600">
                     {s.phone}
-                    <div className="text-xs text-zinc-400">{s.email}</div>
+                    <div className="text-xs text-slate-400">{s.email}</div>
                   </td>
-                  <td className="px-5 py-3 text-zinc-600">
+                  <td className="px-5 py-3 text-slate-600">
                     {completed}/{s.lessons_purchased || "—"}
-                    <div className="text-xs text-zinc-400">{remaining} remaining</div>
+                    <div className="text-xs text-slate-400">{remaining} remaining</div>
                   </td>
-                  <td className="px-5 py-3 text-zinc-600 text-xs truncate max-w-xs">
+                  <td className="px-5 py-3 text-slate-600 text-xs truncate max-w-xs">
                     {s.pickup_address ?? "—"}
                   </td>
                 </tr>
@@ -118,21 +118,21 @@ function StudentsPage() {
           </tbody>
         </table>
         {list.length === 0 && (
-          <div className="text-center py-10 text-sm text-zinc-500">No students yet.</div>
+          <div className="text-center py-10 text-sm text-slate-500">No students yet.</div>
         )}
       </div>
 
       <style>{`
         .input {
           width: 100%;
-          background: #fafafa;
-          border: 1px solid #e4e4e7;
+          background: #fff;
+          border: 1px solid #e2e8f0;
           border-radius: 6px;
           padding: 8px 12px;
           font-size: 14px;
           outline: none;
         }
-        .input:focus { border-color: #064e3b; background: #fff; }
+        .input:focus { border-color: #3b82f6; background: #fff; }
       `}</style>
     </div>
   );

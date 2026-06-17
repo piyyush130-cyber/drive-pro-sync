@@ -9,8 +9,24 @@ export const Route = createFileRoute("/_authenticated/calendar")({
   component: CalendarPage,
 });
 
+function lessonClasses(status: string) {
+  switch (status) {
+    case "confirmed":
+      return "bg-blue-50 border-blue-200 text-blue-800";
+    case "pending":
+      return "bg-amber-50 border-amber-200 text-amber-800";
+    case "completed":
+      return "bg-emerald-50 border-emerald-200 text-emerald-800";
+    case "no_show":
+    case "cancelled":
+      return "bg-red-50 border-red-200 text-red-700";
+    default:
+      return "bg-slate-50 border-slate-200 text-slate-700";
+  }
+}
+
 function CalendarPage() {
-  const [offset, setOffset] = useState(0); // weeks from this week
+  const [offset, setOffset] = useState(0);
   const start = new Date();
   start.setHours(0, 0, 0, 0);
   start.setDate(start.getDate() - start.getDay() + offset * 7);
@@ -56,7 +72,7 @@ function CalendarPage() {
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
           <h1 className="text-2xl font-medium">Calendar</h1>
-          <p className="text-sm text-zinc-500 mt-1">
+          <p className="text-sm text-slate-500 mt-1">
             Week of{" "}
             {start.toLocaleDateString(undefined, { month: "long", day: "numeric" })}
           </p>
@@ -65,7 +81,7 @@ function CalendarPage() {
           <select
             value={instructorId}
             onChange={(e) => setInstructorId(e.target.value)}
-            className="text-sm bg-white border border-zinc-200 rounded-md px-3 py-1.5"
+            className="text-sm bg-white border border-slate-200 rounded-md px-3 py-1.5"
           >
             <option value="">All instructors</option>
             {instructorsQ.data?.map((i) => (
@@ -76,19 +92,19 @@ function CalendarPage() {
           </select>
           <button
             onClick={() => setOffset(offset - 1)}
-            className="px-3 py-1.5 text-sm bg-white border border-zinc-200 rounded-md"
+            className="px-3 py-1.5 text-sm bg-white border border-slate-200 rounded-md"
           >
             ←
           </button>
           <button
             onClick={() => setOffset(0)}
-            className="px-3 py-1.5 text-sm bg-white border border-zinc-200 rounded-md"
+            className="px-3 py-1.5 text-sm bg-white border border-slate-200 rounded-md"
           >
             Today
           </button>
           <button
             onClick={() => setOffset(offset + 1)}
-            className="px-3 py-1.5 text-sm bg-white border border-zinc-200 rounded-md"
+            className="px-3 py-1.5 text-sm bg-white border border-slate-200 rounded-md"
           >
             →
           </button>
@@ -105,22 +121,25 @@ function CalendarPage() {
           return (
             <div
               key={dayStr}
-              className={`bg-white ring-1 ring-black/5 rounded-xl p-3 min-h-[180px] ${
-                isToday ? "ring-emerald-800/30" : ""
+              className={`bg-white border rounded-xl p-3 min-h-[180px] ${
+                isToday ? "border-blue-300" : "border-slate-200"
               }`}
             >
-              <div className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2">
+              <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
                 {day.toLocaleDateString(undefined, { weekday: "short" })}{" "}
-                <span className={isToday ? "text-emerald-800" : "text-zinc-400"}>
+                <span className={isToday ? "text-blue-600" : "text-slate-400"}>
                   {day.getDate()}
                 </span>
               </div>
               <div className="space-y-2">
                 {dayLessons.map((b: any) => (
-                  <div key={b.id} className="text-xs p-2 rounded bg-zinc-50 border border-zinc-100">
-                    <div className="font-semibold text-zinc-700">{fmtTime(b.scheduled_at)}</div>
+                  <div
+                    key={b.id}
+                    className={`text-xs p-2 rounded border ${lessonClasses(b.status)}`}
+                  >
+                    <div className="font-semibold">{fmtTime(b.scheduled_at)}</div>
                     <div className="truncate">{b.students?.full_name}</div>
-                    <div className="text-zinc-500 truncate">
+                    <div className="truncate opacity-75">
                       {b.instructors?.full_name ?? "Unassigned"}
                     </div>
                     <div className="mt-1">
@@ -129,7 +148,7 @@ function CalendarPage() {
                   </div>
                 ))}
                 {dayLessons.length === 0 && (
-                  <div className="text-xs text-zinc-400">No lessons</div>
+                  <div className="text-xs text-slate-400">No lessons</div>
                 )}
               </div>
             </div>
