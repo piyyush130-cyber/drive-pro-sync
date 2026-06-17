@@ -42,7 +42,7 @@ export function AppSidebar({ schoolName }: { schoolName: string }) {
             <div className="text-sm font-semibold tracking-tight text-white truncate">
               DriveProSync
             </div>
-            <div className="text-[10px] text-blue-200/80 uppercase tracking-widest truncate">
+            <div className="text-[10px] text-[#C9A84C] uppercase tracking-widest truncate">
               {schoolName}
             </div>
           </div>
