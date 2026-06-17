@@ -11,16 +11,11 @@ async function redirectByRole(navigate: ReturnType<typeof useNavigate>, userId: 
   const { data } = await supabase.from("user_roles").select("role").eq("user_id", userId);
   const roles = (data ?? []).map((r) => r.role);
   if (roles.includes("admin")) {
-    const { data: s } = await supabase
-      .from("school_settings")
-      .select("onboarding_complete")
-      .eq("id", 1)
-      .maybeSingle();
-    navigate({ to: s?.onboarding_complete ? "/dashboard" : "/onboarding", replace: true });
+    window.location.href = "/dashboard";
   } else if (roles.includes("instructor")) {
-    navigate({ to: "/instructor", replace: true });
+    window.location.href = "/instructor";
   } else {
-    navigate({ to: "/dashboard", replace: true });
+    window.location.href = "/dashboard";
   }
 }
 
