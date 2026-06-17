@@ -97,104 +97,211 @@ function AuthPage() {
   }
 
   return (
-    <div className="glass-bg">
-      <div className="glow-blob-tl" />
-      <div className="glow-blob-br" />
-      <div className="relative z-10 min-h-screen flex items-center justify-center p-4 py-12">
-        <div className="w-full max-w-md glass-card p-8">
-          <Link to="/" className="text-xs text-slate-500 hover:text-slate-700">
-            ← Back to booking
-          </Link>
-          <div className="flex items-center gap-2.5 mt-4 mb-4">
-            <div className="size-9 rounded-xl bg-blue-50 border border-blue-100 grid place-items-center">
-              <CarFront className="size-4.5 text-blue-600" />
-            </div>
-            <div className="text-sm font-semibold text-slate-900">DriveProSync</div>
+    <div
+      className="relative min-h-screen flex items-center justify-center p-4 py-12"
+      style={{ background: "linear-gradient(135deg, #EDE8DF 0%, #E4DDD0 40%, #EAE4D8 100%)" }}
+    >
+      <div
+        className="w-full max-w-md rounded-2xl p-10"
+        style={{
+          background: "#FAF8F4",
+          border: "1px solid rgba(201,168,76,0.2)",
+          boxShadow: "0 8px 40px rgba(27,43,75,0.12)",
+        }}
+      >
+        <Link
+          to="/"
+          className="text-xs"
+          style={{ color: "#6B6B7B" }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = "#1B2B4B")}
+          onMouseLeave={(e) => (e.currentTarget.style.color = "#6B6B7B")}
+        >
+          ← Back to booking
+        </Link>
+        <div className="flex items-center gap-2.5 mt-4 mb-2">
+          <div
+            className="size-9 rounded-xl grid place-items-center"
+            style={{ background: "#1B2B4B" }}
+          >
+            <CarFront className="size-4.5 text-white" />
           </div>
-          <div className="text-[10px] uppercase tracking-[0.18em] text-blue-600">
-            {mode === "signin" ? "Staff sign in" : "New staff account"}
+          <div className="text-xl font-bold" style={{ color: "#1B2B4B" }}>
+            DriveProSync
           </div>
-          <h1 className="text-2xl font-semibold text-slate-900 mt-1 mb-1">
-            {mode === "signin" ? "Welcome back" : "Create your account"}
-          </h1>
-          <p className="text-sm text-slate-500 mb-6">
-            {mode === "signin"
-              ? "Admin & instructor access."
-              : "First account becomes the school admin."}
-          </p>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {mode === "signup" && (
-              <Field label="Full name">
-                <input
-                  required
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  className="glass-input"
-                />
-              </Field>
-            )}
-            <Field label="Email">
+        </div>
+        <div
+          className="text-xs uppercase tracking-widest mb-1"
+          style={{ color: "#C9A84C" }}
+        >
+          Staff Portal
+        </div>
+        <h1 className="text-2xl font-semibold mt-1 mb-1" style={{ color: "#1A1A2E" }}>
+          {mode === "signin" ? "Welcome back" : "Create your account"}
+        </h1>
+        <p className="text-sm mb-6" style={{ color: "#6B6B7B" }}>
+          {mode === "signin"
+            ? "Admin & instructor access."
+            : "First account becomes the school admin."}
+        </p>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {mode === "signup" && (
+            <Field label="Full name">
               <input
                 required
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="glass-input"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                className="w-full rounded-xl px-4 py-3 text-sm outline-none transition-all duration-150"
+                style={{
+                  background: "#F5F1EA",
+                  border: "1px solid rgba(201,168,76,0.2)",
+                  color: "#1A1A2E",
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = "#1B2B4B";
+                  e.currentTarget.style.boxShadow = "0 0 0 3px rgba(27,43,75,0.15)";
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = "rgba(201,168,76,0.2)";
+                  e.currentTarget.style.boxShadow = "none";
+                }}
               />
             </Field>
-            <Field label="Password">
-              <input
-                required
-                type="password"
-                minLength={6}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="glass-input"
-              />
-              <p className="text-[11px] text-slate-500 mt-1">Minimum 6 characters.</p>
-            </Field>
-            <button disabled={loading} className="btn-primary w-full">
-              {loading ? "…" : mode === "signin" ? "Sign in" : "Create account"}
-            </button>
-          </form>
+          )}
+          <Field label="Email">
+            <input
+              required
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full rounded-xl px-4 py-3 text-sm outline-none transition-all duration-150"
+              style={{
+                background: "#F5F1EA",
+                border: "1px solid rgba(201,168,76,0.2)",
+                color: "#1A1A2E",
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = "#1B2B4B";
+                e.currentTarget.style.boxShadow = "0 0 0 3px rgba(27,43,75,0.15)";
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = "rgba(201,168,76,0.2)";
+                e.currentTarget.style.boxShadow = "none";
+              }}
+            />
+          </Field>
+          <Field label="Password">
+            <input
+              required
+              type="password"
+              minLength={6}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full rounded-xl px-4 py-3 text-sm outline-none transition-all duration-150"
+              style={{
+                background: "#F5F1EA",
+                border: "1px solid rgba(201,168,76,0.2)",
+                color: "#1A1A2E",
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = "#1B2B4B";
+                e.currentTarget.style.boxShadow = "0 0 0 3px rgba(27,43,75,0.15)";
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = "rgba(201,168,76,0.2)";
+                e.currentTarget.style.boxShadow = "none";
+              }}
+            />
+            <p className="text-[11px] mt-1" style={{ color: "#6B6B7B" }}>
+              Minimum 6 characters.
+            </p>
+          </Field>
           <button
-            onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
-            className="mt-4 text-xs text-slate-500 hover:text-slate-900 w-full text-center"
+            disabled={loading}
+            className="w-full rounded-xl py-3 font-semibold text-white transition-all duration-150 hover:brightness-110"
+            style={{
+              background: "linear-gradient(90deg, #1B2B4B, #243660)",
+            }}
           >
-            {mode === "signin"
-              ? "Need an account? Create one"
-              : "Already have an account? Sign in"}
+            {loading ? "…" : mode === "signin" ? "Sign in" : "Create account"}
           </button>
-          <Link
-            to="/instructor-signup"
-            className="block mt-2 text-xs text-blue-600 hover:text-blue-700 w-full text-center"
-          >
-            Are you an instructor? Create your account with an invite code →
-          </Link>
+        </form>
+        <button
+          onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
+          className="mt-4 text-xs w-full text-center transition-colors duration-150"
+          style={{ color: "#C9A84C" }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = "#1B2B4B")}
+          onMouseLeave={(e) => (e.currentTarget.style.color = "#C9A84C")}
+        >
+          {mode === "signin"
+            ? "Need an account? Create one"
+            : "Already have an account? Sign in"}
+        </button>
+        <Link
+          to="/instructor-signup"
+          className="block mt-2 text-xs w-full text-center transition-colors duration-150 hover:underline"
+          style={{ color: "#1B2B4B" }}
+          onMouseEnter={(e) => (e.currentTarget.style.textDecorationColor = "#C9A84C")}
+        >
+          Are you an instructor? Create your account with an invite code →
+        </Link>
 
-          <div className="my-5 flex items-center gap-3 text-[10px] uppercase tracking-widest text-slate-400">
-            <div className="h-px flex-1 bg-slate-200" />
+        <div className="my-5 flex items-center gap-3">
+          <div className="h-px flex-1" style={{ background: "rgba(201,168,76,0.3)" }} />
+          <span
+            className="text-[10px] uppercase tracking-widest"
+            style={{ color: "#C9A84C" }}
+          >
             or explore a live demo
-            <div className="h-px flex-1 bg-slate-200" />
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              disabled={loading}
-              onClick={() => loadDemo("admin")}
-              className="btn-secondary text-xs"
-            >
-              Admin demo
-            </button>
-            <button
-              type="button"
-              disabled={loading}
-              onClick={() => loadDemo("instructor")}
-              className="btn-secondary text-xs"
-            >
-              Instructor demo
-            </button>
-          </div>
+          </span>
+          <div className="h-px flex-1" style={{ background: "rgba(201,168,76,0.3)" }} />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            disabled={loading}
+            onClick={() => loadDemo("admin")}
+            className="rounded-xl py-2.5 text-xs font-semibold transition-all duration-150"
+            style={{
+              background: "#F0EBE1",
+              border: "1px solid rgba(201,168,76,0.3)",
+              color: "#1B2B4B",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "#1B2B4B";
+              e.currentTarget.style.color = "#FFFFFF";
+              e.currentTarget.style.borderColor = "#C9A84C";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "#F0EBE1";
+              e.currentTarget.style.color = "#1B2B4B";
+              e.currentTarget.style.borderColor = "rgba(201,168,76,0.3)";
+            }}
+          >
+            Admin demo
+          </button>
+          <button
+            type="button"
+            disabled={loading}
+            onClick={() => loadDemo("instructor")}
+            className="rounded-xl py-2.5 text-xs font-semibold transition-all duration-150"
+            style={{
+              background: "#F0EBE1",
+              border: "1px solid rgba(201,168,76,0.3)",
+              color: "#1B2B4B",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "#1B2B4B";
+              e.currentTarget.style.color = "#FFFFFF";
+              e.currentTarget.style.borderColor = "#C9A84C";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "#F0EBE1";
+              e.currentTarget.style.color = "#1B2B4B";
+              e.currentTarget.style.borderColor = "rgba(201,168,76,0.3)";
+            }}
+          >
+            Instructor demo
+          </button>
         </div>
       </div>
     </div>
@@ -204,7 +311,9 @@ function AuthPage() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-slate-700 mb-1.5">{label}</label>
+      <label className="block text-sm font-medium mb-1.5" style={{ color: "#1A1A2E" }}>
+        {label}
+      </label>
       {children}
     </div>
   );
