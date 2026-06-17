@@ -50,12 +50,15 @@ async function runSeed() {
   const adminId = await ensureUser("admin@demo.com", "Demo12345", "Demo Admin");
   const instId = await ensureUser("instructor@demo.com", "Demo12345", "Demo Instructor");
 
-  await supabaseAdmin
+  const adminRoleResult = await supabaseAdmin
     .from("user_roles")
     .upsert({ user_id: adminId, role: "admin" }, { onConflict: "user_id,role" });
-  await supabaseAdmin
+  if (adminRoleResult.error) throw new Error("Admin role failed: " + adminRoleResult.error.message);
+
+  const instRoleResult = await supabaseAdmin
     .from("user_roles")
     .upsert({ user_id: instId, role: "instructor" }, { onConflict: "user_id,role" });
+  if (instRoleResult.error) throw new Error("Instructor role failed: " + instRoleResult.error.message);
 
   // School settings
   await supabaseAdmin.from("school_settings").upsert(
