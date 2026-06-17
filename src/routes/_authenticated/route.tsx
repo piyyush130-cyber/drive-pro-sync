@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, redirect, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppSidebar } from "@/components/AppSidebar";
 import { useAuthUser, useRoles } from "@/lib/auth";
@@ -19,6 +19,8 @@ function AuthLayout() {
   const { user, loading } = useAuthUser();
   const navigate = useNavigate();
   const rolesQ = useRoles(user?.id);
+  const [demoRoleRetrying, setDemoRoleRetrying] = useState(false);
+  const [demoRoleRetried, setDemoRoleRetried] = useState(false);
   const settingsQ = useQuery({
     queryKey: ["settings"],
     queryFn: async () => {
@@ -40,6 +42,27 @@ function AuthLayout() {
   }
 
   const roles = rolesQ.data ?? [];
+  const isDemoUser = user?.email === "admin@demo.com" || user?.email === "instructor@demo.com";
+  if (roles.length > 0 && (demoRoleRetrying || demoRoleRetried)) {
+    setDemoRoleRetrying(false);
+    setDemoRoleRetried(false);
+  }
+  useEffect(() => {
+    if (roles.length !== 0 || !isDemoUser || demoRoleRetrying || demoRoleRetried) return;
+    setDemoRoleRetrying(true);
+    const timer = window.setTimeout(() => {
+      rolesQ.refetch().finally(() => {
+        setDemoRoleRetrying(false);
+        setDemoRoleRetried(true);
+      });
+    }, 2000);
+    return () => window.clearTimeout(timer);
+  }, [roles.length, isDemoUser, demoRoleRetrying, demoRoleRetried, rolesQ]);
+
+  if (roles.length === 0 && isDemoUser && !demoRoleRetried) {
+    return <div className="min-h-screen flex items-center justify-center text-slate-500">Loading…</div>;
+  }
+
   if (roles.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center p-6 text-center">
