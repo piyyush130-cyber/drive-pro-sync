@@ -169,7 +169,7 @@ function OnboardingPage() {
     setBusy(true);
     await supabase.from("school_settings").update({ onboarding_complete: true }).eq("id", 1);
     setBusy(false);
-    navigate({ to: "/dashboard", replace: true });
+    window.location.href = "/dashboard";
   }
 
   function copyLink() {

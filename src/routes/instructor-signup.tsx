@@ -51,7 +51,10 @@ function InstructorSignupPage() {
       <div className="glow-blob-tl" />
       <div className="glow-blob-br" />
       <div className="relative z-10 min-h-screen flex items-center justify-center px-4 py-12">
-        <div className="glass-card w-full max-w-md p-8">
+        <div
+          className="glass-card w-full max-w-md p-8"
+          style={{ background: "#FAF8F4", border: "1px solid rgba(201,168,76,0.2)" }}
+        >
           <div className="flex items-center gap-2.5 mb-6">
             <div className="size-9 rounded-xl bg-[#3B82F6]/20 grid place-items-center">
               <CarFront className="size-4.5 text-[#60A5FA]" />
@@ -75,8 +78,8 @@ function InstructorSignupPage() {
           ) : (
             <>
               <div className="text-[10px] uppercase tracking-[0.18em] text-[#60A5FA] mb-2">Instructor signup</div>
-              <h1 className="text-2xl font-semibold text-white">Join your driving school</h1>
-              <p className="text-sm text-slate-400 mb-6">Enter the invite code your school admin gave you.</p>
+              <h1 className="text-2xl font-semibold" style={{ color: "#1A1A2E" }}>Join your driving school</h1>
+              <p className="text-sm mb-6" style={{ color: "#6B6B7B" }}>Enter the invite code your school admin gave you.</p>
               <form onSubmit={submit} className="space-y-4">
                 <Field label="Invite code *">
                   <input
@@ -115,7 +118,7 @@ function InstructorSignupPage() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-slate-300 mb-1.5">{label}</label>
+      <label className="block text-sm font-medium mb-1.5" style={{ color: "#1A1A2E" }}>{label}</label>
       {children}
     </div>
   );
