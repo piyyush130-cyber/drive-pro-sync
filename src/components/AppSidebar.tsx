@@ -55,15 +55,16 @@ export function AppSidebar({ schoolName }: { schoolName: string }) {
             <Link
               key={item.url}
               to={item.url}
-              className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+              className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
                 active
-                  ? "bg-white/10 text-white ring-1 ring-white/15"
-                  : "text-slate-300 hover:bg-white/5 hover:text-white"
+                  ? "bg-[rgba(201,168,76,0.12)] text-white font-semibold"
+                  : "text-white/55 hover:bg-white/[0.07] hover:text-white"
               }`}
             >
               {active && (
-                <span className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r bg-blue-400" />
+                <span className="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-r bg-[#C9A84C]" />
               )}
+
               <item.icon className="size-4 shrink-0" />
               {item.title}
             </Link>
