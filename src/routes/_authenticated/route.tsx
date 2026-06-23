@@ -79,26 +79,10 @@ function AuthLayout() {
   }
 
   if (roles.length === 0) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-6 text-center">
-        <div className="max-w-md card-premium p-8">
-          <h1 className="text-xl font-semibold tracking-tight">No role assigned yet</h1>
-          <p className="text-sm text-slate-500 mt-2">
-            Your account exists but doesn't have a role. Ask the school admin to grant access from
-            the Instructors page.
-          </p>
-          <button
-            onClick={async () => {
-              await supabase.auth.signOut();
-              navigate({ to: "/auth", replace: true });
-            }}
-            className="mt-4 text-sm text-blue-700 underline"
-          >
-            Sign out
-          </button>
-        </div>
-      </div>
-    );
+    return <NoRoleScreen userId={user?.id} email={user?.email} onSignOut={async () => {
+      await supabase.auth.signOut();
+      navigate({ to: "/auth", replace: true });
+    }} onRecovered={() => rolesQ.refetch()} />;
   }
 
   // Instructor-only view skips the admin sidebar
