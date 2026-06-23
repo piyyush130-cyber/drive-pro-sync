@@ -113,22 +113,38 @@ function OnboardingPage() {
   }
   async function saveStep3() {
     setBusy(true);
-    // Clear existing, insert new
-    await supabase.from("lesson_types").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-    const rows = types
-      .filter((t) => t.name)
-      .map((t, i) => ({
-        name: t.name,
-        duration_minutes: t.duration_minutes,
-        price_cents: t.price_cents,
-        active: t.active,
-        sort_order: i,
-        category: "lesson",
-      }));
-    const { error } = await supabase.from("lesson_types").insert(rows);
-    setBusy(false);
-    if (error) return toast.error(error.message);
-    setStep(4);
+    try {
+      // Deactivate any types not in the new list (by name), then upsert the new set.
+      const names = types.filter((t) => t.name).map((t) => t.name);
+      const { data: existing } = await supabase.from("lesson_types").select("id,name");
+      const toDeactivate = (existing ?? []).filter((e) => !names.includes(e.name));
+      for (const row of toDeactivate) {
+        await supabase.from("lesson_types").update({ active: false }).eq("id", row.id);
+      }
+      for (let i = 0; i < types.length; i++) {
+        const t = types[i];
+        if (!t.name) continue;
+        const match = (existing ?? []).find((e) => e.name === t.name);
+        const payload = {
+          name: t.name,
+          duration_minutes: t.duration_minutes,
+          price_cents: t.price_cents,
+          active: t.active,
+          sort_order: i,
+          category: "lesson",
+        };
+        if (match) {
+          await supabase.from("lesson_types").update(payload).eq("id", match.id);
+        } else {
+          await supabase.from("lesson_types").insert(payload);
+        }
+      }
+      setStep(4);
+    } catch (err: any) {
+      toast.error(err?.message || "Could not save services");
+    } finally {
+      setBusy(false);
+    }
   }
   async function saveStep4() {
     if (!instructor.full_name) {
