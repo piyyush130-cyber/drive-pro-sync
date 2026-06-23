@@ -99,3 +99,65 @@ function AuthLayout() {
     </div>
   );
 }
+
+function NoRoleScreen({
+  userId,
+  email,
+  onSignOut,
+  onRecovered,
+}: {
+  userId: string | undefined;
+  email: string | undefined | null;
+  onSignOut: () => void;
+  onRecovered: () => void;
+}) {
+  const claim = useServerFn(claimAdminIfFirst);
+  const [busy, setBusy] = useState(false);
+
+  async function tryClaim() {
+    if (!userId) return;
+    setBusy(true);
+    try {
+      const res = await claim({ data: { userId } });
+      if (res.claimed) {
+        toast.success("You're now the school admin. Let's set things up.");
+        window.location.href = "/onboarding";
+      } else {
+        toast.error("This school already has an admin. Ask them to grant you access.");
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "Could not claim admin access");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center p-6 text-center">
+      <div className="max-w-md card-premium p-8">
+        <h1 className="text-xl font-semibold tracking-tight">Account has no access yet</h1>
+        <p className="text-sm text-slate-500 mt-2">
+          Signed in as <span className="font-medium">{email}</span>. If you're setting up a new
+          school, claim admin access below. Otherwise, ask your school admin to add you from the
+          Instructors page.
+        </p>
+        <div className="mt-5 flex flex-col gap-2">
+          <button
+            onClick={tryClaim}
+            disabled={busy}
+            className="w-full rounded-xl py-2.5 text-sm font-semibold text-white"
+            style={{ background: "linear-gradient(90deg, #1B2B4B, #243660)" }}
+          >
+            {busy ? "Setting up…" : "I'm setting up a new school"}
+          </button>
+          <button onClick={onRecovered} className="text-xs text-slate-500 hover:text-slate-700">
+            Refresh access
+          </button>
+          <button onClick={onSignOut} className="text-xs text-slate-500 underline">
+            Sign out
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
