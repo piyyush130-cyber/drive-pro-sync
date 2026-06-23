@@ -7,14 +7,21 @@ import { seedDemoAccounts } from "@/lib/seed-demo.functions";
 import { createAdminRole } from "@/lib/create-admin-role.functions";
 import { toast } from "sonner";
 
-async function redirectByRole(navigate: ReturnType<typeof useNavigate>, userId: string) {
+async function redirectByRole(_navigate: ReturnType<typeof useNavigate>, userId: string) {
   const { data } = await supabase.from("user_roles").select("role").eq("user_id", userId);
   const roles = (data ?? []).map((r) => r.role);
   if (roles.includes("admin")) {
-    window.location.href = "/dashboard";
+    // Check onboarding state — incomplete admins go to setup.
+    const { data: settings } = await supabase
+      .from("school_settings")
+      .select("onboarding_complete")
+      .eq("id", 1)
+      .maybeSingle();
+    window.location.href = settings?.onboarding_complete ? "/dashboard" : "/onboarding";
   } else if (roles.includes("instructor")) {
     window.location.href = "/instructor";
   } else {
+    // No role yet — land them in the gate which now offers self-recovery.
     window.location.href = "/dashboard";
   }
 }
