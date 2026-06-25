@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, redirect, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppSidebar } from "@/components/AppSidebar";
 import { useAuthUser, useRoles } from "@/lib/auth";
@@ -19,10 +19,7 @@ function AuthLayout() {
   const { user, loading } = useAuthUser();
   const navigate = useNavigate();
   const rolesQ = useRoles(user?.id);
-  const [demoRoleRetrying, setDemoRoleRetrying] = useState(false);
-  const [demoRoleRetried, setDemoRoleRetried] = useState(false);
   const roles = rolesQ.data ?? [];
-  const isDemoUser = user?.email === "admin@demo.com" || user?.email === "instructor@demo.com";
   const isAdmin = roles.includes("admin");
   const isInstructor = roles.includes("instructor");
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -42,24 +39,6 @@ function AuthLayout() {
     if (!loading && !user) navigate({ to: "/auth", replace: true });
   }, [loading, user, navigate]);
 
-  useEffect(() => {
-    if (roles.length === 0 || (!demoRoleRetrying && !demoRoleRetried)) return;
-    setDemoRoleRetrying(false);
-    setDemoRoleRetried(false);
-  }, [roles.length, demoRoleRetrying, demoRoleRetried]);
-
-  useEffect(() => {
-    if (roles.length !== 0 || !isDemoUser || demoRoleRetrying || demoRoleRetried) return;
-    setDemoRoleRetrying(true);
-    const timer = window.setTimeout(() => {
-      rolesQ.refetch().finally(() => {
-        setDemoRoleRetrying(false);
-        setDemoRoleRetried(true);
-      });
-    }, 2000);
-    return () => window.clearTimeout(timer);
-  }, [roles.length, isDemoUser, demoRoleRetrying, demoRoleRetried, rolesQ]);
-
   // Instructor (non-admin) is locked to /instructor
   useEffect(() => {
     if (!loading && !rolesQ.isLoading && !isAdmin && isInstructor && pathname !== "/instructor") {
@@ -68,10 +47,6 @@ function AuthLayout() {
   }, [loading, rolesQ.isLoading, isAdmin, isInstructor, pathname, navigate]);
 
   if (loading || rolesQ.isLoading) {
-    return <div className="min-h-screen flex items-center justify-center text-slate-500">Loading…</div>;
-  }
-
-  if (roles.length === 0 && isDemoUser && !demoRoleRetried) {
     return <div className="min-h-screen flex items-center justify-center text-slate-500">Loading…</div>;
   }
 
