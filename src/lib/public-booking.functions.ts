@@ -2,10 +2,10 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 const BookingSchema = z.object({
-  full_name: z.string().min(1).max(120),
-  phone: z.string().min(3).max(40),
-  email: z.string().email().max(200).optional().nullable(),
-  pickup_address: z.string().min(1).max(300),
+  full_name: z.string().trim().min(1).max(120),
+  phone: z.string().trim().min(3).max(40),
+  email: z.string().trim().email().max(200),
+  pickup_address: z.string().trim().min(1).max(300),
   dropoff_address: z.string().max(300).optional().nullable(),
   notes: z.string().max(2000).optional().nullable(),
   lesson_type_id: z.string().uuid(),
@@ -31,7 +31,7 @@ export const submitPublicBooking = createServerFn({ method: "POST" })
       .insert({
         full_name: data.full_name,
         phone: data.phone,
-        email: data.email ?? null,
+        email: data.email,
         pickup_address: data.pickup_address,
         notes: data.notes ?? null,
       })

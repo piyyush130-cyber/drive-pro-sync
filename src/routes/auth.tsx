@@ -21,8 +21,7 @@ async function redirectByRole(_navigate: ReturnType<typeof useNavigate>, userId:
   } else if (roles.includes("instructor")) {
     window.location.href = "/instructor";
   } else {
-    // No role yet — land them in the gate which now offers self-recovery.
-    window.location.href = "/dashboard";
+    window.location.href = "/no-access";
   }
 }
 

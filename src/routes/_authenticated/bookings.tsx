@@ -140,13 +140,13 @@ function BookingsPage() {
                     onClick={() => update(b.id, { status: "confirmed" })}
                     className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded-md font-semibold hover:bg-blue-700"
                   >
-                    Confirm
+                    Approve
                   </button>
                   <button
                     onClick={() => update(b.id, { status: "declined" })}
                     className="text-xs bg-white ring-1 ring-slate-200 text-slate-700 px-3 py-1.5 rounded-md font-semibold hover:bg-slate-50"
                   >
-                    Decline
+                    Deny
                   </button>
                 </>
               )}

@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import {
   CalendarClock,
   Inbox,
@@ -13,6 +14,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { StatCard, StatusPill } from "@/components/StatCard";
 import { fmtTime, money, statusLabel, statusTone } from "@/lib/format";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
@@ -25,6 +27,8 @@ function startOfDay(d = new Date()) {
 }
 
 function Dashboard() {
+  const qc = useQueryClient();
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
   const start = startOfDay().toISOString();
   const end = new Date(startOfDay().getTime() + 86400000).toISOString();
   const weekStart = new Date(startOfDay().getTime() - 7 * 86400000).toISOString();
@@ -54,6 +58,19 @@ function Dashboard() {
         .limit(5);
       if (error) throw error;
       return data;
+    },
+  });
+
+  const instructorsQ = useQuery({
+    queryKey: ["instructors-active"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("instructors")
+        .select("id, full_name")
+        .eq("active", true)
+        .order("full_name");
+      if (error) throw error;
+      return data ?? [];
     },
   });
 
@@ -93,6 +110,25 @@ function Dashboard() {
     month: "long",
     day: "numeric",
   });
+
+  async function updateBooking(id: string, patch: Record<string, unknown>) {
+    setUpdatingId(id);
+    try {
+      const { error } = await supabase.from("bookings").update(patch as any).eq("id", id);
+      if (error) throw error;
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ["pending-bookings"] }),
+        qc.invalidateQueries({ queryKey: ["dashboard-stats"] }),
+        qc.invalidateQueries({ queryKey: ["today-lessons"] }),
+        qc.invalidateQueries({ queryKey: ["bookings"] }),
+      ]);
+      toast.success("Booking updated");
+    } catch (err: any) {
+      toast.error(err?.message || "Could not update booking");
+    } finally {
+      setUpdatingId(null);
+    }
+  }
 
   return (
     <div className="p-6 lg:p-10 max-w-7xl">
@@ -200,11 +236,7 @@ function Dashboard() {
             <div className="card-premium p-5 text-sm text-slate-500">No pending requests.</div>
           )}
           {(pendingQ.data ?? []).map((b: any) => (
-            <Link
-              to="/bookings"
-              key={b.id}
-              className="card-premium p-4 block hover:ring-blue-300 transition-shadow"
-            >
+            <div key={b.id} className="card-premium p-4">
               <div className="flex justify-between items-start mb-1 gap-2">
                 <div className="min-w-0">
                   <div className="font-semibold text-sm truncate">{b.students?.full_name}</div>
@@ -222,8 +254,44 @@ function Dashboard() {
                 </div>
               </div>
               <div className="text-xs text-slate-500">{b.lesson_types?.name}</div>
-              <StatusPill tone={statusTone.pending}>Awaiting review</StatusPill>
-            </Link>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <StatusPill tone={statusTone.pending}>Awaiting review</StatusPill>
+                <select
+                  value={b.instructor_id ?? ""}
+                  disabled={updatingId === b.id || instructorsQ.isLoading}
+                  onChange={(e) => updateBooking(b.id, { instructor_id: e.target.value || null })}
+                  className="min-w-0 flex-1 rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs font-medium text-slate-700"
+                >
+                  <option value="">Assign instructor</option>
+                  {(instructorsQ.data ?? []).map((i) => (
+                    <option key={i.id} value={i.id}>
+                      {i.full_name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  disabled={updatingId === b.id}
+                  onClick={() => updateBooking(b.id, { status: "confirmed" })}
+                  className="rounded-md bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+                >
+                  Approve
+                </button>
+                <button
+                  type="button"
+                  disabled={updatingId === b.id}
+                  onClick={() => updateBooking(b.id, { status: "declined" })}
+                  className="rounded-md bg-white px-3 py-2 text-xs font-semibold text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50 disabled:opacity-60"
+                >
+                  Deny
+                </button>
+              </div>
+              <Link to="/bookings" className="mt-3 inline-flex text-[11px] font-semibold text-blue-700 hover:underline">
+                Open full queue →
+              </Link>
+            </div>
           ))}
         </div>
       </div>
