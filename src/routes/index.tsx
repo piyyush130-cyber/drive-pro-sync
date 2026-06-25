@@ -47,16 +47,24 @@ type LessonType = {
 };
 type Settings = { school_name: string };
 
-// Luxury palette
+// Light premium glass palette
 const C = {
-  bg: "#F5F3EF",
-  surface: "#FFFFFF",
-  formBg: "#FAFAF8",
-  navy: "#1B2B4B",
-  gold: "#C9A84C",
-  text: "#1A1A2E",
-  muted: "#6B6B7B",
-  border: "#E8E4DC",
+  pageBg:
+    "linear-gradient(160deg, #EFF6FF 0%, #F8FAFC 45%, #EEF2FF 100%)",
+  surface: "rgba(255,255,255,0.78)",
+  surfaceSolid: "#FFFFFF",
+  surfaceTint: "rgba(248,250,252,0.85)",
+  primary: "#4F46E5", // indigo-600
+  primaryDark: "#4338CA", // indigo-700
+  primarySoft: "rgba(79,70,229,0.08)",
+  accent: "#0EA5E9", // sky-500
+  text: "#0F172A", // slate-900
+  muted: "#64748B", // slate-500
+  mutedSoft: "#94A3B8", // slate-400
+  border: "rgba(226,232,240,0.9)", // slate-200
+  borderStrong: "#CBD5E1", // slate-300
+  danger: "#DC2626",
+  dangerBg: "rgba(254,226,226,0.7)",
 };
 
 const TIME_SLOTS: { time: string; label: string }[] = [
@@ -83,6 +91,18 @@ function unavailableForDate(d: Date): Set<string> {
   blocked.add(TIME_SLOTS[(seed + 3) % TIME_SLOTS.length].time);
   return blocked;
 }
+
+type Errors = Partial<{
+  service: string;
+  date: string;
+  time: string;
+  full_name: string;
+  phone: string;
+  email: string;
+  pickup_address: string;
+}>;
+
+const emailOk = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
 function BookingPage() {
   const settingsQ = useQuery({
@@ -122,35 +142,50 @@ function BookingPage() {
     pickup_notes: "",
     notes: "",
   });
+  const [errors, setErrors] = useState<Errors>({});
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const submit = useServerFn(submitPublicBooking);
   const school = settingsQ.data?.school_name ?? "Standard Driving School";
 
+  function validate(): Errors {
+    const e: Errors = {};
+    if (!selected) e.service = "Please choose a lesson.";
+    if (!selectedDate) e.date = "Please pick a date.";
+    if (!selectedTime) e.time = "Please pick a time.";
+    if (!form.full_name.trim()) e.full_name = "Full name is required.";
+    if (!form.phone.trim()) e.phone = "Phone number is required.";
+    if (!form.email.trim()) e.email = "Email is required.";
+    else if (!emailOk(form.email.trim())) e.email = "Enter a valid email.";
+    if (!form.pickup_address.trim()) e.pickup_address = "Pickup address is required.";
+    return e;
+  }
+
   async function handleSubmit() {
-    if (!selected) return toast.error("Choose a lesson first.");
-    if (!selectedDate || !selectedTime)
-      return toast.error("Pick a date and an available time.");
-    if (!form.full_name || !form.phone || !form.pickup_address)
-      return toast.error("Name, phone and pickup address are required.");
+    const v = validate();
+    setErrors(v);
+    if (Object.keys(v).length) {
+      toast.error("Please fix the highlighted fields.");
+      return;
+    }
     setSubmitting(true);
     try {
-      const [h, m] = selectedTime.split(":").map(Number);
-      const dt = new Date(selectedDate);
+      const [h, m] = selectedTime!.split(":").map(Number);
+      const dt = new Date(selectedDate!);
       dt.setHours(h, m, 0, 0);
       await submit({
         data: {
           full_name: form.full_name,
           phone: form.phone,
-          email: form.email || null,
+          email: form.email,
           pickup_address: form.pickup_address,
           dropoff_address: form.dropoff_same ? form.pickup_address : form.dropoff_address,
           notes:
             [form.pickup_notes && `Pickup: ${form.pickup_notes}`, form.notes]
               .filter(Boolean)
               .join("\n") || null,
-          lesson_type_id: selected.id,
+          lesson_type_id: selected!.id,
           scheduled_at: dt.toISOString(),
         },
       });
@@ -177,12 +212,12 @@ function BookingPage() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: C.bg, color: C.text }}>
+    <div className="min-h-screen" style={{ background: C.pageBg, color: C.text }}>
       <TopBar school={school} />
 
       <main className="relative max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12 pb-24">
         <div className="grid gap-7 lg:grid-cols-[1.15fr_1fr]">
-          {/* LEFT COLUMN */}
+          {/* LEFT */}
           <div className="space-y-6">
             <Panel eyebrow="Select service" title="Choose your lesson" icon={Sparkles}>
               <ServicePicker
@@ -191,43 +226,62 @@ function BookingPage() {
                 onSelect={(t) => {
                   setSelected(t);
                   setSelectedTime(null);
+                  setErrors((e) => ({ ...e, service: undefined }));
                 }}
               />
+              {errors.service && <InlineError msg={errors.service} />}
             </Panel>
 
-            <Panel eyebrow="Student" title="Your details" icon={User} tinted>
+            <Panel eyebrow="Student" title="Your details" icon={User}>
               <div className="grid sm:grid-cols-2 gap-4">
-                <Field label="Full name" required>
-                  <LuxInput
+                <Field label="Full name" required error={errors.full_name}>
+                  <GlassInput
                     value={form.full_name}
-                    onChange={(v) => setForm({ ...form, full_name: v })}
+                    invalid={!!errors.full_name}
+                    onChange={(v) => {
+                      setForm({ ...form, full_name: v });
+                      if (errors.full_name) setErrors((e) => ({ ...e, full_name: undefined }));
+                    }}
                     placeholder="Sarah Jenkins"
                   />
                 </Field>
-                <Field label="Phone" required>
-                  <LuxInput
+                <Field label="Phone" required error={errors.phone}>
+                  <GlassInput
                     type="tel"
                     value={form.phone}
-                    onChange={(v) => setForm({ ...form, phone: v })}
+                    invalid={!!errors.phone}
+                    onChange={(v) => {
+                      setForm({ ...form, phone: v });
+                      if (errors.phone) setErrors((e) => ({ ...e, phone: undefined }));
+                    }}
                     placeholder="(555) 000-0000"
                   />
                 </Field>
               </div>
-              <Field label="Email">
-                <LuxInput
+              <Field label="Email" required error={errors.email}>
+                <GlassInput
                   type="email"
                   value={form.email}
-                  onChange={(v) => setForm({ ...form, email: v })}
+                  invalid={!!errors.email}
+                  onChange={(v) => {
+                    setForm({ ...form, email: v });
+                    if (errors.email) setErrors((e) => ({ ...e, email: undefined }));
+                  }}
                   placeholder="you@example.com"
                 />
               </Field>
             </Panel>
 
-            <Panel eyebrow="Pickup & drop-off" title="Where shall we meet?" icon={MapPin} tinted>
-              <Field label="Pickup address" required>
-                <LuxInput
+            <Panel eyebrow="Pickup & drop-off" title="Where shall we meet?" icon={MapPin}>
+              <Field label="Pickup address" required error={errors.pickup_address}>
+                <GlassInput
                   value={form.pickup_address}
-                  onChange={(v) => setForm({ ...form, pickup_address: v })}
+                  invalid={!!errors.pickup_address}
+                  onChange={(v) => {
+                    setForm({ ...form, pickup_address: v });
+                    if (errors.pickup_address)
+                      setErrors((e) => ({ ...e, pickup_address: undefined }));
+                  }}
                   placeholder="123 Street Name, City"
                 />
               </Field>
@@ -240,13 +294,13 @@ function BookingPage() {
                   checked={form.dropoff_same}
                   onChange={(e) => setForm({ ...form, dropoff_same: e.target.checked })}
                   className="size-4"
-                  style={{ accentColor: C.navy }}
+                  style={{ accentColor: C.primary }}
                 />
                 Drop-off same as pickup
               </label>
               {!form.dropoff_same && (
                 <Field label="Drop-off address">
-                  <LuxInput
+                  <GlassInput
                     value={form.dropoff_address}
                     onChange={(v) => setForm({ ...form, dropoff_address: v })}
                     placeholder="Drop-off address"
@@ -254,7 +308,7 @@ function BookingPage() {
                 </Field>
               )}
               <Field label="Pickup notes">
-                <LuxTextarea
+                <GlassTextarea
                   value={form.pickup_notes}
                   onChange={(v) => setForm({ ...form, pickup_notes: v })}
                   placeholder="Apartment buzzer, school entrance, meet outside…"
@@ -262,8 +316,8 @@ function BookingPage() {
               </Field>
             </Panel>
 
-            <Panel eyebrow="Notes" title="Anything else?" icon={ShieldCheck} tinted>
-              <LuxTextarea
+            <Panel eyebrow="Notes" title="Anything else?" icon={ShieldCheck}>
+              <GlassTextarea
                 value={form.notes}
                 onChange={(v) => setForm({ ...form, notes: v })}
                 placeholder="License level, goals, focus areas…"
@@ -271,7 +325,7 @@ function BookingPage() {
             </Panel>
           </div>
 
-          {/* RIGHT COLUMN */}
+          {/* RIGHT */}
           <div className="space-y-6 lg:sticky lg:top-6 lg:self-start">
             <Panel eyebrow="Schedule" title="Pick a date & time">
               <Scheduler
@@ -280,9 +334,16 @@ function BookingPage() {
                 onDate={(d) => {
                   setSelectedDate(d);
                   setSelectedTime(null);
+                  setErrors((e) => ({ ...e, date: undefined, time: undefined }));
                 }}
-                onTime={setSelectedTime}
+                onTime={(t) => {
+                  setSelectedTime(t);
+                  setErrors((e) => ({ ...e, time: undefined }));
+                }}
               />
+              {(errors.date || errors.time) && (
+                <InlineError msg={errors.date || errors.time!} />
+              )}
             </Panel>
 
             <SummaryCard
@@ -299,7 +360,7 @@ function BookingPage() {
         <div className="text-center mt-12 space-y-2">
           <p className="text-xs" style={{ color: C.muted }}>
             Powered by{" "}
-            <span className="font-semibold" style={{ color: C.navy }}>
+            <span className="font-semibold" style={{ color: C.primary }}>
               DriveProSync
             </span>
           </p>
@@ -314,21 +375,25 @@ function BookingPage() {
 function TopBar({ school }: { school: string }) {
   return (
     <header
-      className="bg-white"
-      style={{ borderBottom: `1px solid ${C.border}` }}
+      style={{
+        background: "rgba(255,255,255,0.7)",
+        backdropFilter: "saturate(180%) blur(12px)",
+        WebkitBackdropFilter: "saturate(180%) blur(12px)",
+        borderBottom: `1px solid ${C.border}`,
+      }}
     >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-5 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
           <div
-            className="size-9 rounded-lg grid place-items-center shrink-0"
-            style={{ background: C.navy }}
+            className="size-9 rounded-xl grid place-items-center shrink-0"
+            style={{ background: C.primary, boxShadow: "0 6px 16px -6px rgba(79,70,229,0.55)" }}
           >
-            <CarFront className="size-4.5 text-white" />
+            <CarFront className="size-4.5" style={{ color: "#fff" }} />
           </div>
           <div className="flex items-center gap-3 min-w-0">
             <span
               className="font-semibold tracking-tight text-[15px] truncate"
-              style={{ color: C.navy }}
+              style={{ color: C.text }}
             >
               DriveProSync
             </span>
@@ -352,7 +417,7 @@ function TopBar({ school }: { school: string }) {
           <Link
             to="/login"
             className="inline-flex items-center gap-1.5 text-[12px] font-semibold transition-opacity hover:opacity-70"
-            style={{ color: C.navy }}
+            style={{ color: C.primary }}
           >
             <LogIn className="size-3.5" />
             Staff login
@@ -370,36 +435,37 @@ function Panel({
   title,
   icon: Icon,
   children,
-  tinted,
 }: {
   eyebrow: string;
   title: string;
   icon?: any;
   children: React.ReactNode;
-  tinted?: boolean;
 }) {
   return (
     <section
       className="rounded-2xl p-6 sm:p-7"
       style={{
-        background: tinted ? C.formBg : C.surface,
+        background: C.surface,
+        backdropFilter: "saturate(180%) blur(12px)",
+        WebkitBackdropFilter: "saturate(180%) blur(12px)",
         border: `1px solid ${C.border}`,
-        boxShadow: "0 1px 2px rgba(27,43,75,0.04), 0 8px 32px -16px rgba(27,43,75,0.08)",
+        boxShadow:
+          "0 1px 2px rgba(15,23,42,0.04), 0 12px 40px -20px rgba(15,23,42,0.08)",
       }}
     >
       <div className="flex items-center gap-3 mb-5">
         {Icon && (
           <div
             className="size-8 rounded-lg grid place-items-center"
-            style={{ background: "rgba(201,168,76,0.12)" }}
+            style={{ background: C.primarySoft }}
           >
-            <Icon className="size-4" style={{ color: C.gold }} />
+            <Icon className="size-4" style={{ color: C.primary }} />
           </div>
         )}
         <div>
           <div
-            className="text-[10px] font-semibold uppercase tracking-[0.2em]"
-            style={{ color: C.gold }}
+            className="text-[10px] font-semibold uppercase tracking-[0.18em]"
+            style={{ color: C.primary }}
           >
             {eyebrow}
           </div>
@@ -413,6 +479,14 @@ function Panel({
       </div>
       <div className="space-y-4">{children}</div>
     </section>
+  );
+}
+
+function InlineError({ msg }: { msg: string }) {
+  return (
+    <p className="text-xs mt-2" style={{ color: C.danger }}>
+      {msg}
+    </p>
   );
 }
 
@@ -495,23 +569,23 @@ function ServiceCard({
         full ? "w-full" : ""
       }`}
       style={{
-        background: active ? C.navy : C.surface,
-        border: `1px solid ${active ? C.navy : C.border}`,
+        background: active ? C.primarySoft : C.surfaceSolid,
+        border: `1px solid ${active ? C.primary : C.border}`,
         boxShadow: active
-          ? "0 12px 32px -12px rgba(27,43,75,0.45), 0 0 0 1px rgba(201,168,76,0.25)"
-          : "0 1px 2px rgba(27,43,75,0.04)",
+          ? "0 10px 28px -12px rgba(79,70,229,0.35)"
+          : "0 1px 2px rgba(15,23,42,0.04)",
       }}
       onMouseEnter={(e) => {
-        if (!active) e.currentTarget.style.background = C.formBg;
+        if (!active) e.currentTarget.style.borderColor = C.borderStrong;
       }}
       onMouseLeave={(e) => {
-        if (!active) e.currentTarget.style.background = C.surface;
+        if (!active) e.currentTarget.style.borderColor = C.border;
       }}
     >
       {active && (
         <div
           className="absolute top-3 right-3 size-6 rounded-full grid place-items-center"
-          style={{ background: C.gold, color: C.navy }}
+          style={{ background: C.primary, color: "#fff" }}
         >
           <Check className="size-3.5" strokeWidth={3} />
         </div>
@@ -519,9 +593,9 @@ function ServiceCard({
       <div
         className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] rounded-full px-2.5 py-1"
         style={{
-          background: active ? "rgba(201,168,76,0.15)" : "rgba(201,168,76,0.10)",
-          color: active ? C.gold : "#A8862E",
-          border: `1px solid ${active ? "rgba(201,168,76,0.35)" : "rgba(201,168,76,0.20)"}`,
+          background: C.primarySoft,
+          color: C.primary,
+          border: `1px solid rgba(79,70,229,0.18)`,
         }}
       >
         <Clock className="size-3" />
@@ -529,19 +603,19 @@ function ServiceCard({
       </div>
       <div
         className="mt-3 font-semibold tracking-tight text-[16px] pr-7"
-        style={{ color: active ? "#FFFFFF" : C.text }}
+        style={{ color: C.text }}
       >
         {name}
       </div>
       <div
         className="text-[12px] mt-1 line-clamp-1"
-        style={{ color: active ? "rgba(255,255,255,0.65)" : C.muted }}
+        style={{ color: C.muted }}
       >
         {blurb}
       </div>
       <div
         className="mt-4 text-2xl font-bold tracking-tight"
-        style={{ color: C.gold }}
+        style={{ color: C.text }}
       >
         {t.price_cents > 0 ? money(t.price_cents) : "Custom Quote"}
       </div>
@@ -572,7 +646,7 @@ function Scheduler({
       {/* Calendar */}
       <div
         className="rounded-xl p-4"
-        style={{ background: C.surface, border: `1px solid ${C.border}` }}
+        style={{ background: C.surfaceSolid, border: `1px solid ${C.border}` }}
       >
         <div className="flex items-center justify-between mb-4">
           <div
@@ -586,8 +660,8 @@ function Scheduler({
               type="button"
               onClick={() => setMonth(addMonths(month, -1))}
               disabled={isSameMonth(month, today)}
-              className="size-8 rounded-lg grid place-items-center transition-colors disabled:opacity-25 disabled:cursor-not-allowed hover:bg-[#F5F3EF]"
-              style={{ color: C.navy, border: `1px solid ${C.border}` }}
+              className="size-8 rounded-lg grid place-items-center transition-colors disabled:opacity-25 disabled:cursor-not-allowed"
+              style={{ color: C.primary, border: `1px solid ${C.border}` }}
               aria-label="Previous month"
             >
               <ChevronLeft className="size-4" />
@@ -595,8 +669,8 @@ function Scheduler({
             <button
               type="button"
               onClick={() => setMonth(addMonths(month, 1))}
-              className="size-8 rounded-lg grid place-items-center transition-colors hover:bg-[#F5F3EF]"
-              style={{ color: C.navy, border: `1px solid ${C.border}` }}
+              className="size-8 rounded-lg grid place-items-center transition-colors"
+              style={{ color: C.primary, border: `1px solid ${C.border}` }}
               aria-label="Next month"
             >
               <ChevronRight className="size-4" />
@@ -623,11 +697,11 @@ function Scheduler({
             const disabled = !inMonth || isPast;
             const base: React.CSSProperties = {};
             if (isSel) {
-              base.background = C.navy;
+              base.background = C.primary;
               base.color = "#FFFFFF";
             } else if (isToday) {
-              base.border = `1.5px solid ${C.gold}`;
-              base.color = C.gold;
+              base.border = `1.5px solid ${C.primary}`;
+              base.color = C.primary;
             } else {
               base.color = C.text;
             }
@@ -638,11 +712,7 @@ function Scheduler({
                 disabled={disabled}
                 onClick={() => onDate(d)}
                 className={`relative h-10 rounded-full text-sm font-medium transition-all ${
-                  disabled
-                    ? "opacity-25 cursor-not-allowed"
-                    : isSel
-                      ? ""
-                      : "hover:bg-[#F5F3EF]"
+                  disabled ? "opacity-25 cursor-not-allowed" : ""
                 }`}
                 style={base}
               >
@@ -657,8 +727,8 @@ function Scheduler({
       <div>
         <div className="flex items-center justify-between mb-3">
           <div
-            className="text-[10px] font-semibold uppercase tracking-[0.2em]"
-            style={{ color: C.gold }}
+            className="text-[10px] font-semibold uppercase tracking-[0.18em]"
+            style={{ color: C.primary }}
           >
             Available times
           </div>
@@ -671,8 +741,8 @@ function Scheduler({
             className="text-sm py-8 text-center rounded-xl"
             style={{
               color: C.muted,
-              background: C.formBg,
-              border: `1px solid ${C.border}`,
+              background: C.surfaceTint,
+              border: `1px dashed ${C.border}`,
             }}
           >
             Choose a date to see open times.
@@ -684,19 +754,19 @@ function Scheduler({
               const active = time === s.time;
               const style: React.CSSProperties = active
                 ? {
-                    background: C.navy,
+                    background: C.primary,
                     color: "#FFFFFF",
-                    border: `1px solid ${C.gold}`,
+                    border: `1px solid ${C.primary}`,
                   }
                 : unavailable
                   ? {
-                      background: C.surface,
-                      color: C.text,
+                      background: C.surfaceSolid,
+                      color: C.muted,
                       border: `1px solid ${C.border}`,
-                      opacity: 0.3,
+                      opacity: 0.45,
                     }
                   : {
-                      background: C.surface,
+                      background: C.surfaceSolid,
                       color: C.text,
                       border: `1px solid ${C.border}`,
                     };
@@ -707,11 +777,7 @@ function Scheduler({
                   disabled={unavailable}
                   onClick={() => onTime(s.time)}
                   className={`rounded-full px-3 py-2.5 text-xs font-semibold transition-all ${
-                    unavailable
-                      ? "cursor-not-allowed line-through"
-                      : active
-                        ? ""
-                        : "hover:bg-[#FAFAF8]"
+                    unavailable ? "cursor-not-allowed line-through" : ""
                   }`}
                   style={style}
                 >
@@ -739,7 +805,7 @@ function buildMonthGrid(month: Date): Date[] {
   return days;
 }
 
-/* ---------------- Live Summary + submit ---------------- */
+/* ---------------- Summary ---------------- */
 
 function SummaryCard({
   lesson,
@@ -757,24 +823,29 @@ function SummaryCard({
   submitting: boolean;
 }) {
   const timeLabel = TIME_SLOTS.find((s) => s.time === time)?.label;
-  const ready = !!(lesson && date && time && form.full_name && form.phone && form.pickup_address);
 
   return (
     <section
       className="rounded-2xl overflow-hidden"
       style={{
         background: C.surface,
+        backdropFilter: "saturate(180%) blur(12px)",
+        WebkitBackdropFilter: "saturate(180%) blur(12px)",
         border: `1px solid ${C.border}`,
-        boxShadow: "0 1px 2px rgba(27,43,75,0.04), 0 12px 40px -16px rgba(27,43,75,0.10)",
+        boxShadow:
+          "0 1px 2px rgba(15,23,42,0.04), 0 16px 40px -20px rgba(15,23,42,0.12)",
       }}
     >
       <div
         className="px-6 py-4"
-        style={{ background: C.formBg, borderBottom: `1px solid ${C.border}` }}
+        style={{
+          background: C.surfaceTint,
+          borderBottom: `1px solid ${C.border}`,
+        }}
       >
         <div
-          className="text-[10px] font-semibold uppercase tracking-[0.2em]"
-          style={{ color: C.gold }}
+          className="text-[10px] font-semibold uppercase tracking-[0.18em]"
+          style={{ color: C.primary }}
         >
           Booking Summary
         </div>
@@ -798,7 +869,7 @@ function SummaryCard({
         </div>
         <div
           className="mt-4 text-3xl font-bold tracking-tight"
-          style={{ color: C.gold }}
+          style={{ color: C.text }}
         >
           {lesson ? (lesson.price_cents > 0 ? money(lesson.price_cents) : "Custom Quote") : "—"}
         </div>
@@ -807,6 +878,9 @@ function SummaryCard({
       <div className="p-6 grid grid-cols-2 gap-x-5 gap-y-4 text-sm">
         <Row label="Name">{form.full_name || "—"}</Row>
         <Row label="Phone">{form.phone || "—"}</Row>
+        <Row label="Email" full>
+          {form.email || "—"}
+        </Row>
         <Row label="Pickup" full>
           {form.pickup_address || "—"}
         </Row>
@@ -821,9 +895,9 @@ function SummaryCard({
         <div
           className="rounded-lg px-3 py-2.5 text-[11px] font-semibold uppercase tracking-[0.18em]"
           style={{
-            background: C.formBg,
-            color: C.navy,
-            borderLeft: `3px solid ${C.gold}`,
+            background: C.primarySoft,
+            color: C.primary,
+            borderLeft: `3px solid ${C.primary}`,
           }}
         >
           Pending school approval
@@ -834,35 +908,21 @@ function SummaryCard({
         <button
           type="button"
           onClick={onSubmit}
-          disabled={!ready || submitting}
-          className="group relative w-full inline-flex items-center justify-center gap-2 rounded-xl px-4 py-4 text-sm font-semibold tracking-wide transition-all overflow-hidden"
+          disabled={submitting}
+          className="w-full inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-sm font-semibold tracking-wide transition-all"
           style={{
-            background: C.navy,
+            background: submitting
+              ? C.mutedSoft
+              : `linear-gradient(90deg, ${C.primary}, ${C.primaryDark})`,
             color: "#FFFFFF",
-            border: ready && !submitting ? `1px solid ${C.gold}` : `1px solid transparent`,
-            boxShadow:
-              ready && !submitting
-                ? "0 12px 32px -12px rgba(27,43,75,0.55), 0 0 0 1px rgba(201,168,76,0.20)"
-                : "none",
-            opacity: ready && !submitting ? 1 : 0.4,
-            cursor: ready && !submitting ? "pointer" : "not-allowed",
+            boxShadow: submitting
+              ? "none"
+              : "0 12px 28px -12px rgba(79,70,229,0.55)",
+            cursor: submitting ? "not-allowed" : "pointer",
           }}
         >
-          {/* gold shimmer */}
-          {ready && !submitting && (
-            <span
-              aria-hidden
-              className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out pointer-events-none"
-              style={{
-                background:
-                  "linear-gradient(90deg, transparent, rgba(201,168,76,0.25), transparent)",
-              }}
-            />
-          )}
-          <span className="relative">
-            {submitting ? "Sending…" : "Request Lesson Time"}
-          </span>
-          {!submitting && <ArrowRight className="relative size-4" />}
+          {submitting ? "Sending…" : "Request Lesson Time"}
+          {!submitting && <ArrowRight className="size-4" />}
         </button>
         <p className="text-[11px] text-center mt-3" style={{ color: C.muted }}>
           Your spot is held for 10 minutes after submitting.
@@ -885,11 +945,11 @@ function Row({
     <div className={full ? "col-span-2" : ""}>
       <div
         className="text-[10px] uppercase tracking-[0.18em] font-semibold"
-        style={{ color: C.muted }}
+        style={{ color: C.mutedSoft }}
       >
         {label}
       </div>
-      <div className="text-sm mt-1 truncate" style={{ color: C.navy }}>
+      <div className="text-sm mt-1 truncate" style={{ color: C.text }}>
         {children}
       </div>
     </div>
@@ -901,10 +961,12 @@ function Row({
 function Field({
   label,
   required,
+  error,
   children,
 }: {
   label: string;
   required?: boolean;
+  error?: string;
   children: React.ReactNode;
 }) {
   return (
@@ -914,9 +976,14 @@ function Field({
         style={{ color: C.muted }}
       >
         {label}
-        {required && <span style={{ color: C.gold }}> *</span>}
+        {required && <span style={{ color: C.danger }}> *</span>}
       </label>
       {children}
+      {error && (
+        <p className="text-xs mt-1.5" style={{ color: C.danger }}>
+          {error}
+        </p>
+      )}
     </div>
   );
 }
@@ -924,16 +991,18 @@ function Field({
 const inputClass =
   "w-full rounded-xl px-4 py-3 text-sm outline-none transition-all placeholder:opacity-50";
 
-function LuxInput({
+function GlassInput({
   value,
   onChange,
   placeholder,
   type = "text",
+  invalid,
 }: {
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
   type?: string;
+  invalid?: boolean;
 }) {
   return (
     <input
@@ -943,23 +1012,25 @@ function LuxInput({
       placeholder={placeholder}
       className={inputClass}
       style={{
-        background: C.surface,
-        border: `1px solid ${C.border}`,
+        background: C.surfaceSolid,
+        border: `1px solid ${invalid ? C.danger : C.border}`,
         color: C.text,
       }}
       onFocus={(e) => {
-        e.currentTarget.style.borderColor = C.navy;
-        e.currentTarget.style.boxShadow = `0 0 0 3px rgba(27,43,75,0.10)`;
+        e.currentTarget.style.borderColor = invalid ? C.danger : C.primary;
+        e.currentTarget.style.boxShadow = invalid
+          ? `0 0 0 3px rgba(220,38,38,0.12)`
+          : `0 0 0 3px rgba(79,70,229,0.12)`;
       }}
       onBlur={(e) => {
-        e.currentTarget.style.borderColor = C.border;
+        e.currentTarget.style.borderColor = invalid ? C.danger : C.border;
         e.currentTarget.style.boxShadow = "none";
       }}
     />
   );
 }
 
-function LuxTextarea({
+function GlassTextarea({
   value,
   onChange,
   placeholder,
@@ -975,13 +1046,13 @@ function LuxTextarea({
       placeholder={placeholder}
       className={`${inputClass} min-h-[88px] resize-y`}
       style={{
-        background: C.surface,
+        background: C.surfaceSolid,
         border: `1px solid ${C.border}`,
         color: C.text,
       }}
       onFocus={(e) => {
-        e.currentTarget.style.borderColor = C.navy;
-        e.currentTarget.style.boxShadow = `0 0 0 3px rgba(27,43,75,0.10)`;
+        e.currentTarget.style.borderColor = C.primary;
+        e.currentTarget.style.boxShadow = `0 0 0 3px rgba(79,70,229,0.12)`;
       }}
       onBlur={(e) => {
         e.currentTarget.style.borderColor = C.border;
@@ -1009,30 +1080,32 @@ function ConfirmationScreen({
   name: string;
 }) {
   return (
-    <div className="min-h-screen" style={{ background: C.bg, color: C.text }}>
+    <div className="min-h-screen" style={{ background: C.pageBg, color: C.text }}>
       <TopBar school={school} />
       <main className="max-w-xl mx-auto px-4 sm:px-6 py-14">
         <div
           className="rounded-2xl overflow-hidden"
           style={{
             background: C.surface,
+            backdropFilter: "saturate(180%) blur(12px)",
+            WebkitBackdropFilter: "saturate(180%) blur(12px)",
             border: `1px solid ${C.border}`,
-            boxShadow: "0 12px 40px -16px rgba(27,43,75,0.15)",
+            boxShadow: "0 16px 40px -20px rgba(15,23,42,0.18)",
           }}
         >
           <div className="p-10 text-center">
             <div
               className="mx-auto size-16 rounded-full grid place-items-center"
               style={{
-                background: C.navy,
-                boxShadow: "0 12px 32px -12px rgba(27,43,75,0.55)",
+                background: C.primary,
+                boxShadow: "0 12px 32px -12px rgba(79,70,229,0.55)",
               }}
             >
-              <CircleCheck className="size-8" style={{ color: C.gold }} />
+              <CircleCheck className="size-8" style={{ color: "#fff" }} />
             </div>
             <div
-              className="text-[10px] font-semibold uppercase tracking-[0.2em] mt-5"
-              style={{ color: C.gold }}
+              className="text-[10px] font-semibold uppercase tracking-[0.18em] mt-5"
+              style={{ color: C.primary }}
             >
               Booking request received
             </div>
@@ -1066,14 +1139,14 @@ function ConfirmationScreen({
           <Link
             to="/"
             className="text-sm font-semibold hover:opacity-70 transition-opacity"
-            style={{ color: C.navy }}
+            style={{ color: C.primary }}
           >
             Book another lesson
           </Link>
         </div>
         <p className="text-center text-xs mt-8" style={{ color: C.muted }}>
           Powered by{" "}
-          <span className="font-semibold" style={{ color: C.navy }}>
+          <span className="font-semibold" style={{ color: C.primary }}>
             DriveProSync
           </span>
         </p>
