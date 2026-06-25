@@ -166,7 +166,6 @@ function BookingPage() {
     const v = validate();
     setErrors(v);
     if (Object.keys(v).length) {
-      toast.error("Please fix the highlighted fields.");
       return;
     }
     setSubmitting(true);
@@ -178,8 +177,8 @@ function BookingPage() {
         data: {
           full_name: form.full_name,
           phone: form.phone,
-          email: form.email,
-          pickup_address: form.pickup_address,
+          email: form.email.trim(),
+          pickup_address: form.pickup_address.trim(),
           dropoff_address: form.dropoff_same ? form.pickup_address : form.dropoff_address,
           notes:
             [form.pickup_notes && `Pickup: ${form.pickup_notes}`, form.notes]
@@ -212,7 +211,7 @@ function BookingPage() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: C.pageBg, color: C.text }}>
+    <div className="public-booking-page min-h-screen" style={{ background: C.pageBg, color: C.text }}>
       <TopBar school={school} />
 
       <main className="relative max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12 pb-24">
@@ -341,9 +340,8 @@ function BookingPage() {
                   setErrors((e) => ({ ...e, time: undefined }));
                 }}
               />
-              {(errors.date || errors.time) && (
-                <InlineError msg={errors.date || errors.time!} />
-              )}
+              {errors.date && <InlineError msg={errors.date} />}
+              {errors.time && <InlineError msg={errors.time} />}
             </Panel>
 
             <SummaryCard
@@ -1080,7 +1078,7 @@ function ConfirmationScreen({
   name: string;
 }) {
   return (
-    <div className="min-h-screen" style={{ background: C.pageBg, color: C.text }}>
+    <div className="public-booking-page min-h-screen" style={{ background: C.pageBg, color: C.text }}>
       <TopBar school={school} />
       <main className="max-w-xl mx-auto px-4 sm:px-6 py-14">
         <div
