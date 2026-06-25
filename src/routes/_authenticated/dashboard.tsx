@@ -114,7 +114,7 @@ function Dashboard() {
   async function updateBooking(id: string, patch: Record<string, unknown>) {
     setUpdatingId(id);
     try {
-      const { error } = await supabase.from("bookings").update(patch).eq("id", id);
+      const { error } = await supabase.from("bookings").update(patch as any).eq("id", id);
       if (error) throw error;
       await Promise.all([
         qc.invalidateQueries({ queryKey: ["pending-bookings"] }),

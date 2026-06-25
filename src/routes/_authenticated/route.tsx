@@ -76,10 +76,10 @@ function AuthLayout() {
   }
 
   if (roles.length === 0) {
-    return <NoRoleScreen userId={user?.id} email={user?.email} onSignOut={async () => {
+    return <NoRoleScreen email={user?.email} onSignOut={async () => {
       await supabase.auth.signOut();
       navigate({ to: "/auth", replace: true });
-    }} onRecovered={() => rolesQ.refetch()} />;
+    }} onRecovered={() => { void rolesQ.refetch(); }} />;
   }
 
   // Instructor-only view skips the admin sidebar
