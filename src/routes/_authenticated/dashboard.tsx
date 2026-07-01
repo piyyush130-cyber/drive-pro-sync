@@ -10,6 +10,8 @@ import {
   CheckCircle2,
   MapPin,
   ArrowRight,
+  Sparkles,
+  Circle,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { StatCard, StatusPill } from "@/components/StatCard";
@@ -19,6 +21,7 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
 });
+
 
 function startOfDay(d = new Date()) {
   const x = new Date(d);
