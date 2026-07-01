@@ -201,7 +201,53 @@ function Dashboard() {
         />
       </div>
 
+      {setupQ.data && (() => {
+        const items = [
+          { done: setupQ.data.hasSchoolName, label: "Set your school name", to: "/settings" as const },
+          { done: setupQ.data.hasContact, label: "Add contact phone & email", to: "/settings" as const },
+          { done: setupQ.data.hasServiceArea, label: "Describe your service area", to: "/settings" as const },
+          { done: setupQ.data.hasInstructor, label: "Add at least one instructor", to: "/instructors" as const },
+          { done: setupQ.data.hasLessonTypes, label: "Publish your lesson types & pricing", to: "/settings" as const },
+        ];
+        const remaining = items.filter((i) => !i.done);
+        if (remaining.length === 0) return null;
+        const doneCount = items.length - remaining.length;
+        return (
+          <div className="card-premium p-5 mb-8 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100">
+            <div className="flex items-center justify-between mb-3 gap-3">
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="size-8 rounded-lg bg-blue-600 text-white grid place-items-center shrink-0">
+                  <Sparkles className="size-4" />
+                </div>
+                <div className="min-w-0">
+                  <div className="font-semibold text-slate-900 truncate">Finish setting up your school</div>
+                  <div className="text-xs text-slate-500">{doneCount} of {items.length} complete</div>
+                </div>
+              </div>
+            </div>
+            <ul className="grid sm:grid-cols-2 gap-x-6 gap-y-2">
+              {items.map((it) => (
+                <li key={it.label}>
+                  <Link
+                    to={it.to}
+                    className={`flex items-center gap-2 text-sm py-1 ${it.done ? "text-slate-400 line-through" : "text-slate-700 hover:text-blue-700"}`}
+                  >
+                    {it.done ? (
+                      <CheckCircle2 className="size-4 text-emerald-600 shrink-0" />
+                    ) : (
+                      <Circle className="size-4 text-slate-400 shrink-0" />
+                    )}
+                    <span className="truncate">{it.label}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        );
+      })()}
+
       <div className="grid lg:grid-cols-3 gap-6">
+
         <div className="lg:col-span-2">
           <div className="card-premium overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-center">
