@@ -215,7 +215,31 @@ function BookingPage() {
       <TopBar school={school} />
 
       <main className="relative max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12 pb-24">
-        <div className="grid gap-7 lg:grid-cols-[1.15fr_1fr]">
+        <div
+          className="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 size-[420px] rounded-full opacity-40 blur-3xl"
+          style={{ background: "radial-gradient(circle, rgba(79,70,229,0.16) 0%, rgba(14,165,233,0.08) 55%, transparent 75%)" }}
+        />
+        <div className="relative mb-9 sm:mb-11 max-w-2xl">
+          <div
+            className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] rounded-full px-3 py-1 mb-4"
+            style={{ background: C.primarySoft, color: C.primary, border: `1px solid rgba(79,70,229,0.18)` }}
+          >
+            <CarFront className="size-3" />
+            {school}
+          </div>
+          <h1
+            className="text-[32px] sm:text-[40px] leading-[1.08] tracking-tight"
+            style={{ fontFamily: "var(--font-display)", color: C.text }}
+          >
+            Book your driving lesson
+            <span style={{ color: C.primary }}>.</span>
+          </h1>
+          <p className="mt-3 text-[15px] leading-relaxed" style={{ color: C.muted }}>
+            Pick a lesson, choose a time, and you're on the road — no calls, no waiting on a callback.
+          </p>
+        </div>
+
+        <div className="relative grid gap-7 lg:grid-cols-[1.15fr_1fr]">
           {/* LEFT */}
           <div className="space-y-6">
             <Panel eyebrow="Select service" title="Choose your lesson" icon={Sparkles}>
@@ -468,8 +492,8 @@ function Panel({
             {eyebrow}
           </div>
           <div
-            className="font-semibold tracking-tight text-[17px] mt-1"
-            style={{ color: C.text }}
+            className="tracking-tight text-[19px] mt-1"
+            style={{ fontFamily: "var(--font-display)", color: C.text }}
           >
             {title}
           </div>
@@ -508,8 +532,14 @@ function ServicePicker({
   };
   if (!types.length) {
     return (
-      <div className="text-sm" style={{ color: C.muted }}>
-        Loading services…
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 animate-pulse">
+        {[0, 1].map((i) => (
+          <div
+            key={i}
+            className="rounded-2xl p-5 h-[118px]"
+            style={{ background: C.surfaceTint, border: `1px solid ${C.border}` }}
+          />
+        ))}
       </div>
     );
   }
@@ -563,21 +593,27 @@ function ServiceCard({
     <button
       type="button"
       onClick={onSelect}
-      className={`group relative text-left rounded-2xl p-5 transition-all duration-200 ${
+      className={`group relative text-left rounded-2xl p-5 transition-all duration-200 ease-out hover:-translate-y-0.5 ${
         full ? "w-full" : ""
       }`}
       style={{
         background: active ? C.primarySoft : C.surfaceSolid,
         border: `1px solid ${active ? C.primary : C.border}`,
         boxShadow: active
-          ? "0 10px 28px -12px rgba(79,70,229,0.35)"
+          ? "0 14px 32px -14px rgba(79,70,229,0.4)"
           : "0 1px 2px rgba(15,23,42,0.04)",
       }}
       onMouseEnter={(e) => {
-        if (!active) e.currentTarget.style.borderColor = C.borderStrong;
+        if (!active) {
+          e.currentTarget.style.borderColor = C.borderStrong;
+          e.currentTarget.style.boxShadow = "0 12px 24px -14px rgba(15,23,42,0.12)";
+        }
       }}
       onMouseLeave={(e) => {
-        if (!active) e.currentTarget.style.borderColor = C.border;
+        if (!active) {
+          e.currentTarget.style.borderColor = C.border;
+          e.currentTarget.style.boxShadow = "0 1px 2px rgba(15,23,42,0.04)";
+        }
       }}
     >
       {active && (
@@ -907,7 +943,7 @@ function SummaryCard({
           type="button"
           onClick={onSubmit}
           disabled={submitting}
-          className="w-full inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-sm font-semibold tracking-wide transition-all"
+          className="w-full inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3.5 text-sm font-semibold tracking-wide transition-all duration-200 ease-out hover:enabled:-translate-y-0.5 active:enabled:translate-y-0"
           style={{
             background: submitting
               ? C.mutedSoft
@@ -917,6 +953,12 @@ function SummaryCard({
               ? "none"
               : "0 12px 28px -12px rgba(79,70,229,0.55)",
             cursor: submitting ? "not-allowed" : "pointer",
+          }}
+          onMouseEnter={(e) => {
+            if (!submitting) e.currentTarget.style.boxShadow = "0 16px 34px -12px rgba(79,70,229,0.65)";
+          }}
+          onMouseLeave={(e) => {
+            if (!submitting) e.currentTarget.style.boxShadow = "0 12px 28px -12px rgba(79,70,229,0.55)";
           }}
         >
           {submitting ? "Sending…" : "Request Lesson Time"}
