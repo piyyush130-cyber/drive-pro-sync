@@ -185,34 +185,48 @@ async function runSeed() {
     }
   }
 
-  // General bookings seed - only if fewer than 5 exist
+  // General bookings seed - only if fewer than 8 exist
   const { count: bCount } = await supabaseAdmin
     .from("bookings")
     .select("*", { count: "exact", head: true });
-  if ((bCount ?? 0) < 5 && lessonTypes && lessonTypes.length > 0 && studentIds.length > 0) {
+  if ((bCount ?? 0) < 8 && lessonTypes && lessonTypes.length > 0 && studentIds.length > 0) {
     const now = new Date();
-    const statuses: ("confirmed" | "pending" | "completed" | "no_show")[] = [
-      "completed", "completed", "completed",
-      "confirmed", "confirmed",
-      "pending", "pending",
-      "no_show",
+    // 12 realistic bookings: mix of past (completed / no-show), today, upcoming, and pending review
+    const plan: { dayOffset: number; hour: number; min: number; status: "confirmed" | "pending" | "completed" | "no_show" }[] = [
+      { dayOffset: -8, hour: 10, min: 0, status: "completed" },
+      { dayOffset: -6, hour: 13, min: 30, status: "completed" },
+      { dayOffset: -5, hour: 9, min: 0, status: "completed" },
+      { dayOffset: -4, hour: 15, min: 0, status: "no_show" },
+      { dayOffset: -2, hour: 11, min: 0, status: "completed" },
+      { dayOffset: -1, hour: 16, min: 30, status: "completed" },
+      { dayOffset: 1, hour: 9, min: 30, status: "confirmed" },
+      { dayOffset: 2, hour: 14, min: 0, status: "confirmed" },
+      { dayOffset: 3, hour: 10, min: 0, status: "confirmed" },
+      { dayOffset: 4, hour: 12, min: 30, status: "pending" },
+      { dayOffset: 5, hour: 9, min: 0, status: "pending" },
+      { dayOffset: 6, hour: 15, min: 30, status: "pending" },
     ];
-    const rows = statuses.map((status, i) => {
-      const dayOffset = i - 5;
+    const rows = plan.map((p, i) => {
       const date = new Date(now);
-      date.setDate(date.getDate() + dayOffset);
-      date.setHours(9 + (i % 8), (i % 2) * 30, 0, 0);
+      date.setDate(date.getDate() + p.dayOffset);
+      date.setHours(p.hour, p.min, 0, 0);
       const lt = lessonTypes[i % lessonTypes.length];
+      // Distribute across all instructors (skip primary — demo instructor gets its own guaranteed block)
+      const instructorPool = instructorIds.slice(1);
+      const instructorId = instructorPool.length > 0
+        ? instructorPool[i % instructorPool.length]
+        : instructorIds[0];
       return {
         student_id: studentIds[i % studentIds.length],
-        instructor_id: instructorIds[(i + 1) % instructorIds.length],
+        instructor_id: instructorId,
         lesson_type_id: lt.id,
         scheduled_at: date.toISOString(),
         duration_minutes: lt.duration_minutes,
         price_cents: lt.price_cents,
-        status,
-        payment_status: (status === "completed" ? "paid" : "unpaid") as "paid" | "unpaid",
+        status: p.status,
+        payment_status: (p.status === "completed" ? "paid" : "unpaid") as "paid" | "unpaid",
         pickup_address: STUDENTS[i % STUDENTS.length].address,
+        notes: STUDENT_NOTES[i % STUDENT_NOTES.length],
       };
     });
     await supabaseAdmin.from("bookings").insert(rows);
@@ -230,6 +244,7 @@ async function runSeed() {
       }
     }
   }
+
 
   // GUARANTEE: demo instructor has >=5 upcoming confirmed lessons in next 7 days
   if (lessonTypes && lessonTypes.length > 0 && studentIds.length >= 5) {
