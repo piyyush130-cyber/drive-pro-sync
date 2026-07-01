@@ -26,6 +26,8 @@ function InstructorPage() {
   const [nextFocus, setNextFocus] = useState("");
   const [readiness, setReadiness] = useState<"not_ready" | "improving" | "almost_ready" | "ready">("improving");
   const [savingNote, setSavingNote] = useState(false);
+  const [reseeding, setReseeding] = useState(false);
+  const reseed = useServerFn(seedDemoAccounts);
 
   function openNote(id: string) {
     setNoteOpen(id);
@@ -121,8 +123,6 @@ function InstructorPage() {
     ? list.find((b: any) => new Date(b.scheduled_at).getTime() >= now && b.status !== "completed" && b.status !== "no_show")
     : null;
 
-  const reseed = useServerFn(seedDemoAccounts);
-  const [reseeding, setReseeding] = useState(false);
   async function loadDemo() {
     setReseeding(true);
     try {
