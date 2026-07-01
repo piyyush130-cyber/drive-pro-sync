@@ -39,6 +39,14 @@ export const submitPublicBooking = createServerFn({ method: "POST" })
       .single();
     if (sErr || !student) throw new Error("Could not create student");
 
+    // Honor Approval Mode: auto-confirm when admin has disabled manual approval
+    const { data: settings } = await supabaseAdmin
+      .from("school_settings")
+      .select("require_approval")
+      .eq("id", 1)
+      .maybeSingle();
+    const initialStatus = settings?.require_approval === false ? "confirmed" : "pending";
+
     const { error: bErr } = await supabaseAdmin.from("bookings").insert({
       student_id: student.id,
       lesson_type_id: lt.id,
@@ -48,11 +56,12 @@ export const submitPublicBooking = createServerFn({ method: "POST" })
       dropoff_address: data.dropoff_address ?? data.pickup_address,
       notes: data.notes ?? null,
       price_cents: lt.price_cents,
-      status: "pending",
+      status: initialStatus,
     });
     if (bErr) throw new Error("Could not create booking");
 
-    return { ok: true };
+    return { ok: true, status: initialStatus };
+
   });
 
 const CancelSchema = z.object({
