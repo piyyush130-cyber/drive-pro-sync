@@ -227,18 +227,20 @@ function InstructorPage() {
                       <CalendarClock className="size-4 text-blue-600" />
                       {fmtTime(b.scheduled_at)} · {b.lesson_types?.name ?? "Lesson"}
                     </div>
-                    <div className="mt-2 text-sm text-slate-700">
-                      {b.students?.full_name}
+                    <div className="mt-2 text-sm text-slate-700 flex flex-wrap items-center gap-x-3 gap-y-1">
+                      <span className="font-medium">{b.students?.full_name}</span>
                       {b.students?.phone && (
-                        <a
-                          href={`tel:${b.students.phone}`}
-                          className="ml-3 text-blue-700 inline-flex items-center gap-1"
-                        >
-                          <Phone className="size-3.5" />
-                          {b.students.phone}
+                        <a href={`tel:${b.students.phone}`} className="text-blue-700 inline-flex items-center gap-1">
+                          <Phone className="size-3.5" />{b.students.phone}
+                        </a>
+                      )}
+                      {b.students?.email && (
+                        <a href={`mailto:${b.students.email}`} className="text-slate-500 inline-flex items-center gap-1 truncate max-w-[220px]">
+                          <Mail className="size-3.5" />{b.students.email}
                         </a>
                       )}
                     </div>
+
                     <div className="mt-2 text-sm text-slate-600 inline-flex items-start gap-1.5">
                       <MapPin className="size-3.5 mt-0.5 text-slate-400" />
                       <span>
