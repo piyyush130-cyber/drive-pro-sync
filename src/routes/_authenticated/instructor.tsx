@@ -1,10 +1,13 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { CalendarClock, MapPin, Phone, CheckCircle2, XCircle, CarFront, LogOut, NotebookPen } from "lucide-react";
+import { CalendarClock, MapPin, Phone, CheckCircle2, XCircle, CarFront, LogOut, NotebookPen, Mail, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fmtTime, fmtDate, statusTone, statusLabel } from "@/lib/format";
 import { toast } from "sonner";
+import { useServerFn } from "@tanstack/react-start";
+import { seedDemoAccounts } from "@/lib/seed-demo.functions";
+
 
 export const Route = createFileRoute("/_authenticated/instructor")({
   beforeLoad: async () => {
