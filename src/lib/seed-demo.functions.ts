@@ -147,8 +147,20 @@ async function runSeed() {
   const { data: lessonTypes } = await supabaseAdmin.from("lesson_types").select("id, price_cents, duration_minutes").limit(4);
 
   // Students
+  const STUDENT_NOTES = [
+    "Beginner — wants extra parking practice.",
+    "Road test preparation. Focus on shoulder checks.",
+    "Needs help with lane changes on Kenaston.",
+    "Prefers calm, patient instruction.",
+    "Pickup from Red River College main entrance.",
+    "Working on parallel parking downtown.",
+    "Nervous on Perimeter Hwy — build confidence.",
+    "Almost ready for road test — polish 3-point turn.",
+  ];
   const studentIds: string[] = [];
-  for (const s of STUDENTS) {
+  for (let i = 0; i < STUDENTS.length; i++) {
+    const s = STUDENTS[i];
+    const note = STUDENT_NOTES[i % STUDENT_NOTES.length];
     const { data: exist } = await supabaseAdmin
       .from("students")
       .select("id")
@@ -156,6 +168,7 @@ async function runSeed() {
       .maybeSingle();
     if (exist) {
       studentIds.push(exist.id);
+      await supabaseAdmin.from("students").update({ notes: note, pickup_address: s.address }).eq("id", exist.id);
     } else {
       const { data } = await supabaseAdmin
         .from("students")
@@ -164,6 +177,7 @@ async function runSeed() {
           email: s.email,
           phone: s.phone,
           pickup_address: s.address,
+          notes: note,
         })
         .select()
         .single();
@@ -171,39 +185,38 @@ async function runSeed() {
     }
   }
 
-  // Bookings - only seed if fewer than 5 exist
+  // General bookings seed - only if fewer than 5 exist
   const { count: bCount } = await supabaseAdmin
     .from("bookings")
     .select("*", { count: "exact", head: true });
   if ((bCount ?? 0) < 5 && lessonTypes && lessonTypes.length > 0 && studentIds.length > 0) {
     const now = new Date();
     const statuses: ("confirmed" | "pending" | "completed" | "no_show")[] = [
-      "completed", "completed", "completed", "completed",
-      "confirmed", "confirmed", "confirmed",
+      "completed", "completed", "completed",
+      "confirmed", "confirmed",
       "pending", "pending",
       "no_show",
-      "confirmed", "confirmed",
     ];
     const rows = statuses.map((status, i) => {
-      const dayOffset = i - 6;
+      const dayOffset = i - 5;
       const date = new Date(now);
       date.setDate(date.getDate() + dayOffset);
       date.setHours(9 + (i % 8), (i % 2) * 30, 0, 0);
       const lt = lessonTypes[i % lessonTypes.length];
       return {
         student_id: studentIds[i % studentIds.length],
-        instructor_id: instructorIds[i % instructorIds.length],
+        instructor_id: instructorIds[(i + 1) % instructorIds.length],
         lesson_type_id: lt.id,
         scheduled_at: date.toISOString(),
         duration_minutes: lt.duration_minutes,
         price_cents: lt.price_cents,
         status,
         payment_status: (status === "completed" ? "paid" : "unpaid") as "paid" | "unpaid",
+        pickup_address: STUDENTS[i % STUDENTS.length].address,
       };
     });
     await supabaseAdmin.from("bookings").insert(rows);
 
-    // Cancellation requests on 2 confirmed bookings
     const { data: confirmedBookings } = await supabaseAdmin
       .from("bookings")
       .select("id")
@@ -217,6 +230,60 @@ async function runSeed() {
       }
     }
   }
+
+  // GUARANTEE: demo instructor has >=5 upcoming confirmed lessons in next 7 days
+  if (lessonTypes && lessonTypes.length > 0 && studentIds.length >= 5) {
+    const now = new Date();
+    const in7 = new Date(now.getTime() + 7 * 86400000);
+    const { count: upcomingCount } = await supabaseAdmin
+      .from("bookings")
+      .select("*", { count: "exact", head: true })
+      .eq("instructor_id", primaryInstructorId)
+      .eq("status", "confirmed")
+      .gte("scheduled_at", now.toISOString())
+      .lt("scheduled_at", in7.toISOString());
+
+    if ((upcomingCount ?? 0) < 5) {
+      // Wipe any prior demo-instructor upcoming rows to avoid duplicates on reseed
+      await supabaseAdmin
+        .from("bookings")
+        .delete()
+        .eq("instructor_id", primaryInstructorId)
+        .gte("scheduled_at", now.toISOString());
+
+      const slots = [
+        { dayOffset: 0, hour: 10, min: 0 },
+        { dayOffset: 0, hour: 14, min: 30 },
+        { dayOffset: 1, hour: 9, min: 0 },
+        { dayOffset: 1, hour: 13, min: 0 },
+        { dayOffset: 2, hour: 11, min: 0 },
+        { dayOffset: 3, hour: 15, min: 30 },
+        { dayOffset: 4, hour: 10, min: 30 },
+      ];
+      const rows = slots.map((s, i) => {
+        const date = new Date(now);
+        date.setDate(date.getDate() + s.dayOffset);
+        date.setHours(s.hour, s.min, 0, 0);
+        const lt = lessonTypes[i % lessonTypes.length];
+        const stu = STUDENTS[i % STUDENTS.length];
+        return {
+          student_id: studentIds[i % studentIds.length],
+          instructor_id: primaryInstructorId,
+          lesson_type_id: lt.id,
+          scheduled_at: date.toISOString(),
+          duration_minutes: lt.duration_minutes,
+          price_cents: lt.price_cents,
+          status: "confirmed" as const,
+          payment_status: "unpaid" as const,
+          pickup_address: stu.address,
+          notes: STUDENT_NOTES[i % STUDENT_NOTES.length],
+        };
+      });
+      await supabaseAdmin.from("bookings").insert(rows);
+    }
+  }
+
+
 
   return { ok: true };
 }

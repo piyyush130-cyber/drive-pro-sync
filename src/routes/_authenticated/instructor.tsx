@@ -1,10 +1,13 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { CalendarClock, MapPin, Phone, CheckCircle2, XCircle, CarFront, LogOut, NotebookPen } from "lucide-react";
+import { CalendarClock, MapPin, Phone, CheckCircle2, XCircle, CarFront, LogOut, NotebookPen, Mail, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fmtTime, fmtDate, statusTone, statusLabel } from "@/lib/format";
 import { toast } from "sonner";
+import { useServerFn } from "@tanstack/react-start";
+import { seedDemoAccounts } from "@/lib/seed-demo.functions";
+
 
 export const Route = createFileRoute("/_authenticated/instructor")({
   beforeLoad: async () => {
@@ -113,38 +116,82 @@ function InstructorPage() {
     );
 
   const list = bookingsQ.data ?? [];
+  const now = Date.now();
+  const nextLesson = tab === "today" || tab === "upcoming"
+    ? list.find((b: any) => new Date(b.scheduled_at).getTime() >= now && b.status !== "completed" && b.status !== "no_show")
+    : null;
+
+  const reseed = useServerFn(seedDemoAccounts);
+  const [reseeding, setReseeding] = useState(false);
+  async function loadDemo() {
+    setReseeding(true);
+    try {
+      await reseed();
+      toast.success("Demo lessons loaded");
+      qc.invalidateQueries({ queryKey: ["instructor-bookings"] });
+    } catch (e: any) {
+      toast.error(e?.message ?? "Failed to load demo lessons");
+    } finally {
+      setReseeding(false);
+    }
+  }
 
   return (
     <div className="min-h-screen bg-[color:var(--color-mist)]">
       <header className="brand-gradient brand-grid-bg text-white">
-        <div className="max-w-5xl mx-auto px-6 py-6 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="size-10 rounded-xl bg-white/10 ring-1 ring-white/15 grid place-items-center">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-5 sm:py-6 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="size-10 shrink-0 rounded-xl bg-white/10 ring-1 ring-white/15 grid place-items-center">
               <CarFront className="size-5 text-blue-300" />
             </div>
-            <div>
+            <div className="min-w-0">
               <div className="text-xs uppercase tracking-widest text-blue-200">
                 DriveProSync · Instructor
               </div>
-              <div className="font-semibold tracking-tight">{meQ.data.full_name}</div>
+              <div className="font-semibold tracking-tight truncate">{meQ.data.full_name}</div>
             </div>
           </div>
           <button
             onClick={signOut}
-            className="text-sm text-slate-200 hover:text-white inline-flex items-center gap-2"
+            className="text-sm text-slate-200 hover:text-white inline-flex items-center gap-2 shrink-0"
           >
-            <LogOut className="size-4" /> Sign out
+            <LogOut className="size-4" /> <span className="hidden sm:inline">Sign out</span>
           </button>
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-6 py-8">
-        <div className="flex items-center gap-2 mb-6">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        {nextLesson && (
+          <div className="mb-6 rounded-2xl p-5 sm:p-6 bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-lg">
+            <div className="text-[11px] uppercase tracking-widest text-blue-100 flex items-center gap-1.5">
+              <Sparkles className="size-3.5" /> Next lesson
+            </div>
+            <div className="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <div className="text-2xl sm:text-3xl font-bold tracking-tight">{fmtTime(nextLesson.scheduled_at)}</div>
+              <div className="text-blue-100">{fmtDate(nextLesson.scheduled_at)}</div>
+            </div>
+            <div className="mt-3 text-lg font-semibold">{nextLesson.students?.full_name}</div>
+            <div className="text-sm text-blue-100">{nextLesson.lesson_types?.name} · {nextLesson.duration_minutes} min</div>
+            <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm">
+              <span className="inline-flex items-center gap-1.5"><MapPin className="size-4" />{nextLesson.pickup_address}</span>
+              {nextLesson.students?.phone && (
+                <a href={`tel:${nextLesson.students.phone}`} className="inline-flex items-center gap-1.5 hover:underline">
+                  <Phone className="size-4" />{nextLesson.students.phone}
+                </a>
+              )}
+            </div>
+            {nextLesson.notes && (
+              <div className="mt-3 text-sm bg-white/10 rounded-lg px-3 py-2 italic">"{nextLesson.notes}"</div>
+            )}
+          </div>
+        )}
+
+        <div className="flex items-center gap-2 mb-6 overflow-x-auto">
           {(["today", "upcoming", "past"] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition ${
+              className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition shrink-0 ${
                 tab === t
                   ? "bg-[color:var(--color-electric)] text-white"
                   : "bg-white text-slate-600 ring-1 ring-[color:var(--color-silver)]"
@@ -156,10 +203,18 @@ function InstructorPage() {
         </div>
 
         {list.length === 0 ? (
-          <div className="card-premium p-10 text-center text-slate-500">
-            No lessons in this view.
+          <div className="card-premium p-8 sm:p-10 text-center">
+            <div className="text-slate-500">No lessons in this view.</div>
+            <button
+              onClick={loadDemo}
+              disabled={reseeding}
+              className="btn-primary mt-5 mx-auto disabled:opacity-60"
+            >
+              <Sparkles className="size-4" /> {reseeding ? "Loading…" : "Load demo lessons"}
+            </button>
           </div>
         ) : (
+
           <div className="space-y-3">
             {list.map((b: any) => (
               <div key={b.id} className="card-premium p-5">
@@ -172,18 +227,20 @@ function InstructorPage() {
                       <CalendarClock className="size-4 text-blue-600" />
                       {fmtTime(b.scheduled_at)} · {b.lesson_types?.name ?? "Lesson"}
                     </div>
-                    <div className="mt-2 text-sm text-slate-700">
-                      {b.students?.full_name}
+                    <div className="mt-2 text-sm text-slate-700 flex flex-wrap items-center gap-x-3 gap-y-1">
+                      <span className="font-medium">{b.students?.full_name}</span>
                       {b.students?.phone && (
-                        <a
-                          href={`tel:${b.students.phone}`}
-                          className="ml-3 text-blue-700 inline-flex items-center gap-1"
-                        >
-                          <Phone className="size-3.5" />
-                          {b.students.phone}
+                        <a href={`tel:${b.students.phone}`} className="text-blue-700 inline-flex items-center gap-1">
+                          <Phone className="size-3.5" />{b.students.phone}
+                        </a>
+                      )}
+                      {b.students?.email && (
+                        <a href={`mailto:${b.students.email}`} className="text-slate-500 inline-flex items-center gap-1 truncate max-w-[220px]">
+                          <Mail className="size-3.5" />{b.students.email}
                         </a>
                       )}
                     </div>
+
                     <div className="mt-2 text-sm text-slate-600 inline-flex items-start gap-1.5">
                       <MapPin className="size-3.5 mt-0.5 text-slate-400" />
                       <span>
