@@ -107,6 +107,30 @@ function Dashboard() {
     },
   });
 
+  const setupQ = useQuery({
+    queryKey: ["setup-checklist"],
+    queryFn: async () => {
+      const [settings, instructors, types] = await Promise.all([
+        supabase
+          .from("school_settings")
+          .select("school_name, contact_phone, contact_email, service_area")
+          .eq("id", 1)
+          .maybeSingle(),
+        supabase.from("instructors").select("id", { count: "exact", head: true }).eq("active", true),
+        supabase.from("lesson_types").select("id", { count: "exact", head: true }).eq("active", true),
+      ]);
+      const s = settings.data ?? ({} as any);
+      return {
+        hasSchoolName: !!s.school_name && s.school_name !== "Standard Driving School",
+        hasContact: !!s.contact_phone && !!s.contact_email,
+        hasServiceArea: !!s.service_area,
+        hasInstructor: (instructors.count ?? 0) > 0,
+        hasLessonTypes: (types.count ?? 0) > 0,
+      };
+    },
+  });
+
+
   const lessons = todayQ.data ?? [];
   const today = new Date().toLocaleDateString(undefined, {
     weekday: "long",
