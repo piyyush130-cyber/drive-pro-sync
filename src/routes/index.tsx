@@ -104,6 +104,15 @@ type Errors = Partial<{
 
 const emailOk = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
+function formatPhone(raw: string): string {
+  const digits = raw.replace(/\D/g, "").slice(0, 10);
+  const len = digits.length;
+  if (len === 0) return "";
+  if (len < 4) return `(${digits}`;
+  if (len < 7) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+}
+
 function BookingPage() {
   const settingsQ = useQuery({
     queryKey: ["public-settings"],
@@ -156,6 +165,7 @@ function BookingPage() {
     if (!selectedTime) e.time = "Please pick a time.";
     if (!form.full_name.trim()) e.full_name = "Full name is required.";
     if (!form.phone.trim()) e.phone = "Phone number is required.";
+    else if (form.phone.replace(/\D/g, "").length !== 10) e.phone = "Enter a 10-digit phone number.";
     if (!form.email.trim()) e.email = "Email is required.";
     else if (!emailOk(form.email.trim())) e.email = "Enter a valid email.";
     if (!form.pickup_address.trim()) e.pickup_address = "Pickup address is required.";
@@ -274,7 +284,7 @@ function BookingPage() {
                     value={form.phone}
                     invalid={!!errors.phone}
                     onChange={(v) => {
-                      setForm({ ...form, phone: v });
+                      setForm({ ...form, phone: formatPhone(v) });
                       if (errors.phone) setErrors((e) => ({ ...e, phone: undefined }));
                     }}
                     placeholder="(555) 000-0000"
