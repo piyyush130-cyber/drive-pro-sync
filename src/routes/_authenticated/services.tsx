@@ -1,8 +1,10 @@
+```tsx
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuthUser, useSchoolId } from "@/lib/auth";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/services")({
@@ -12,6 +14,8 @@ export const Route = createFileRoute("/_authenticated/services")({
 function ServicesPage() {
   const qc = useQueryClient();
   const [adding, setAdding] = useState(false);
+  const { user } = useAuthUser();
+  const schoolIdQ = useSchoolId(user?.id);
 
   const q = useQuery({
     queryKey: ["services"],
@@ -27,6 +31,7 @@ function ServicesPage() {
 
   async function add(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (!schoolIdQ.data) return toast.error("Could not determine your school — try refreshing.");
     const fd = new FormData(e.currentTarget);
     const { error } = await supabase.from("lesson_types").insert({
       name: String(fd.get("name")),
@@ -37,6 +42,7 @@ function ServicesPage() {
       buffer_minutes: Number(fd.get("buffer") || 0),
       sort_order: Number(fd.get("sort_order") || 0),
       active: true,
+      school_id: schoolIdQ.data,
     });
     if (error) return toast.error(error.message);
     setAdding(false);
@@ -207,3 +213,5 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     </div>
   );
 }
+
+```
