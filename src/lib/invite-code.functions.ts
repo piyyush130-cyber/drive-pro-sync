@@ -1,3 +1,4 @@
+```ts
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
@@ -5,20 +6,24 @@ export const generateInviteCode = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: isAdmin } = await context.supabase.rpc("has_role", {
-      _user_id: context.userId,
-      _role: "admin",
-    });
-    if (!isAdmin) throw new Error("Forbidden");
+    const { data: roleRow } = await context.supabase
+      .from("user_roles")
+      .select("school_id")
+      .eq("user_id", context.userId)
+      .eq("role", "admin")
+      .limit(1)
+      .maybeSingle();
+    if (!roleRow?.school_id) throw new Error("Forbidden");
 
     const code = "DRIVE-" + Math.random().toString(36).toUpperCase().slice(2, 8);
     await supabaseAdmin
       .from("instructor_invite_codes")
       .update({ is_active: false })
-      .eq("is_active", true);
+      .eq("is_active", true)
+      .eq("school_id", roleRow.school_id);
     const { data, error } = await supabaseAdmin
       .from("instructor_invite_codes")
-      .insert({ code, is_active: true, created_by: context.userId })
+      .insert({ code, is_active: true, created_by: context.userId, school_id: roleRow.school_id })
       .select()
       .single();
     if (error) throw new Error(error.message);
@@ -62,12 +67,13 @@ export const useInviteCode = createServerFn({ method: "POST" })
       active: false,
       status: "pending_approval",
       invite_code_used: invite.code,
+      school_id: invite.school_id,
     });
     await supabaseAdmin
       .from("user_roles")
       .upsert(
-        { user_id: data.userId, role: "instructor" },
-        { onConflict: "user_id,role" },
+        { user_id: data.userId, role: "instructor", school_id: invite.school_id },
+        { onConflict: "user_id,school_id,role" },
       );
     await supabaseAdmin
       .from("instructor_invite_codes")
@@ -75,3 +81,5 @@ export const useInviteCode = createServerFn({ method: "POST" })
       .eq("id", invite.id);
     return { success: true };
   });
+
+```
