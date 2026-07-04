@@ -10,6 +10,7 @@ const BookingSchema = z.object({
   notes: z.string().max(2000).optional().nullable(),
   lesson_type_id: z.string().uuid(),
   scheduled_at: z.string().datetime(),
+  school_id: z.string().uuid(),
 });
 
 export const submitPublicBooking = createServerFn({ method: "POST" })
@@ -17,11 +18,14 @@ export const submitPublicBooking = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    // Validate lesson type exists & is active; trust server price/duration
+    // Validate the lesson type exists, is active, AND belongs to this
+    // school — without this check, someone could book a lesson type
+    // that belongs to a different school by tampering with the request.
     const { data: lt, error: ltErr } = await supabaseAdmin
       .from("lesson_types")
-      .select("id,duration_minutes,price_cents,active")
+      .select("id,duration_minutes,price_cents,active,school_id")
       .eq("id", data.lesson_type_id)
+      .eq("school_id", data.school_id)
       .maybeSingle();
     if (ltErr) throw new Error("Could not load lesson type");
     if (!lt || !lt.active) throw new Error("Invalid lesson type");
@@ -34,6 +38,7 @@ export const submitPublicBooking = createServerFn({ method: "POST" })
         email: data.email,
         pickup_address: data.pickup_address,
         notes: data.notes ?? null,
+        school_id: data.school_id,
       })
       .select("id")
       .single();
@@ -43,7 +48,7 @@ export const submitPublicBooking = createServerFn({ method: "POST" })
     const { data: settings } = await supabaseAdmin
       .from("school_settings")
       .select("require_approval")
-      .eq("id", 1)
+      .eq("school_id", data.school_id)
       .maybeSingle();
     const initialStatus = settings?.require_approval === false ? "confirmed" : "pending";
 
@@ -57,6 +62,7 @@ export const submitPublicBooking = createServerFn({ method: "POST" })
       notes: data.notes ?? null,
       price_cents: lt.price_cents,
       status: initialStatus,
+      school_id: data.school_id,
     });
     if (bErr) throw new Error("Could not create booking");
 
