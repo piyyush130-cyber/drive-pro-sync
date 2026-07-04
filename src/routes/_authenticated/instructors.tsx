@@ -1,3 +1,4 @@
+```tsx
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -5,6 +6,7 @@ import { Copy, Check, Key, RefreshCw, Link as LinkIcon } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { generateInviteCode } from "@/lib/invite-code.functions";
+import { useAuthUser, useSchoolId } from "@/lib/auth";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/instructors")({
@@ -33,6 +35,8 @@ function InstructorsPage() {
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
+  const { user } = useAuthUser();
+  const schoolIdQ = useSchoolId(user?.id);
 
   const instructorsQ = useQuery({
     queryKey: ["instructors-all"],
@@ -78,11 +82,13 @@ function InstructorsPage() {
 
   async function add(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (!schoolIdQ.data) return toast.error("Could not determine your school — try refreshing.");
     const fd = new FormData(e.currentTarget);
     const { error } = await supabase.from("instructors").insert({
       full_name: String(fd.get("full_name") || ""),
       phone: String(fd.get("phone") || "") || null,
       email: String(fd.get("email") || "") || null,
+      school_id: schoolIdQ.data,
     });
     if (error) return toast.error(error.message);
     setAdding(false);
@@ -258,3 +264,5 @@ function AvailabilityEditor({ initial, onSave }: { initial: any; onSave: (v: any
     </div>
   );
 }
+
+```
