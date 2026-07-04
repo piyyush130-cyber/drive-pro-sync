@@ -1,3 +1,4 @@
+```tsx
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import type { User } from "@supabase/supabase-js";
@@ -31,3 +32,25 @@ export function useRoles(userId: string | undefined) {
     },
   });
 }
+
+// Resolves which school the logged-in user belongs to, so new records
+// (a new lesson type, a new instructor, etc.) can be tagged with the
+// correct school_id when created.
+export function useSchoolId(userId: string | undefined) {
+  return useQuery({
+    queryKey: ["school-id", userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("school_id")
+        .eq("user_id", userId!)
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return data?.school_id as string | undefined;
+    },
+  });
+}
+
+```
