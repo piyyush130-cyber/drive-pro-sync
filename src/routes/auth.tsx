@@ -1,3 +1,4 @@
+```tsx
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { CarFront } from "lucide-react";
@@ -8,14 +9,15 @@ import { createAdminRole } from "@/lib/create-admin-role.functions";
 import { toast } from "sonner";
 
 async function redirectByRole(_navigate: ReturnType<typeof useNavigate>, userId: string) {
-  const { data } = await supabase.from("user_roles").select("role").eq("user_id", userId);
+  const { data } = await supabase.from("user_roles").select("role,school_id").eq("user_id", userId);
   const roles = (data ?? []).map((r) => r.role);
   if (roles.includes("admin")) {
+    const schoolId = (data ?? []).find((r) => r.role === "admin")?.school_id;
     // Check onboarding state — incomplete admins go to setup.
     const { data: settings } = await supabase
       .from("school_settings")
       .select("onboarding_complete")
-      .eq("id", 1)
+      .eq("school_id", schoolId)
       .maybeSingle();
     window.location.href = settings?.onboarding_complete ? "/dashboard" : "/onboarding";
   } else if (roles.includes("instructor")) {
@@ -35,6 +37,7 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [schoolName, setSchoolName] = useState("");
   const [loading, setLoading] = useState(false);
 
   const seed = useServerFn(seedDemoAccounts);
@@ -62,7 +65,7 @@ function AuthPage() {
         if (error) throw error;
         if (data.user) {
           await assignAdminRole({
-            data: { userId: data.user.id, fullName, schoolName: "" },
+            data: { userId: data.user.id, fullName, schoolName },
           });
           toast.success("Welcome! Let's set up your school.");
           window.location.href = "/onboarding";
@@ -151,6 +154,30 @@ function AuthPage() {
                 required
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
+                className="w-full rounded-xl px-4 py-3 text-sm outline-none transition-all duration-150"
+                style={{
+                  background: "#F5F1EA",
+                  border: "1px solid rgba(201,168,76,0.2)",
+                  color: "#1A1A2E",
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = "#1B2B4B";
+                  e.currentTarget.style.boxShadow = "0 0 0 3px rgba(27,43,75,0.15)";
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = "rgba(201,168,76,0.2)";
+                  e.currentTarget.style.boxShadow = "none";
+                }}
+              />
+            </Field>
+          )}
+          {mode === "signup" && (
+            <Field label="School name">
+              <input
+                required
+                value={schoolName}
+                onChange={(e) => setSchoolName(e.target.value)}
+                placeholder="e.g. Winnipeg Pro Driving School"
                 className="w-full rounded-xl px-4 py-3 text-sm outline-none transition-all duration-150"
                 style={{
                   background: "#F5F1EA",
@@ -319,3 +346,5 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     </div>
   );
 }
+
+```
