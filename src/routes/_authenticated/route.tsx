@@ -1,9 +1,10 @@
+```tsx
 import { createFileRoute, Outlet, redirect, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppSidebar } from "@/components/AppSidebar";
-import { useAuthUser, useRoles } from "@/lib/auth";
+import { useAuthUser, useRoles, useSchoolId } from "@/lib/auth";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -19,17 +20,19 @@ function AuthLayout() {
   const { user, loading } = useAuthUser();
   const navigate = useNavigate();
   const rolesQ = useRoles(user?.id);
+  const schoolIdQ = useSchoolId(user?.id);
   const roles = rolesQ.data ?? [];
   const isAdmin = roles.includes("admin");
   const isInstructor = roles.includes("instructor");
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const settingsQ = useQuery({
-    queryKey: ["settings"],
+    queryKey: ["settings", schoolIdQ.data],
+    enabled: !!schoolIdQ.data,
     queryFn: async () => {
       const { data } = await supabase
         .from("school_settings")
         .select("school_name")
-        .eq("id", 1)
+        .eq("school_id", schoolIdQ.data as string)
         .maybeSingle();
       return data;
     },
@@ -101,3 +104,5 @@ function NoRoleScreen({
     </div>
   );
 }
+
+```
