@@ -1,3 +1,4 @@
+```tsx
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -46,6 +47,7 @@ function InstructorPage() {
       practiced_skills: practiced,
       next_focus: nextFocus,
       road_test_readiness: readiness,
+      school_id: meQ.data.school_id,
     });
     setSavingNote(false);
     if (error) return toast.error(error.message);
@@ -343,3 +345,5 @@ function InstructorPage() {
     </div>
   );
 }
+
+```
