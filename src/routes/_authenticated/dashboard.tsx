@@ -1,3 +1,4 @@
+```tsx
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -14,6 +15,7 @@ import {
   Circle,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuthUser, useSchoolId } from "@/lib/auth";
 import { StatCard, StatusPill } from "@/components/StatCard";
 import { fmtTime, money, statusLabel, statusTone } from "@/lib/format";
 import { toast } from "sonner";
@@ -31,6 +33,8 @@ function startOfDay(d = new Date()) {
 
 function Dashboard() {
   const qc = useQueryClient();
+  const { user } = useAuthUser();
+  const schoolIdQ = useSchoolId(user?.id);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const start = startOfDay().toISOString();
   const end = new Date(startOfDay().getTime() + 86400000).toISOString();
@@ -108,13 +112,14 @@ function Dashboard() {
   });
 
   const setupQ = useQuery({
-    queryKey: ["setup-checklist"],
+    queryKey: ["setup-checklist", schoolIdQ.data],
+    enabled: !!schoolIdQ.data,
     queryFn: async () => {
       const [settings, instructors, types] = await Promise.all([
         supabase
           .from("school_settings")
           .select("school_name, contact_phone, contact_email, service_area")
-          .eq("id", 1)
+          .eq("school_id", schoolIdQ.data as string)
           .maybeSingle(),
         supabase.from("instructors").select("id", { count: "exact", head: true }).eq("active", true),
         supabase.from("lesson_types").select("id", { count: "exact", head: true }).eq("active", true),
@@ -371,3 +376,5 @@ function Dashboard() {
     </div>
   );
 }
+
+```
