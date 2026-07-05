@@ -1,7 +1,9 @@
+```tsx
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuthUser, useSchoolId } from "@/lib/auth";
 import { money } from "@/lib/format";
 import { toast } from "sonner";
 
@@ -11,13 +13,16 @@ export const Route = createFileRoute("/_authenticated/settings")({
 
 function SettingsPage() {
   const qc = useQueryClient();
+  const { user } = useAuthUser();
+  const schoolIdQ = useSchoolId(user?.id);
   const settingsQ = useQuery({
-    queryKey: ["settings-full"],
+    queryKey: ["settings-full", schoolIdQ.data],
+    enabled: !!schoolIdQ.data,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("school_settings")
         .select("*")
-        .eq("id", 1)
+        .eq("school_id", schoolIdQ.data as string)
         .maybeSingle();
       if (error) throw error;
       return data;
@@ -38,6 +43,7 @@ function SettingsPage() {
   }, [settingsQ.data]);
 
   async function saveSettings() {
+    if (!schoolIdQ.data) return toast.error("Could not determine your school — try refreshing.");
     const { error } = await supabase
       .from("school_settings")
       .update({
@@ -56,7 +62,7 @@ function SettingsPage() {
         default_buffer_minutes: Number(form.default_buffer_minutes) || 15,
         require_approval: !!form.require_approval,
       })
-      .eq("id", 1);
+      .eq("school_id", schoolIdQ.data);
     if (error) return toast.error(error.message);
     qc.invalidateQueries({ queryKey: ["settings"] });
     qc.invalidateQueries({ queryKey: ["settings-full"] });
@@ -175,3 +181,5 @@ function LessonTypeRow({ initial, onSave }: { initial: any; onSave: (t: any) => 
     </div>
   );
 }
+
+```
