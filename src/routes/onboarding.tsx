@@ -1,8 +1,9 @@
+```tsx
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Check, Copy, ExternalLink, Key, ArrowRight, Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuthUser } from "@/lib/auth";
+import { useAuthUser, useSchoolId } from "@/lib/auth";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/onboarding")({
@@ -44,8 +45,10 @@ const DEFAULT_AVAIL = DAYS.reduce<Record<string, { enabled: boolean; start: stri
 function OnboardingPage() {
   const navigate = useNavigate();
   const { user, loading } = useAuthUser();
+  const schoolIdQ = useSchoolId(user?.id);
   const [step, setStep] = useState(1);
   const [busy, setBusy] = useState(false);
+  const [schoolSlug, setSchoolSlug] = useState("");
 
   // Step 1
   const [school, setSchool] = useState({
@@ -73,7 +76,8 @@ function OnboardingPage() {
   const [avail, setAvail] = useState(DEFAULT_AVAIL);
   // Step 6
   const [copied, setCopied] = useState(false);
-  const bookingUrl = typeof window !== "undefined" ? window.location.origin + "/" : "";
+  const bookingUrl =
+    typeof window !== "undefined" && schoolSlug ? `${window.location.origin}/${schoolSlug}` : "";
 
   useEffect(() => {
     if (loading) return;
@@ -81,37 +85,49 @@ function OnboardingPage() {
       navigate({ to: "/auth", replace: true });
       return;
     }
+    if (!schoolIdQ.data) return;
+    supabase
+      .from("schools")
+      .select("slug")
+      .eq("id", schoolIdQ.data)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.slug) setSchoolSlug(data.slug);
+      });
     supabase
       .from("school_settings")
       .select("onboarding_complete,school_name")
-      .eq("id", 1)
+      .eq("school_id", schoolIdQ.data)
       .maybeSingle()
       .then(({ data }) => {
         if (data?.onboarding_complete) navigate({ to: "/dashboard", replace: true });
         if (data?.school_name && data.school_name !== "My Driving School")
           setSchool((s) => ({ ...s, school_name: data.school_name }));
       });
-  }, [loading, user, navigate]);
+  }, [loading, user, navigate, schoolIdQ.data]);
 
   async function saveStep1() {
     if (!school.school_name || !school.city || !school.province) {
       toast.error("School name, city, and province are required");
       return;
     }
+    if (!schoolIdQ.data) return toast.error("Could not determine your school — try refreshing.");
     setBusy(true);
-    const { error } = await supabase.from("school_settings").update(school).eq("id", 1);
+    const { error } = await supabase.from("school_settings").update(school).eq("school_id", schoolIdQ.data);
     setBusy(false);
     if (error) return toast.error(error.message);
     setStep(2);
   }
   async function saveStep2() {
+    if (!schoolIdQ.data) return toast.error("Could not determine your school — try refreshing.");
     setBusy(true);
-    const { error } = await supabase.from("school_settings").update(rules).eq("id", 1);
+    const { error } = await supabase.from("school_settings").update(rules).eq("school_id", schoolIdQ.data);
     setBusy(false);
     if (error) return toast.error(error.message);
     setStep(3);
   }
   async function saveStep3() {
+    if (!schoolIdQ.data) return toast.error("Could not determine your school — try refreshing.");
     setBusy(true);
     try {
       // Deactivate any types not in the new list (by name), then upsert the new set.
@@ -132,6 +148,7 @@ function OnboardingPage() {
           active: t.active,
           sort_order: i,
           category: "lesson",
+          school_id: schoolIdQ.data,
         };
         if (match) {
           await supabase.from("lesson_types").update(payload).eq("id", match.id);
@@ -151,6 +168,7 @@ function OnboardingPage() {
       toast.error("Instructor name is required");
       return;
     }
+    if (!schoolIdQ.data) return toast.error("Could not determine your school — try refreshing.");
     setBusy(true);
     const { data, error } = await supabase
       .from("instructors")
@@ -159,6 +177,7 @@ function OnboardingPage() {
         email: instructor.email || null,
         phone: instructor.phone || null,
         active: true,
+        school_id: schoolIdQ.data,
       })
       .select()
       .single();
@@ -183,7 +202,9 @@ function OnboardingPage() {
   }
   async function finish() {
     setBusy(true);
-    await supabase.from("school_settings").update({ onboarding_complete: true }).eq("id", 1);
+    if (schoolIdQ.data) {
+      await supabase.from("school_settings").update({ onboarding_complete: true }).eq("school_id", schoolIdQ.data);
+    }
     setBusy(false);
     window.location.href = "/dashboard";
   }
@@ -427,3 +448,5 @@ function NextRow({ onBack, onNext, busy }: { onBack?: () => void; onNext: () => 
     </div>
   );
 }
+
+```
