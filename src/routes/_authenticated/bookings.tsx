@@ -2,9 +2,11 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { MapPin, StickyNote } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { fmtDateTime, money, statusLabel, statusTone } from "@/lib/format";
 import { StatusPill } from "@/components/StatCard";
+import { notifyBookingUpdated } from "@/lib/notifications.functions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/bookings")({
@@ -40,6 +42,8 @@ function BookingsPage() {
     },
   });
 
+  const notifyUpdate = useServerFn(notifyBookingUpdated);
+
   async function update(id: string, patch: any) {
     const { error } = await supabase.from("bookings").update(patch).eq("id", id);
     if (error) return toast.error(error.message);
@@ -47,6 +51,7 @@ function BookingsPage() {
     qc.invalidateQueries({ queryKey: ["dashboard-stats"] });
     qc.invalidateQueries({ queryKey: ["pending-bookings"] });
     toast.success("Updated");
+    void notifyUpdate({ data: { bookingId: id, patch } });
   }
 
   return (
@@ -67,7 +72,9 @@ function BookingsPage() {
               key={f}
               onClick={() => setFilter(f)}
               className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${
-                filter === f ? "bg-blue-600 text-white shadow-sm" : "text-slate-600 hover:bg-slate-50"
+                filter === f
+                  ? "bg-blue-600 text-white shadow-sm"
+                  : "text-slate-600 hover:bg-slate-50"
               }`}
             >
               {f === "pending" ? "Pending" : "All"}
@@ -165,6 +172,14 @@ function BookingsPage() {
                     No-show
                   </button>
                 </>
+              )}
+              {(b.status === "pending" || b.status === "confirmed") && (
+                <button
+                  onClick={() => update(b.id, { status: "cancelled" })}
+                  className="text-xs bg-white ring-1 ring-red-200 text-red-600 px-3 py-1.5 rounded-md font-semibold hover:bg-red-50"
+                >
+                  Cancel
+                </button>
               )}
               {b.payment_status !== "paid" && (
                 <button

@@ -139,20 +139,27 @@ export const submitPublicBooking = createServerFn({ method: "POST" })
       ? await pickInstructor(supabaseAdmin, data.school_id, data.scheduled_at, lt.duration_minutes)
       : null;
 
-    const { error: bErr } = await supabaseAdmin.from("bookings").insert({
-      student_id: student.id,
-      instructor_id: instructorId,
-      lesson_type_id: lt.id,
-      scheduled_at: data.scheduled_at,
-      duration_minutes: lt.duration_minutes,
-      pickup_address: data.pickup_address,
-      dropoff_address: data.dropoff_address ?? data.pickup_address,
-      notes: data.notes ?? null,
-      price_cents: lt.price_cents,
-      status: initialStatus,
-      school_id: data.school_id,
-    });
-    if (bErr) throw new Error("Could not create booking");
+    const { data: booking, error: bErr } = await supabaseAdmin
+      .from("bookings")
+      .insert({
+        student_id: student.id,
+        instructor_id: instructorId,
+        lesson_type_id: lt.id,
+        scheduled_at: data.scheduled_at,
+        duration_minutes: lt.duration_minutes,
+        pickup_address: data.pickup_address,
+        dropoff_address: data.dropoff_address ?? data.pickup_address,
+        notes: data.notes ?? null,
+        price_cents: lt.price_cents,
+        status: initialStatus,
+        school_id: data.school_id,
+      })
+      .select("id")
+      .single();
+    if (bErr || !booking) throw new Error("Could not create booking");
+
+    const { notifyBookingCreated } = await import("@/lib/notifications.server");
+    await notifyBookingCreated(supabaseAdmin, { bookingId: booking.id });
 
     return { ok: true, status: initialStatus };
   });
