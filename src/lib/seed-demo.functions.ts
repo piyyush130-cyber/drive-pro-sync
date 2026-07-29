@@ -2,14 +2,54 @@ import { createServerFn } from "@tanstack/react-start";
 import { CURRENT_TERMS_VERSION, CURRENT_PRIVACY_VERSION } from "@/lib/legal";
 
 const STUDENTS = [
-  { name: "Liam Tremblay", email: "liam.tremblay@example.ca", phone: "(204) 555-0101", address: "248 Wellington Cres, Winnipeg" },
-  { name: "Olivia Chen", email: "olivia.chen@example.ca", phone: "(204) 555-0102", address: "1140 Pembina Hwy, Winnipeg" },
-  { name: "Noah Kowalski", email: "noah.k@example.ca", phone: "(204) 555-0103", address: "55 Goulet St, Winnipeg" },
-  { name: "Emma Singh", email: "emma.singh@example.ca", phone: "(204) 555-0104", address: "920 Henderson Hwy, Winnipeg" },
-  { name: "Ethan Dubois", email: "ethan.dubois@example.ca", phone: "(204) 555-0105", address: "313 Portage Ave, Winnipeg" },
-  { name: "Sophia Nguyen", email: "sophia.n@example.ca", phone: "(204) 555-0106", address: "78 Stafford St, Winnipeg" },
-  { name: "Mateo Reyes", email: "mateo.reyes@example.ca", phone: "(204) 555-0107", address: "401 Corydon Ave, Winnipeg" },
-  { name: "Ava Macdonald", email: "ava.mac@example.ca", phone: "(204) 555-0108", address: "612 Osborne St, Winnipeg" },
+  {
+    name: "Liam Tremblay",
+    email: "liam.tremblay@example.ca",
+    phone: "(204) 555-0101",
+    address: "248 Wellington Cres, Winnipeg",
+  },
+  {
+    name: "Olivia Chen",
+    email: "olivia.chen@example.ca",
+    phone: "(204) 555-0102",
+    address: "1140 Pembina Hwy, Winnipeg",
+  },
+  {
+    name: "Noah Kowalski",
+    email: "noah.k@example.ca",
+    phone: "(204) 555-0103",
+    address: "55 Goulet St, Winnipeg",
+  },
+  {
+    name: "Emma Singh",
+    email: "emma.singh@example.ca",
+    phone: "(204) 555-0104",
+    address: "920 Henderson Hwy, Winnipeg",
+  },
+  {
+    name: "Ethan Dubois",
+    email: "ethan.dubois@example.ca",
+    phone: "(204) 555-0105",
+    address: "313 Portage Ave, Winnipeg",
+  },
+  {
+    name: "Sophia Nguyen",
+    email: "sophia.n@example.ca",
+    phone: "(204) 555-0106",
+    address: "78 Stafford St, Winnipeg",
+  },
+  {
+    name: "Mateo Reyes",
+    email: "mateo.reyes@example.ca",
+    phone: "(204) 555-0107",
+    address: "401 Corydon Ave, Winnipeg",
+  },
+  {
+    name: "Ava Macdonald",
+    email: "ava.mac@example.ca",
+    phone: "(204) 555-0108",
+    address: "612 Osborne St, Winnipeg",
+  },
 ];
 const EXTRA_INSTRUCTORS = [
   { full_name: "Sarah Mitchell", email: "sarah.m@wpgprodrive.ca", phone: "(204) 555-0201" },
@@ -58,20 +98,47 @@ async function runSeed() {
   const adminId = await ensureUser("admin@demo.com", "Demo12345", "Demo Admin");
   const instId = await ensureUser("instructor@demo.com", "Demo12345", "Demo Instructor");
 
+  // Demo school
+  const { data: existingSchool } = await supabaseAdmin
+    .from("schools")
+    .select("id")
+    .eq("slug", "demo-driving-school")
+    .maybeSingle();
+  let schoolId: string;
+  if (existingSchool) {
+    schoolId = existingSchool.id;
+  } else {
+    const { data: newSchool, error: schoolErr } = await supabaseAdmin
+      .from("schools")
+      .insert({ name: "Winnipeg Pro Driving School", slug: "demo-driving-school" })
+      .select("id")
+      .single();
+    if (schoolErr || !newSchool)
+      throw new Error("Demo school creation failed: " + schoolErr?.message);
+    schoolId = newSchool.id;
+  }
+
   const adminRoleResult = await supabaseAdmin
     .from("user_roles")
-    .upsert({ user_id: adminId, role: "admin" }, { onConflict: "user_id,role" });
+    .upsert(
+      { user_id: adminId, role: "admin", school_id: schoolId },
+      { onConflict: "user_id,school_id,role" },
+    );
   if (adminRoleResult.error) throw new Error("Admin role failed: " + adminRoleResult.error.message);
 
   const instRoleResult = await supabaseAdmin
     .from("user_roles")
-    .upsert({ user_id: instId, role: "instructor" }, { onConflict: "user_id,role" });
-  if (instRoleResult.error) throw new Error("Instructor role failed: " + instRoleResult.error.message);
+    .upsert(
+      { user_id: instId, role: "instructor", school_id: schoolId },
+      { onConflict: "user_id,school_id,role" },
+    );
+  if (instRoleResult.error)
+    throw new Error("Instructor role failed: " + instRoleResult.error.message);
 
   // School settings
   await supabaseAdmin.from("school_settings").upsert(
     {
-      id: 1,
+      school_id: schoolId,
       school_name: "Winnipeg Pro Driving School",
       city: "Winnipeg",
       province: "MB",
@@ -80,7 +147,7 @@ async function runSeed() {
       service_area: "Within 20km of downtown Winnipeg",
       onboarding_complete: true,
     },
-    { onConflict: "id" },
+    { onConflict: "school_id" },
   );
 
   // Default instructor profile
@@ -97,6 +164,7 @@ async function runSeed() {
     .from("instructors")
     .select("id")
     .eq("profile_id", instId)
+    .eq("school_id", schoolId)
     .maybeSingle();
   let primaryInstructorId: string;
   if (!existingPrimary) {
@@ -108,6 +176,7 @@ async function runSeed() {
         email: "instructor@demo.com",
         active: true,
         weekly_availability: defaultAvail,
+        school_id: schoolId,
       })
       .select()
       .single();
@@ -127,32 +196,70 @@ async function runSeed() {
       .from("instructors")
       .select("id")
       .eq("email", ei.email)
+      .eq("school_id", schoolId)
       .maybeSingle();
     if (exist) {
       instructorIds.push(exist.id);
     } else {
       const { data } = await supabaseAdmin
         .from("instructors")
-        .insert({ ...ei, active: true, weekly_availability: defaultAvail })
+        .insert({ ...ei, active: true, weekly_availability: defaultAvail, school_id: schoolId })
         .select()
         .single();
       if (data) instructorIds.push(data.id);
     }
   }
 
-  // Lesson types - only seed if none exist
+  // Lesson types - only seed if none exist for this school
   const { count: ltCount } = await supabaseAdmin
     .from("lesson_types")
-    .select("*", { count: "exact", head: true });
+    .select("*", { count: "exact", head: true })
+    .eq("school_id", schoolId);
   if ((ltCount ?? 0) === 0) {
     await supabaseAdmin.from("lesson_types").insert([
-      { name: "1 Hour Lesson", duration_minutes: 60, price_cents: 6500, active: true, sort_order: 0, category: "lesson" },
-      { name: "1.5 Hour Lesson", duration_minutes: 90, price_cents: 9500, active: true, sort_order: 1, category: "lesson" },
-      { name: "2 Hour Lesson", duration_minutes: 120, price_cents: 12000, active: true, sort_order: 2, category: "lesson" },
-      { name: "Road Test Package", duration_minutes: 90, price_cents: 18000, active: true, sort_order: 3, category: "lesson" },
+      {
+        name: "1 Hour Lesson",
+        duration_minutes: 60,
+        price_cents: 6500,
+        active: true,
+        sort_order: 0,
+        category: "lesson",
+        school_id: schoolId,
+      },
+      {
+        name: "1.5 Hour Lesson",
+        duration_minutes: 90,
+        price_cents: 9500,
+        active: true,
+        sort_order: 1,
+        category: "lesson",
+        school_id: schoolId,
+      },
+      {
+        name: "2 Hour Lesson",
+        duration_minutes: 120,
+        price_cents: 12000,
+        active: true,
+        sort_order: 2,
+        category: "lesson",
+        school_id: schoolId,
+      },
+      {
+        name: "Road Test Package",
+        duration_minutes: 90,
+        price_cents: 18000,
+        active: true,
+        sort_order: 3,
+        category: "lesson",
+        school_id: schoolId,
+      },
     ]);
   }
-  const { data: lessonTypes } = await supabaseAdmin.from("lesson_types").select("id, price_cents, duration_minutes").limit(4);
+  const { data: lessonTypes } = await supabaseAdmin
+    .from("lesson_types")
+    .select("id, price_cents, duration_minutes")
+    .eq("school_id", schoolId)
+    .limit(4);
 
   // Students
   const STUDENT_NOTES = [
@@ -173,10 +280,14 @@ async function runSeed() {
       .from("students")
       .select("id")
       .eq("email", s.email)
+      .eq("school_id", schoolId)
       .maybeSingle();
     if (exist) {
       studentIds.push(exist.id);
-      await supabaseAdmin.from("students").update({ notes: note, pickup_address: s.address }).eq("id", exist.id);
+      await supabaseAdmin
+        .from("students")
+        .update({ notes: note, pickup_address: s.address })
+        .eq("id", exist.id);
     } else {
       const { data } = await supabaseAdmin
         .from("students")
@@ -186,6 +297,7 @@ async function runSeed() {
           phone: s.phone,
           pickup_address: s.address,
           notes: note,
+          school_id: schoolId,
         })
         .select()
         .single();
@@ -193,14 +305,20 @@ async function runSeed() {
     }
   }
 
-  // General bookings seed - only if fewer than 8 exist
+  // General bookings seed - only if fewer than 8 exist for this school
   const { count: bCount } = await supabaseAdmin
     .from("bookings")
-    .select("*", { count: "exact", head: true });
+    .select("*", { count: "exact", head: true })
+    .eq("school_id", schoolId);
   if ((bCount ?? 0) < 8 && lessonTypes && lessonTypes.length > 0 && studentIds.length > 0) {
     const now = new Date();
     // 12 realistic bookings: mix of past (completed / no-show), today, upcoming, and pending review
-    const plan: { dayOffset: number; hour: number; min: number; status: "confirmed" | "pending" | "completed" | "no_show" }[] = [
+    const plan: {
+      dayOffset: number;
+      hour: number;
+      min: number;
+      status: "confirmed" | "pending" | "completed" | "no_show";
+    }[] = [
       { dayOffset: -8, hour: 10, min: 0, status: "completed" },
       { dayOffset: -6, hour: 13, min: 30, status: "completed" },
       { dayOffset: -5, hour: 9, min: 0, status: "completed" },
@@ -221,9 +339,8 @@ async function runSeed() {
       const lt = lessonTypes[i % lessonTypes.length];
       // Distribute across all instructors (skip primary — demo instructor gets its own guaranteed block)
       const instructorPool = instructorIds.slice(1);
-      const instructorId = instructorPool.length > 0
-        ? instructorPool[i % instructorPool.length]
-        : instructorIds[0];
+      const instructorId =
+        instructorPool.length > 0 ? instructorPool[i % instructorPool.length] : instructorIds[0];
       return {
         student_id: studentIds[i % studentIds.length],
         instructor_id: instructorId,
@@ -235,6 +352,7 @@ async function runSeed() {
         payment_status: (p.status === "completed" ? "paid" : "unpaid") as "paid" | "unpaid",
         pickup_address: STUDENTS[i % STUDENTS.length].address,
         notes: STUDENT_NOTES[i % STUDENT_NOTES.length],
+        school_id: schoolId,
       };
     });
     await supabaseAdmin.from("bookings").insert(rows);
@@ -243,16 +361,18 @@ async function runSeed() {
       .from("bookings")
       .select("id")
       .eq("status", "confirmed")
+      .eq("school_id", schoolId)
       .limit(2);
     if (confirmedBookings) {
       for (const b of confirmedBookings) {
-        await supabaseAdmin
-          .from("cancellation_requests")
-          .insert({ booking_id: b.id, reason: "Schedule conflict, need to reschedule." });
+        await supabaseAdmin.from("cancellation_requests").insert({
+          booking_id: b.id,
+          reason: "Schedule conflict, need to reschedule.",
+          school_id: schoolId,
+        });
       }
     }
   }
-
 
   // GUARANTEE: demo instructor has >=5 upcoming confirmed lessons in next 7 days
   if (lessonTypes && lessonTypes.length > 0 && studentIds.length >= 5) {
@@ -300,14 +420,12 @@ async function runSeed() {
           payment_status: "unpaid" as const,
           pickup_address: stu.address,
           notes: STUDENT_NOTES[i % STUDENT_NOTES.length],
+          school_id: schoolId,
         };
       });
       await supabaseAdmin.from("bookings").insert(rows);
     }
   }
 
-
-
   return { ok: true };
 }
-
