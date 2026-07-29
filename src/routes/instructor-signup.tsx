@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useInviteCode } from "@/lib/invite-code.functions";
 import { recordPolicyAcceptance } from "@/lib/legal.functions";
+import { friendlyAuthError } from "@/lib/auth-errors";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 
@@ -49,7 +50,7 @@ function InstructorSignupPage() {
       await supabase.auth.signOut();
       setDone(true);
     } catch (err: any) {
-      toast.error(err.message || "Signup failed");
+      toast.error(friendlyAuthError(err.message || "Signup failed"));
     } finally {
       setBusy(false);
     }
@@ -86,9 +87,15 @@ function InstructorSignupPage() {
             </div>
           ) : (
             <>
-              <div className="text-[10px] uppercase tracking-[0.18em] text-[#60A5FA] mb-2">Instructor signup</div>
-              <h1 className="text-2xl font-semibold" style={{ color: "#1A1A2E" }}>Join your driving school</h1>
-              <p className="text-sm mb-6" style={{ color: "#6B6B7B" }}>Enter the invite code your school admin gave you.</p>
+              <div className="text-[10px] uppercase tracking-[0.18em] text-[#60A5FA] mb-2">
+                Instructor signup
+              </div>
+              <h1 className="text-2xl font-semibold" style={{ color: "#1A1A2E" }}>
+                Join your driving school
+              </h1>
+              <p className="text-sm mb-6" style={{ color: "#6B6B7B" }}>
+                Enter the invite code your school admin gave you.
+              </p>
               <form onSubmit={submit} className="space-y-4">
                 <Field label="Invite code *">
                   <input
@@ -100,16 +107,38 @@ function InstructorSignupPage() {
                   />
                 </Field>
                 <Field label="Full name *">
-                  <input required value={form.fullName} onChange={(e) => setForm({ ...form, fullName: e.target.value })} className="glass-input" />
+                  <input
+                    required
+                    value={form.fullName}
+                    onChange={(e) => setForm({ ...form, fullName: e.target.value })}
+                    className="glass-input"
+                  />
                 </Field>
                 <Field label="Email *">
-                  <input required type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="glass-input" />
+                  <input
+                    required
+                    type="email"
+                    value={form.email}
+                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    className="glass-input"
+                  />
                 </Field>
                 <Field label="Phone">
-                  <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="glass-input" />
+                  <input
+                    value={form.phone}
+                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                    className="glass-input"
+                  />
                 </Field>
                 <Field label="Password *">
-                  <input required type="password" minLength={6} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} className="glass-input" />
+                  <input
+                    required
+                    type="password"
+                    minLength={6}
+                    value={form.password}
+                    onChange={(e) => setForm({ ...form, password: e.target.value })}
+                    className="glass-input"
+                  />
                 </Field>
                 <label className="flex items-start gap-2 text-xs" style={{ color: "#6B6B7B" }}>
                   <Checkbox
@@ -119,19 +148,34 @@ function InstructorSignupPage() {
                   />
                   <span>
                     I agree to the{" "}
-                    <a href="/terms" target="_blank" rel="noreferrer" style={{ color: "#1B2B4B", textDecoration: "underline" }}>
+                    <a
+                      href="/terms"
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{ color: "#1B2B4B", textDecoration: "underline" }}
+                    >
                       Terms of Service
                     </a>{" "}
                     and{" "}
-                    <a href="/privacy" target="_blank" rel="noreferrer" style={{ color: "#1B2B4B", textDecoration: "underline" }}>
+                    <a
+                      href="/privacy"
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{ color: "#1B2B4B", textDecoration: "underline" }}
+                    >
                       Privacy Policy
                     </a>
                     .
                   </span>
                 </label>
-                <button disabled={busy || !agreedToPolicies} className="btn-primary w-full">{busy ? "Creating…" : "Create account"}</button>
+                <button disabled={busy || !agreedToPolicies} className="btn-primary w-full">
+                  {busy ? "Creating…" : "Create account"}
+                </button>
               </form>
-              <Link to="/auth" className="block text-center mt-4 text-xs text-slate-500 hover:text-slate-300">
+              <Link
+                to="/auth"
+                className="block text-center mt-4 text-xs text-slate-500 hover:text-slate-300"
+              >
                 ← Back to login
               </Link>
             </>
@@ -145,7 +189,9 @@ function InstructorSignupPage() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-sm font-medium mb-1.5" style={{ color: "#1A1A2E" }}>{label}</label>
+      <label className="block text-sm font-medium mb-1.5" style={{ color: "#1A1A2E" }}>
+        {label}
+      </label>
       {children}
     </div>
   );

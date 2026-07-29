@@ -6,6 +6,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { seedDemoAccounts } from "@/lib/seed-demo.functions";
 import { createAdminRole } from "@/lib/create-admin-role.functions";
 import { recordPolicyAcceptance } from "@/lib/legal.functions";
+import { friendlyAuthError } from "@/lib/auth-errors";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 
@@ -41,10 +42,26 @@ function AuthPage() {
   const [schoolName, setSchoolName] = useState("");
   const [agreedToPolicies, setAgreedToPolicies] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [unconfirmedEmail, setUnconfirmedEmail] = useState<string | null>(null);
+  const [resending, setResending] = useState(false);
 
   const seed = useServerFn(seedDemoAccounts);
   const assignAdminRole = useServerFn(createAdminRole);
   const acceptPolicies = useServerFn(recordPolicyAcceptance);
+
+  async function resendConfirmation() {
+    if (!unconfirmedEmail) return;
+    setResending(true);
+    try {
+      const { error } = await supabase.auth.resend({ type: "signup", email: unconfirmedEmail });
+      if (error) throw error;
+      toast.success(`Confirmation email sent to ${unconfirmedEmail}.`);
+    } catch (err: any) {
+      toast.error(friendlyAuthError(err.message || "Could not resend the confirmation email."));
+    } finally {
+      setResending(false);
+    }
+  }
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -58,6 +75,7 @@ function AuthPage() {
       toast.error("Please agree to the Terms of Service and Privacy Policy to continue.");
       return;
     }
+    setUnconfirmedEmail(null);
     setLoading(true);
     try {
       if (mode === "signup") {
@@ -84,7 +102,11 @@ function AuthPage() {
         if (data.user) await redirectByRole(navigate, data.user.id);
       }
     } catch (err: any) {
-      toast.error(err.message || "Authentication failed");
+      const message = err.message || "Authentication failed";
+      if (mode === "signin" && message.toLowerCase().includes("email not confirmed")) {
+        setUnconfirmedEmail(email);
+      }
+      toast.error(friendlyAuthError(message));
     } finally {
       setLoading(false);
     }
@@ -152,6 +174,27 @@ function AuthPage() {
             ? "Admin & instructor access."
             : "First account becomes the school admin."}
         </p>
+        {unconfirmedEmail && (
+          <div
+            className="mb-4 rounded-xl p-4 text-sm"
+            style={{
+              background: "rgba(201,168,76,0.1)",
+              border: "1px solid rgba(201,168,76,0.3)",
+              color: "#1A1A2E",
+            }}
+          >
+            Your email isn't confirmed yet. Check your inbox for the link, or{" "}
+            <button
+              type="button"
+              disabled={resending}
+              onClick={resendConfirmation}
+              className="font-semibold underline"
+            >
+              {resending ? "sending…" : "resend the confirmation email"}
+            </button>
+            .
+          </div>
+        )}
         <form onSubmit={handleSubmit} className="space-y-4">
           {mode === "signup" && (
             <Field label="Full name">

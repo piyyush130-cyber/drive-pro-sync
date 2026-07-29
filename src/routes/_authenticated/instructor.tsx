@@ -1,13 +1,24 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute, redirect, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { CalendarClock, MapPin, Phone, CheckCircle2, XCircle, CarFront, LogOut, NotebookPen, Mail, Sparkles } from "lucide-react";
+import {
+  CalendarClock,
+  MapPin,
+  Phone,
+  CheckCircle2,
+  XCircle,
+  CarFront,
+  LogOut,
+  NotebookPen,
+  Mail,
+  Sparkles,
+  UserCircle,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fmtTime, fmtDate, statusTone, statusLabel } from "@/lib/format";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { seedDemoAccounts } from "@/lib/seed-demo.functions";
-
 
 export const Route = createFileRoute("/_authenticated/instructor")({
   beforeLoad: async () => {
@@ -24,7 +35,9 @@ function InstructorPage() {
   const [noteOpen, setNoteOpen] = useState<string | null>(null);
   const [practiced, setPracticed] = useState("");
   const [nextFocus, setNextFocus] = useState("");
-  const [readiness, setReadiness] = useState<"not_ready" | "improving" | "almost_ready" | "ready">("improving");
+  const [readiness, setReadiness] = useState<"not_ready" | "improving" | "almost_ready" | "ready">(
+    "improving",
+  );
   const [savingNote, setSavingNote] = useState(false);
   const [reseeding, setReseeding] = useState(false);
   const reseed = useServerFn(seedDemoAccounts);
@@ -120,9 +133,15 @@ function InstructorPage() {
 
   const list = bookingsQ.data ?? [];
   const now = Date.now();
-  const nextLesson = tab === "today" || tab === "upcoming"
-    ? list.find((b: any) => new Date(b.scheduled_at).getTime() >= now && b.status !== "completed" && b.status !== "no_show")
-    : null;
+  const nextLesson =
+    tab === "today" || tab === "upcoming"
+      ? list.find(
+          (b: any) =>
+            new Date(b.scheduled_at).getTime() >= now &&
+            b.status !== "completed" &&
+            b.status !== "no_show",
+        )
+      : null;
 
   async function loadDemo() {
     setReseeding(true);
@@ -152,12 +171,20 @@ function InstructorPage() {
               <div className="font-semibold tracking-tight truncate">{meQ.data.full_name}</div>
             </div>
           </div>
-          <button
-            onClick={signOut}
-            className="text-sm text-slate-200 hover:text-white inline-flex items-center gap-2 shrink-0"
-          >
-            <LogOut className="size-4" /> <span className="hidden sm:inline">Sign out</span>
-          </button>
+          <div className="flex items-center gap-4 shrink-0">
+            <Link
+              to="/account"
+              className="text-sm text-slate-200 hover:text-white inline-flex items-center gap-2"
+            >
+              <UserCircle className="size-4" /> <span className="hidden sm:inline">Account</span>
+            </Link>
+            <button
+              onClick={signOut}
+              className="text-sm text-slate-200 hover:text-white inline-flex items-center gap-2"
+            >
+              <LogOut className="size-4" /> <span className="hidden sm:inline">Sign out</span>
+            </button>
+          </div>
         </div>
       </header>
 
@@ -168,21 +195,34 @@ function InstructorPage() {
               <Sparkles className="size-3.5" /> Next lesson
             </div>
             <div className="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-              <div className="text-2xl sm:text-3xl font-bold tracking-tight">{fmtTime(nextLesson.scheduled_at)}</div>
+              <div className="text-2xl sm:text-3xl font-bold tracking-tight">
+                {fmtTime(nextLesson.scheduled_at)}
+              </div>
               <div className="text-blue-100">{fmtDate(nextLesson.scheduled_at)}</div>
             </div>
             <div className="mt-3 text-lg font-semibold">{nextLesson.students?.full_name}</div>
-            <div className="text-sm text-blue-100">{nextLesson.lesson_types?.name} · {nextLesson.duration_minutes} min</div>
+            <div className="text-sm text-blue-100">
+              {nextLesson.lesson_types?.name} · {nextLesson.duration_minutes} min
+            </div>
             <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm">
-              <span className="inline-flex items-center gap-1.5"><MapPin className="size-4" />{nextLesson.pickup_address}</span>
+              <span className="inline-flex items-center gap-1.5">
+                <MapPin className="size-4" />
+                {nextLesson.pickup_address}
+              </span>
               {nextLesson.students?.phone && (
-                <a href={`tel:${nextLesson.students.phone}`} className="inline-flex items-center gap-1.5 hover:underline">
-                  <Phone className="size-4" />{nextLesson.students.phone}
+                <a
+                  href={`tel:${nextLesson.students.phone}`}
+                  className="inline-flex items-center gap-1.5 hover:underline"
+                >
+                  <Phone className="size-4" />
+                  {nextLesson.students.phone}
                 </a>
               )}
             </div>
             {nextLesson.notes && (
-              <div className="mt-3 text-sm bg-white/10 rounded-lg px-3 py-2 italic">"{nextLesson.notes}"</div>
+              <div className="mt-3 text-sm bg-white/10 rounded-lg px-3 py-2 italic">
+                "{nextLesson.notes}"
+              </div>
             )}
           </div>
         )}
@@ -215,7 +255,6 @@ function InstructorPage() {
             </button>
           </div>
         ) : (
-
           <div className="space-y-3">
             {list.map((b: any) => (
               <div key={b.id} className="card-premium p-5">
@@ -231,13 +270,21 @@ function InstructorPage() {
                     <div className="mt-2 text-sm text-slate-700 flex flex-wrap items-center gap-x-3 gap-y-1">
                       <span className="font-medium">{b.students?.full_name}</span>
                       {b.students?.phone && (
-                        <a href={`tel:${b.students.phone}`} className="text-blue-700 inline-flex items-center gap-1">
-                          <Phone className="size-3.5" />{b.students.phone}
+                        <a
+                          href={`tel:${b.students.phone}`}
+                          className="text-blue-700 inline-flex items-center gap-1"
+                        >
+                          <Phone className="size-3.5" />
+                          {b.students.phone}
                         </a>
                       )}
                       {b.students?.email && (
-                        <a href={`mailto:${b.students.email}`} className="text-slate-500 inline-flex items-center gap-1 truncate max-w-[220px]">
-                          <Mail className="size-3.5" />{b.students.email}
+                        <a
+                          href={`mailto:${b.students.email}`}
+                          className="text-slate-500 inline-flex items-center gap-1 truncate max-w-[220px]"
+                        >
+                          <Mail className="size-3.5" />
+                          {b.students.email}
                         </a>
                       )}
                     </div>
@@ -291,7 +338,9 @@ function InstructorPage() {
                     {noteOpen === b.id && (
                       <div className="card-premium mt-3 p-4 bg-blue-50/60 border border-blue-100 space-y-3">
                         <div>
-                          <label className="text-xs font-medium text-slate-700">Practiced today</label>
+                          <label className="text-xs font-medium text-slate-700">
+                            Practiced today
+                          </label>
                           <textarea
                             value={practiced}
                             onChange={(e) => setPracticed(e.target.value)}
@@ -311,7 +360,9 @@ function InstructorPage() {
                           />
                         </div>
                         <div>
-                          <label className="text-xs font-medium text-slate-700">Road-test readiness</label>
+                          <label className="text-xs font-medium text-slate-700">
+                            Road-test readiness
+                          </label>
                           <select
                             value={readiness}
                             onChange={(e) => setReadiness(e.target.value as typeof readiness)}

@@ -10,6 +10,7 @@ import {
   LogOut,
   CarFront,
   Tag,
+  UserCircle,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -22,6 +23,7 @@ const items = [
   { title: "Services & Pricing", url: "/services", icon: Tag },
   { title: "Payment Watch", url: "/payments", icon: Wallet },
   { title: "Settings", url: "/settings", icon: Settings },
+  { title: "My Account", url: "/account", icon: UserCircle },
 ];
 
 export function AppSidebar({ schoolName }: { schoolName: string }) {

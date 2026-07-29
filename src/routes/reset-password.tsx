@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { CarFront } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { friendlyAuthError } from "@/lib/auth-errors";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/reset-password")({
@@ -39,7 +40,7 @@ function ResetPasswordPage() {
       setStatus("done");
       toast.success("Password updated.");
     } catch (err: any) {
-      toast.error(err.message || "Could not update password.");
+      toast.error(friendlyAuthError(err.message || "Could not update password."));
     } finally {
       setLoading(false);
     }
