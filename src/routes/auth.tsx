@@ -1,4 +1,3 @@
-```tsx
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { CarFront } from "lucide-react";
@@ -6,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
 import { seedDemoAccounts } from "@/lib/seed-demo.functions";
 import { createAdminRole } from "@/lib/create-admin-role.functions";
+import { recordPolicyAcceptance } from "@/lib/legal.functions";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 
 async function redirectByRole(_navigate: ReturnType<typeof useNavigate>, userId: string) {
@@ -38,10 +39,12 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [schoolName, setSchoolName] = useState("");
+  const [agreedToPolicies, setAgreedToPolicies] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const seed = useServerFn(seedDemoAccounts);
   const assignAdminRole = useServerFn(createAdminRole);
+  const acceptPolicies = useServerFn(recordPolicyAcceptance);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -51,6 +54,10 @@ function AuthPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (mode === "signup" && !agreedToPolicies) {
+      toast.error("Please agree to the Terms of Service and Privacy Policy to continue.");
+      return;
+    }
     setLoading(true);
     try {
       if (mode === "signup") {
@@ -67,6 +74,7 @@ function AuthPage() {
           await assignAdminRole({
             data: { userId: data.user.id, fullName, schoolName },
           });
+          await acceptPolicies({ data: { userId: data.user.id } });
           toast.success("Welcome! Let's set up your school.");
           window.location.href = "/onboarding";
         }
@@ -243,8 +251,28 @@ function AuthPage() {
               Minimum 6 characters.
             </p>
           </Field>
+          {mode === "signup" && (
+            <label className="flex items-start gap-2 text-xs" style={{ color: "#6B6B7B" }}>
+              <Checkbox
+                checked={agreedToPolicies}
+                onCheckedChange={(v) => setAgreedToPolicies(v === true)}
+                className="mt-0.5"
+              />
+              <span>
+                I agree to the{" "}
+                <a href="/terms" target="_blank" rel="noreferrer" style={{ color: "#1B2B4B", textDecoration: "underline" }}>
+                  Terms of Service
+                </a>{" "}
+                and{" "}
+                <a href="/privacy" target="_blank" rel="noreferrer" style={{ color: "#1B2B4B", textDecoration: "underline" }}>
+                  Privacy Policy
+                </a>
+                .
+              </span>
+            </label>
+          )}
           <button
-            disabled={loading}
+            disabled={loading || (mode === "signup" && !agreedToPolicies)}
             className="w-full rounded-xl py-3 font-semibold text-white transition-all duration-150 hover:brightness-110"
             style={{
               background: "linear-gradient(90deg, #1B2B4B, #243660)",
@@ -346,5 +374,3 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     </div>
   );
 }
-
-```

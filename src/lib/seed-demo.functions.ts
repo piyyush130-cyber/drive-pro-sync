@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { CURRENT_TERMS_VERSION, CURRENT_PRIVACY_VERSION } from "@/lib/legal";
 
 const STUDENTS = [
   { name: "Liam Tremblay", email: "liam.tremblay@example.ca", phone: "(204) 555-0101", address: "248 Wellington Cres, Winnipeg" },
@@ -44,6 +45,13 @@ async function runSeed() {
     await supabaseAdmin
       .from("profiles")
       .upsert({ id: user.id, email, full_name: fullName }, { onConflict: "id" });
+    await supabaseAdmin.from("policy_acceptances").upsert(
+      [
+        { user_id: user.id, policy_type: "terms_of_service", version: CURRENT_TERMS_VERSION },
+        { user_id: user.id, policy_type: "privacy_policy", version: CURRENT_PRIVACY_VERSION },
+      ],
+      { onConflict: "user_id,policy_type,version" },
+    );
     return user.id;
   }
 

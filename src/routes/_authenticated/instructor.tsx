@@ -1,4 +1,3 @@
-```tsx
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -345,5 +344,3 @@ function InstructorPage() {
     </div>
   );
 }
-
-```

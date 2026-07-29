@@ -1,4 +1,3 @@
-```tsx
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Check, Copy, ExternalLink, Key, ArrowRight, Plus, Trash2 } from "lucide-react";
@@ -448,5 +447,3 @@ function NextRow({ onBack, onNext, busy }: { onBack?: () => void; onNext: () => 
     </div>
   );
 }
-
-```

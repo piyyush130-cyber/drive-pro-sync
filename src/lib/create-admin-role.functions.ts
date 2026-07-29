@@ -1,4 +1,3 @@
-```ts
 import { createServerFn } from "@tanstack/react-start";
 
 function slugify(name: string): string {
@@ -47,5 +46,3 @@ export const createAdminRole = createServerFn({ method: "POST" })
 
     return { role: "admin" as const, schoolId: school.id };
   });
-
-```

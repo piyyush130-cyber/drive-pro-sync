@@ -4,6 +4,8 @@ import { CarFront, Check } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useInviteCode } from "@/lib/invite-code.functions";
+import { recordPolicyAcceptance } from "@/lib/legal.functions";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/instructor-signup")({
@@ -13,12 +15,18 @@ export const Route = createFileRoute("/instructor-signup")({
 function InstructorSignupPage() {
   const navigate = useNavigate();
   const claim = useServerFn(useInviteCode);
+  const acceptPolicies = useServerFn(recordPolicyAcceptance);
   const [form, setForm] = useState({ code: "", fullName: "", email: "", phone: "", password: "" });
+  const [agreedToPolicies, setAgreedToPolicies] = useState(false);
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (!agreedToPolicies) {
+      toast.error("Please agree to the Terms of Service and Privacy Policy to continue.");
+      return;
+    }
     setBusy(true);
     try {
       const { data, error } = await supabase.auth.signUp({
@@ -37,6 +45,7 @@ function InstructorSignupPage() {
           phone: form.phone,
         },
       });
+      await acceptPolicies({ data: { userId: data.user.id } });
       await supabase.auth.signOut();
       setDone(true);
     } catch (err: any) {
@@ -102,7 +111,25 @@ function InstructorSignupPage() {
                 <Field label="Password *">
                   <input required type="password" minLength={6} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} className="glass-input" />
                 </Field>
-                <button disabled={busy} className="btn-primary w-full">{busy ? "Creating…" : "Create account"}</button>
+                <label className="flex items-start gap-2 text-xs" style={{ color: "#6B6B7B" }}>
+                  <Checkbox
+                    checked={agreedToPolicies}
+                    onCheckedChange={(v) => setAgreedToPolicies(v === true)}
+                    className="mt-0.5"
+                  />
+                  <span>
+                    I agree to the{" "}
+                    <a href="/terms" target="_blank" rel="noreferrer" style={{ color: "#1B2B4B", textDecoration: "underline" }}>
+                      Terms of Service
+                    </a>{" "}
+                    and{" "}
+                    <a href="/privacy" target="_blank" rel="noreferrer" style={{ color: "#1B2B4B", textDecoration: "underline" }}>
+                      Privacy Policy
+                    </a>
+                    .
+                  </span>
+                </label>
+                <button disabled={busy || !agreedToPolicies} className="btn-primary w-full">{busy ? "Creating…" : "Create account"}</button>
               </form>
               <Link to="/auth" className="block text-center mt-4 text-xs text-slate-500 hover:text-slate-300">
                 ← Back to login

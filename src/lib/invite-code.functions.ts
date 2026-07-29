@@ -1,4 +1,3 @@
-```ts
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
@@ -81,5 +80,3 @@ export const useInviteCode = createServerFn({ method: "POST" })
       .eq("id", invite.id);
     return { success: true };
   });
-
-```

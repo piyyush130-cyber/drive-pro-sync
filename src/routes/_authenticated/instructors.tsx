@@ -1,4 +1,3 @@
-```tsx
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
@@ -264,5 +263,3 @@ function AvailabilityEditor({ initial, onSave }: { initial: any; onSave: (v: any
     </div>
   );
 }
-
-```

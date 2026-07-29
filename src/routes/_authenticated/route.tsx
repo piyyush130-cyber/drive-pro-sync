@@ -1,10 +1,13 @@
-```tsx
 import { createFileRoute, Outlet, redirect, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppSidebar } from "@/components/AppSidebar";
-import { useAuthUser, useRoles, useSchoolId } from "@/lib/auth";
+import { useAuthUser, useRoles, useSchoolId, useLatestPolicyAcceptance } from "@/lib/auth";
+import { CURRENT_TERMS_VERSION, CURRENT_PRIVACY_VERSION } from "@/lib/legal";
+import { recordPolicyAcceptance } from "@/lib/legal.functions";
+import { Checkbox } from "@/components/ui/checkbox";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -21,6 +24,7 @@ function AuthLayout() {
   const navigate = useNavigate();
   const rolesQ = useRoles(user?.id);
   const schoolIdQ = useSchoolId(user?.id);
+  const acceptanceQ = useLatestPolicyAcceptance(user?.id);
   const roles = rolesQ.data ?? [];
   const isAdmin = roles.includes("admin");
   const isInstructor = roles.includes("instructor");
@@ -49,7 +53,7 @@ function AuthLayout() {
     }
   }, [loading, rolesQ.isLoading, isAdmin, isInstructor, pathname, navigate]);
 
-  if (loading || rolesQ.isLoading) {
+  if (loading || rolesQ.isLoading || acceptanceQ.isLoading) {
     return <div className="min-h-screen flex items-center justify-center text-slate-500">Loading…</div>;
   }
 
@@ -58,6 +62,17 @@ function AuthLayout() {
       await supabase.auth.signOut();
       navigate({ to: "/auth", replace: true });
     }} onRecovered={() => { void rolesQ.refetch(); }} />;
+  }
+
+  const hasCurrentTerms = acceptanceQ.data?.some(
+    (a) => a.policy_type === "terms_of_service" && a.version === CURRENT_TERMS_VERSION,
+  );
+  const hasCurrentPrivacy = acceptanceQ.data?.some(
+    (a) => a.policy_type === "privacy_policy" && a.version === CURRENT_PRIVACY_VERSION,
+  );
+
+  if (user && (!hasCurrentTerms || !hasCurrentPrivacy)) {
+    return <AcceptPoliciesScreen userId={user.id} onAccepted={() => acceptanceQ.refetch()} />;
   }
 
   // Instructor-only view skips the admin sidebar
@@ -71,6 +86,54 @@ function AuthLayout() {
       <main className="flex-1 min-w-0">
         <Outlet />
       </main>
+    </div>
+  );
+}
+
+function AcceptPoliciesScreen({ userId, onAccepted }: { userId: string; onAccepted: () => void }) {
+  const acceptPolicies = useServerFn(recordPolicyAcceptance);
+  const [agreed, setAgreed] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  async function handleAccept() {
+    setBusy(true);
+    try {
+      await acceptPolicies({ data: { userId } });
+      onAccepted();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center p-6 text-center bg-slate-50">
+      <div className="max-w-md w-full rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+        <h1 className="text-xl font-semibold tracking-tight text-slate-900">
+          Our Terms of Service and Privacy Policy have been updated
+        </h1>
+        <p className="text-sm text-slate-500 mt-2">
+          Please review the updated policies and accept them to continue using DriveProSync.
+        </p>
+        <div className="mt-4 flex flex-col gap-1 text-sm">
+          <a href="/terms" target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">
+            Read the Terms of Service →
+          </a>
+          <a href="/privacy" target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">
+            Read the Privacy Policy →
+          </a>
+        </div>
+        <label className="flex items-start gap-2 mt-5 text-xs text-left text-slate-600">
+          <Checkbox checked={agreed} onCheckedChange={(v) => setAgreed(v === true)} className="mt-0.5" />
+          <span>I have reviewed and agree to the updated Terms of Service and Privacy Policy.</span>
+        </label>
+        <button
+          disabled={!agreed || busy}
+          onClick={handleAccept}
+          className="mt-5 w-full rounded-xl bg-blue-600 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+        >
+          {busy ? "Saving…" : "I agree — continue"}
+        </button>
+      </div>
     </div>
   );
 }
@@ -104,5 +167,3 @@ function NoRoleScreen({
     </div>
   );
 }
-
-```

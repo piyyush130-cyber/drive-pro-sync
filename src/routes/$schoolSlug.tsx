@@ -157,21 +157,6 @@ function BookingPage() {
     },
   });
 
-  if (!schoolQ.isLoading && schoolQ.data === null) {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-4" style={{ background: C.pageBg }}>
-        <div className="text-center max-w-sm">
-          <div className="text-lg font-semibold" style={{ color: C.text }}>
-            We couldn't find that driving school.
-          </div>
-          <p className="mt-2 text-sm" style={{ color: C.muted }}>
-            Double-check the link your school gave you, or contact them directly to confirm your booking page.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   const [selected, setSelected] = useState<LessonType | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
@@ -191,6 +176,21 @@ function BookingPage() {
 
   const submit = useServerFn(submitPublicBooking);
   const school = settingsQ.data?.school_name ?? "Standard Driving School";
+
+  if (!schoolQ.isLoading && schoolQ.data === null) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4" style={{ background: C.pageBg }}>
+        <div className="text-center max-w-sm">
+          <div className="text-lg font-semibold" style={{ color: C.text }}>
+            We couldn't find that driving school.
+          </div>
+          <p className="mt-2 text-sm" style={{ color: C.muted }}>
+            Double-check the link your school gave you, or contact them directly to confirm your booking page.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   function validate(): Errors {
     const e: Errors = {};

@@ -606,6 +606,30 @@ export type Database = {
         }
         Relationships: []
       }
+      policy_acceptances: {
+        Row: {
+          accepted_at: string
+          id: string
+          policy_type: Database["public"]["Enums"]["policy_type"]
+          user_id: string
+          version: string
+        }
+        Insert: {
+          accepted_at?: string
+          id?: string
+          policy_type: Database["public"]["Enums"]["policy_type"]
+          user_id: string
+          version: string
+        }
+        Update: {
+          accepted_at?: string
+          id?: string
+          policy_type?: Database["public"]["Enums"]["policy_type"]
+          user_id?: string
+          version?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -637,6 +661,7 @@ export type Database = {
         | "rejected"
       payment_method: "cash" | "etransfer" | "card" | "other"
       payment_status: "unpaid" | "deposit_paid" | "paid" | "refunded"
+      policy_type: "terms_of_service" | "privacy_policy"
       road_test_readiness: "not_ready" | "improving" | "almost_ready" | "ready"
     }
     CompositeTypes: {
@@ -784,6 +809,7 @@ export const Constants = {
       ],
       payment_method: ["cash", "etransfer", "card", "other"],
       payment_status: ["unpaid", "deposit_paid", "paid", "refunded"],
+      policy_type: ["terms_of_service", "privacy_policy"],
       road_test_readiness: ["not_ready", "improving", "almost_ready", "ready"],
     },
   },

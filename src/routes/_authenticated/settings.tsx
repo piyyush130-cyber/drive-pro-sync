@@ -1,4 +1,3 @@
-```tsx
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
@@ -181,5 +180,3 @@ function LessonTypeRow({ initial, onSave }: { initial: any; onSave: (t: any) => 
     </div>
   );
 }
-
-```
