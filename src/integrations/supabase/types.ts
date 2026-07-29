@@ -515,6 +515,7 @@ export type Database = {
       };
       school_settings: {
         Row: {
+          auto_assign_instructor: boolean;
           cancellation_fee_cents: number;
           cancellation_notice_hours: number;
           cancellation_policy: string | null;
@@ -535,6 +536,7 @@ export type Database = {
           updated_at: string;
         };
         Insert: {
+          auto_assign_instructor?: boolean;
           cancellation_fee_cents?: number;
           cancellation_notice_hours?: number;
           cancellation_policy?: string | null;
@@ -555,6 +557,7 @@ export type Database = {
           updated_at?: string;
         };
         Update: {
+          auto_assign_instructor?: boolean;
           cancellation_fee_cents?: number;
           cancellation_notice_hours?: number;
           cancellation_policy?: string | null;

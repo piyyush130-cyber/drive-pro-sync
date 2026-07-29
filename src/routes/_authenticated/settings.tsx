@@ -60,6 +60,7 @@ function SettingsPage() {
         default_duration_minutes: Number(form.default_duration_minutes) || 60,
         default_buffer_minutes: Number(form.default_buffer_minutes) || 15,
         require_approval: !!form.require_approval,
+        auto_assign_instructor: !!form.auto_assign_instructor,
       })
       .eq("school_id", schoolIdQ.data);
     if (error) return toast.error(error.message);
@@ -94,52 +95,127 @@ function SettingsPage() {
       <section className="glass-card p-6 mb-6 space-y-4">
         <h2 className="font-semibold text-slate-900">School details</h2>
         <Field label="School name">
-          <input value={form.school_name || ""} onChange={(e) => setForm({ ...form, school_name: e.target.value })} className="glass-input" />
+          <input
+            value={form.school_name || ""}
+            onChange={(e) => setForm({ ...form, school_name: e.target.value })}
+            className="glass-input"
+          />
         </Field>
         <div className="grid sm:grid-cols-2 gap-4">
           <Field label="City">
-            <input value={form.city || ""} onChange={(e) => setForm({ ...form, city: e.target.value })} className="glass-input" />
+            <input
+              value={form.city || ""}
+              onChange={(e) => setForm({ ...form, city: e.target.value })}
+              className="glass-input"
+            />
           </Field>
           <Field label="Province">
-            <input value={form.province || ""} onChange={(e) => setForm({ ...form, province: e.target.value })} className="glass-input" />
+            <input
+              value={form.province || ""}
+              onChange={(e) => setForm({ ...form, province: e.target.value })}
+              className="glass-input"
+            />
           </Field>
         </div>
         <div className="grid sm:grid-cols-2 gap-4">
           <Field label="Contact phone">
-            <input value={form.contact_phone || ""} onChange={(e) => setForm({ ...form, contact_phone: e.target.value })} className="glass-input" />
+            <input
+              value={form.contact_phone || ""}
+              onChange={(e) => setForm({ ...form, contact_phone: e.target.value })}
+              className="glass-input"
+            />
           </Field>
           <Field label="Contact email">
-            <input value={form.contact_email || ""} onChange={(e) => setForm({ ...form, contact_email: e.target.value })} className="glass-input" />
+            <input
+              value={form.contact_email || ""}
+              onChange={(e) => setForm({ ...form, contact_email: e.target.value })}
+              className="glass-input"
+            />
           </Field>
         </div>
         <Field label="Service area">
-          <textarea value={form.service_area || ""} onChange={(e) => setForm({ ...form, service_area: e.target.value })} className="glass-input min-h-[60px]" />
+          <textarea
+            value={form.service_area || ""}
+            onChange={(e) => setForm({ ...form, service_area: e.target.value })}
+            className="glass-input min-h-[60px]"
+          />
         </Field>
         <Field label="Cancellation policy">
-          <textarea value={form.cancellation_policy || ""} onChange={(e) => setForm({ ...form, cancellation_policy: e.target.value })} className="glass-input min-h-[60px]" />
+          <textarea
+            value={form.cancellation_policy || ""}
+            onChange={(e) => setForm({ ...form, cancellation_policy: e.target.value })}
+            className="glass-input min-h-[60px]"
+          />
         </Field>
         <div className="grid sm:grid-cols-2 gap-4">
           <Field label="Cancellation notice (hours)">
-            <input type="number" value={form.cancellation_notice_hours ?? 24} onChange={(e) => setForm({ ...form, cancellation_notice_hours: e.target.value })} className="glass-input" />
+            <input
+              type="number"
+              value={form.cancellation_notice_hours ?? 24}
+              onChange={(e) => setForm({ ...form, cancellation_notice_hours: e.target.value })}
+              className="glass-input"
+            />
           </Field>
           <Field label="Cancellation fee ($)">
-            <input type="number" value={(form.cancellation_fee_cents ?? 0) / 100} onChange={(e) => setForm({ ...form, cancellation_fee_cents: Math.round(Number(e.target.value) * 100) })} className="glass-input" />
+            <input
+              type="number"
+              value={(form.cancellation_fee_cents ?? 0) / 100}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  cancellation_fee_cents: Math.round(Number(e.target.value) * 100),
+                })
+              }
+              className="glass-input"
+            />
           </Field>
         </div>
         <label className="flex items-center gap-2 text-sm text-slate-700">
-          <input type="checkbox" checked={!!form.deposit_required} onChange={(e) => setForm({ ...form, deposit_required: e.target.checked })} className="accent-[#3B82F6]" />
+          <input
+            type="checkbox"
+            checked={!!form.deposit_required}
+            onChange={(e) => setForm({ ...form, deposit_required: e.target.checked })}
+            className="accent-[#3B82F6]"
+          />
           Require deposit at booking
         </label>
         {form.deposit_required && (
           <Field label="Deposit amount ($)">
-            <input type="number" value={(form.deposit_cents ?? 0) / 100} onChange={(e) => setForm({ ...form, deposit_cents: Math.round(Number(e.target.value) * 100) })} className="glass-input" />
+            <input
+              type="number"
+              value={(form.deposit_cents ?? 0) / 100}
+              onChange={(e) =>
+                setForm({ ...form, deposit_cents: Math.round(Number(e.target.value) * 100) })
+              }
+              className="glass-input"
+            />
           </Field>
         )}
         <label className="flex items-center gap-2 text-sm text-slate-700">
-          <input type="checkbox" checked={!!form.require_approval} onChange={(e) => setForm({ ...form, require_approval: e.target.checked })} className="accent-[#3B82F6]" />
+          <input
+            type="checkbox"
+            checked={!!form.require_approval}
+            onChange={(e) => setForm({ ...form, require_approval: e.target.checked })}
+            className="accent-[#3B82F6]"
+          />
           Require admin approval for new bookings
         </label>
-        <button onClick={saveSettings} className="btn-primary text-sm">Save settings</button>
+        <label className="flex items-center gap-2 text-sm text-slate-700">
+          <input
+            type="checkbox"
+            checked={!!form.auto_assign_instructor}
+            onChange={(e) => setForm({ ...form, auto_assign_instructor: e.target.checked })}
+            className="accent-[#3B82F6]"
+          />
+          Automatically assign an instructor to new bookings
+        </label>
+        <p className="text-xs text-slate-500 -mt-2">
+          When on, new bookings are assigned to an available instructor based on their weekly hours
+          and existing schedule. When off, assign instructors manually from the Booking Queue.
+        </p>
+        <button onClick={saveSettings} className="btn-primary text-sm">
+          Save settings
+        </button>
       </section>
 
       <section className="glass-card p-6">
@@ -167,11 +243,30 @@ function LessonTypeRow({ initial, onSave }: { initial: any; onSave: (t: any) => 
   const [t, setT] = useState(initial);
   return (
     <div className="grid grid-cols-12 gap-2 items-center">
-      <input value={t.name} onChange={(e) => setT({ ...t, name: e.target.value })} className="glass-input col-span-5 text-sm" />
-      <input type="number" value={t.duration_minutes} onChange={(e) => setT({ ...t, duration_minutes: e.target.value })} className="glass-input col-span-2 text-sm" />
-      <input type="number" value={(t.price_cents ?? 0) / 100} onChange={(e) => setT({ ...t, price_cents: Math.round(Number(e.target.value) * 100) })} className="glass-input col-span-2 text-sm" />
+      <input
+        value={t.name}
+        onChange={(e) => setT({ ...t, name: e.target.value })}
+        className="glass-input col-span-5 text-sm"
+      />
+      <input
+        type="number"
+        value={t.duration_minutes}
+        onChange={(e) => setT({ ...t, duration_minutes: e.target.value })}
+        className="glass-input col-span-2 text-sm"
+      />
+      <input
+        type="number"
+        value={(t.price_cents ?? 0) / 100}
+        onChange={(e) => setT({ ...t, price_cents: Math.round(Number(e.target.value) * 100) })}
+        className="glass-input col-span-2 text-sm"
+      />
       <label className="flex items-center gap-1 text-xs col-span-1 text-slate-700">
-        <input type="checkbox" checked={t.active} onChange={(e) => setT({ ...t, active: e.target.checked })} className="accent-[#3B82F6]" />
+        <input
+          type="checkbox"
+          checked={t.active}
+          onChange={(e) => setT({ ...t, active: e.target.checked })}
+          className="accent-[#3B82F6]"
+        />
         On
       </label>
       <button onClick={() => onSave(t)} className="col-span-2 btn-primary text-xs">
