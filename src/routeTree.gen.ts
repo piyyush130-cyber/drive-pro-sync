@@ -10,10 +10,12 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as InstructorSignupRouteImport } from './routes/instructor-signup'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as CancelRouteImport } from './routes/cancel'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as SchoolSlugRouteImport } from './routes/$schoolSlug'
@@ -36,6 +38,11 @@ const TermsRoute = TermsRouteImport.update({
   path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
@@ -54,6 +61,11 @@ const LoginRoute = LoginRouteImport.update({
 const InstructorSignupRoute = InstructorSignupRouteImport.update({
   id: '/instructor-signup',
   path: '/instructor-signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CancelRoute = CancelRouteImport.update({
@@ -142,10 +154,12 @@ export interface FileRoutesByFullPath {
   '/$schoolSlug': typeof SchoolSlugRoute
   '/auth': typeof AuthRoute
   '/cancel': typeof CancelRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/instructor-signup': typeof InstructorSignupRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/privacy': typeof PrivacyRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
   '/bookings': typeof AuthenticatedBookingsRoute
   '/calendar': typeof AuthenticatedCalendarRoute
@@ -164,10 +178,12 @@ export interface FileRoutesByTo {
   '/$schoolSlug': typeof SchoolSlugRoute
   '/auth': typeof AuthRoute
   '/cancel': typeof CancelRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/instructor-signup': typeof InstructorSignupRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/privacy': typeof PrivacyRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
   '/bookings': typeof AuthenticatedBookingsRoute
   '/calendar': typeof AuthenticatedCalendarRoute
@@ -188,10 +204,12 @@ export interface FileRoutesById {
   '/$schoolSlug': typeof SchoolSlugRoute
   '/auth': typeof AuthRoute
   '/cancel': typeof CancelRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/instructor-signup': typeof InstructorSignupRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
   '/privacy': typeof PrivacyRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
   '/_authenticated/bookings': typeof AuthenticatedBookingsRoute
   '/_authenticated/calendar': typeof AuthenticatedCalendarRoute
@@ -212,10 +230,12 @@ export interface FileRouteTypes {
     | '/$schoolSlug'
     | '/auth'
     | '/cancel'
+    | '/forgot-password'
     | '/instructor-signup'
     | '/login'
     | '/onboarding'
     | '/privacy'
+    | '/reset-password'
     | '/terms'
     | '/bookings'
     | '/calendar'
@@ -234,10 +254,12 @@ export interface FileRouteTypes {
     | '/$schoolSlug'
     | '/auth'
     | '/cancel'
+    | '/forgot-password'
     | '/instructor-signup'
     | '/login'
     | '/onboarding'
     | '/privacy'
+    | '/reset-password'
     | '/terms'
     | '/bookings'
     | '/calendar'
@@ -257,10 +279,12 @@ export interface FileRouteTypes {
     | '/$schoolSlug'
     | '/auth'
     | '/cancel'
+    | '/forgot-password'
     | '/instructor-signup'
     | '/login'
     | '/onboarding'
     | '/privacy'
+    | '/reset-password'
     | '/terms'
     | '/_authenticated/bookings'
     | '/_authenticated/calendar'
@@ -281,10 +305,12 @@ export interface RootRouteChildren {
   SchoolSlugRoute: typeof SchoolSlugRoute
   AuthRoute: typeof AuthRoute
   CancelRoute: typeof CancelRoute
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
   InstructorSignupRoute: typeof InstructorSignupRoute
   LoginRoute: typeof LoginRoute
   OnboardingRoute: typeof OnboardingRoute
   PrivacyRoute: typeof PrivacyRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   TermsRoute: typeof TermsRoute
 }
 
@@ -295,6 +321,13 @@ declare module '@tanstack/react-router' {
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -323,6 +356,13 @@ declare module '@tanstack/react-router' {
       path: '/instructor-signup'
       fullPath: '/instructor-signup'
       preLoaderRoute: typeof InstructorSignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/cancel': {
@@ -488,10 +528,12 @@ const rootRouteChildren: RootRouteChildren = {
   SchoolSlugRoute: SchoolSlugRoute,
   AuthRoute: AuthRoute,
   CancelRoute: CancelRoute,
+  ForgotPasswordRoute: ForgotPasswordRoute,
   InstructorSignupRoute: InstructorSignupRoute,
   LoginRoute: LoginRoute,
   OnboardingRoute: OnboardingRoute,
   PrivacyRoute: PrivacyRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   TermsRoute: TermsRoute,
 }
 export const routeTree = rootRouteImport

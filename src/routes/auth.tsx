@@ -141,10 +141,7 @@ function AuthPage() {
             DriveProSync
           </div>
         </div>
-        <div
-          className="text-xs uppercase tracking-widest mb-1"
-          style={{ color: "#C9A84C" }}
-        >
+        <div className="text-xs uppercase tracking-widest mb-1" style={{ color: "#C9A84C" }}>
           Staff Portal
         </div>
         <h1 className="text-2xl font-semibold mt-1 mb-1" style={{ color: "#1A1A2E" }}>
@@ -250,6 +247,15 @@ function AuthPage() {
             <p className="text-[11px] mt-1" style={{ color: "#6B6B7B" }}>
               Minimum 6 characters.
             </p>
+            {mode === "signin" && (
+              <Link
+                to="/forgot-password"
+                className="mt-1.5 inline-block text-xs hover:underline"
+                style={{ color: "#1B2B4B" }}
+              >
+                Forgot password?
+              </Link>
+            )}
           </Field>
           {mode === "signup" && (
             <label className="flex items-start gap-2 text-xs" style={{ color: "#6B6B7B" }}>
@@ -260,11 +266,21 @@ function AuthPage() {
               />
               <span>
                 I agree to the{" "}
-                <a href="/terms" target="_blank" rel="noreferrer" style={{ color: "#1B2B4B", textDecoration: "underline" }}>
+                <a
+                  href="/terms"
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{ color: "#1B2B4B", textDecoration: "underline" }}
+                >
                   Terms of Service
                 </a>{" "}
                 and{" "}
-                <a href="/privacy" target="_blank" rel="noreferrer" style={{ color: "#1B2B4B", textDecoration: "underline" }}>
+                <a
+                  href="/privacy"
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{ color: "#1B2B4B", textDecoration: "underline" }}
+                >
                   Privacy Policy
                 </a>
                 .
@@ -288,9 +304,7 @@ function AuthPage() {
           onMouseEnter={(e) => (e.currentTarget.style.color = "#1B2B4B")}
           onMouseLeave={(e) => (e.currentTarget.style.color = "#C9A84C")}
         >
-          {mode === "signin"
-            ? "Need an account? Create one"
-            : "Already have an account? Sign in"}
+          {mode === "signin" ? "Need an account? Create one" : "Already have an account? Sign in"}
         </button>
         <Link
           to="/instructor-signup"
@@ -303,10 +317,7 @@ function AuthPage() {
 
         <div className="my-5 flex items-center gap-3">
           <div className="h-px flex-1" style={{ background: "rgba(201,168,76,0.3)" }} />
-          <span
-            className="text-[10px] uppercase tracking-widest"
-            style={{ color: "#C9A84C" }}
-          >
+          <span className="text-[10px] uppercase tracking-widest" style={{ color: "#C9A84C" }}>
             or explore a live demo
           </span>
           <div className="h-px flex-1" style={{ background: "rgba(201,168,76,0.3)" }} />
