@@ -21,11 +21,23 @@ function StudentsPage() {
       const { data, error } = await supabase
         .from("students")
         .select("*, bookings(id, status)")
+        .is("deleted_at", null)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data ?? [];
     },
   });
+
+  async function deleteStudent(id: string, name: string) {
+    if (!window.confirm(`Delete ${name}? You can restore them from the recycle bin.`)) return;
+    const { error } = await supabase
+      .from("students")
+      .update({ deleted_at: new Date().toISOString() })
+      .eq("id", id);
+    if (error) return toast.error(error.message);
+    qc.invalidateQueries({ queryKey: ["students"] });
+    toast.success(`${name} deleted`);
+  }
 
   async function addStudent(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -93,11 +105,13 @@ function StudentsPage() {
               <th className="text-left px-5 py-3">Contact</th>
               <th className="text-left px-5 py-3">Lessons</th>
               <th className="text-left px-5 py-3">Pickup</th>
+              <th className="text-right px-5 py-3"></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {list.map((s: any) => {
-              const completed = s.bookings?.filter((b: any) => b.status === "completed").length ?? 0;
+              const completed =
+                s.bookings?.filter((b: any) => b.status === "completed").length ?? 0;
               const remaining = Math.max(0, (s.lessons_purchased ?? 0) - completed);
               return (
                 <tr key={s.id} className="hover:bg-slate-50">
@@ -116,6 +130,14 @@ function StudentsPage() {
                   </td>
                   <td className="px-5 py-3 text-slate-600 text-xs truncate max-w-xs">
                     {s.pickup_address ?? "—"}
+                  </td>
+                  <td className="px-5 py-3 text-right">
+                    <button
+                      onClick={() => deleteStudent(s.id, s.full_name)}
+                      className="text-xs text-red-600 hover:underline"
+                    >
+                      Delete
+                    </button>
                   </td>
                 </tr>
               );

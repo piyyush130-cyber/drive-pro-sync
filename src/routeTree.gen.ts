@@ -24,6 +24,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedStudentsRouteImport } from './routes/_authenticated/students'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedServicesRouteImport } from './routes/_authenticated/services'
+import { Route as AuthenticatedRecycleBinRouteImport } from './routes/_authenticated/recycle-bin'
 import { Route as AuthenticatedPaymentsRouteImport } from './routes/_authenticated/payments'
 import { Route as AuthenticatedNoAccessRouteImport } from './routes/_authenticated/no-access'
 import { Route as AuthenticatedInstructorsRouteImport } from './routes/_authenticated/instructors'
@@ -108,6 +109,11 @@ const AuthenticatedServicesRoute = AuthenticatedServicesRouteImport.update({
   path: '/services',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedRecycleBinRoute = AuthenticatedRecycleBinRouteImport.update({
+  id: '/recycle-bin',
+  path: '/recycle-bin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedPaymentsRoute = AuthenticatedPaymentsRouteImport.update({
   id: '/payments',
   path: '/payments',
@@ -175,6 +181,7 @@ export interface FileRoutesByFullPath {
   '/instructors': typeof AuthenticatedInstructorsRoute
   '/no-access': typeof AuthenticatedNoAccessRoute
   '/payments': typeof AuthenticatedPaymentsRoute
+  '/recycle-bin': typeof AuthenticatedRecycleBinRoute
   '/services': typeof AuthenticatedServicesRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/students': typeof AuthenticatedStudentsRouteWithChildren
@@ -200,6 +207,7 @@ export interface FileRoutesByTo {
   '/instructors': typeof AuthenticatedInstructorsRoute
   '/no-access': typeof AuthenticatedNoAccessRoute
   '/payments': typeof AuthenticatedPaymentsRoute
+  '/recycle-bin': typeof AuthenticatedRecycleBinRoute
   '/services': typeof AuthenticatedServicesRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/students': typeof AuthenticatedStudentsRouteWithChildren
@@ -227,6 +235,7 @@ export interface FileRoutesById {
   '/_authenticated/instructors': typeof AuthenticatedInstructorsRoute
   '/_authenticated/no-access': typeof AuthenticatedNoAccessRoute
   '/_authenticated/payments': typeof AuthenticatedPaymentsRoute
+  '/_authenticated/recycle-bin': typeof AuthenticatedRecycleBinRoute
   '/_authenticated/services': typeof AuthenticatedServicesRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/students': typeof AuthenticatedStudentsRouteWithChildren
@@ -254,6 +263,7 @@ export interface FileRouteTypes {
     | '/instructors'
     | '/no-access'
     | '/payments'
+    | '/recycle-bin'
     | '/services'
     | '/settings'
     | '/students'
@@ -279,6 +289,7 @@ export interface FileRouteTypes {
     | '/instructors'
     | '/no-access'
     | '/payments'
+    | '/recycle-bin'
     | '/services'
     | '/settings'
     | '/students'
@@ -305,6 +316,7 @@ export interface FileRouteTypes {
     | '/_authenticated/instructors'
     | '/_authenticated/no-access'
     | '/_authenticated/payments'
+    | '/_authenticated/recycle-bin'
     | '/_authenticated/services'
     | '/_authenticated/settings'
     | '/_authenticated/students'
@@ -433,6 +445,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedServicesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/recycle-bin': {
+      id: '/_authenticated/recycle-bin'
+      path: '/recycle-bin'
+      fullPath: '/recycle-bin'
+      preLoaderRoute: typeof AuthenticatedRecycleBinRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/payments': {
       id: '/_authenticated/payments'
       path: '/payments'
@@ -521,6 +540,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedInstructorsRoute: typeof AuthenticatedInstructorsRoute
   AuthenticatedNoAccessRoute: typeof AuthenticatedNoAccessRoute
   AuthenticatedPaymentsRoute: typeof AuthenticatedPaymentsRoute
+  AuthenticatedRecycleBinRoute: typeof AuthenticatedRecycleBinRoute
   AuthenticatedServicesRoute: typeof AuthenticatedServicesRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedStudentsRoute: typeof AuthenticatedStudentsRouteWithChildren
@@ -535,6 +555,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedInstructorsRoute: AuthenticatedInstructorsRoute,
   AuthenticatedNoAccessRoute: AuthenticatedNoAccessRoute,
   AuthenticatedPaymentsRoute: AuthenticatedPaymentsRoute,
+  AuthenticatedRecycleBinRoute: AuthenticatedRecycleBinRoute,
   AuthenticatedServicesRoute: AuthenticatedServicesRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedStudentsRoute: AuthenticatedStudentsRouteWithChildren,

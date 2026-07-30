@@ -23,7 +23,6 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
   component: Dashboard,
 });
 
-
 function startOfDay(d = new Date()) {
   const x = new Date(d);
   x.setHours(0, 0, 0, 0);
@@ -45,6 +44,7 @@ function Dashboard() {
       const { data, error } = await supabase
         .from("bookings")
         .select("*, students(full_name, phone), instructors(full_name), lesson_types(name)")
+        .is("deleted_at", null)
         .gte("scheduled_at", start)
         .lt("scheduled_at", end)
         .order("scheduled_at");
@@ -59,6 +59,7 @@ function Dashboard() {
       const { data, error } = await supabase
         .from("bookings")
         .select("*, students(full_name), lesson_types(name, price_cents)")
+        .is("deleted_at", null)
         .eq("status", "pending")
         .order("scheduled_at")
         .limit(5);
@@ -74,6 +75,7 @@ function Dashboard() {
         .from("instructors")
         .select("id, full_name")
         .eq("active", true)
+        .is("deleted_at", null)
         .order("full_name");
       if (error) throw error;
       return data ?? [];
@@ -84,10 +86,25 @@ function Dashboard() {
     queryKey: ["dashboard-stats", weekStart],
     queryFn: async () => {
       const [pending, unpaid, students, instructors, cancels, completed] = await Promise.all([
-        supabase.from("bookings").select("*", { count: "exact", head: true }).eq("status", "pending"),
-        supabase.from("bookings").select("price_cents").eq("payment_status", "unpaid"),
-        supabase.from("students").select("*", { count: "exact", head: true }),
-        supabase.from("instructors").select("*", { count: "exact", head: true }).eq("active", true),
+        supabase
+          .from("bookings")
+          .select("*", { count: "exact", head: true })
+          .is("deleted_at", null)
+          .eq("status", "pending"),
+        supabase
+          .from("bookings")
+          .select("price_cents")
+          .is("deleted_at", null)
+          .eq("payment_status", "unpaid"),
+        supabase
+          .from("students")
+          .select("*", { count: "exact", head: true })
+          .is("deleted_at", null),
+        supabase
+          .from("instructors")
+          .select("*", { count: "exact", head: true })
+          .eq("active", true)
+          .is("deleted_at", null),
         supabase
           .from("cancellation_requests")
           .select("*", { count: "exact", head: true })
@@ -95,6 +112,7 @@ function Dashboard() {
         supabase
           .from("bookings")
           .select("*", { count: "exact", head: true })
+          .is("deleted_at", null)
           .eq("status", "completed")
           .gte("scheduled_at", weekStart),
       ]);
@@ -120,8 +138,15 @@ function Dashboard() {
           .select("school_name, contact_phone, contact_email, service_area")
           .eq("school_id", schoolIdQ.data as string)
           .maybeSingle(),
-        supabase.from("instructors").select("id", { count: "exact", head: true }).eq("active", true),
-        supabase.from("lesson_types").select("id", { count: "exact", head: true }).eq("active", true),
+        supabase
+          .from("instructors")
+          .select("id", { count: "exact", head: true })
+          .eq("active", true)
+          .is("deleted_at", null),
+        supabase
+          .from("lesson_types")
+          .select("id", { count: "exact", head: true })
+          .eq("active", true),
       ]);
       const s = settings.data ?? ({} as any);
       return {
@@ -134,7 +159,6 @@ function Dashboard() {
     },
   });
 
-
   const lessons = todayQ.data ?? [];
   const today = new Date().toLocaleDateString(undefined, {
     weekday: "long",
@@ -145,7 +169,10 @@ function Dashboard() {
   async function updateBooking(id: string, patch: Record<string, unknown>) {
     setUpdatingId(id);
     try {
-      const { error } = await supabase.from("bookings").update(patch as any).eq("id", id);
+      const { error } = await supabase
+        .from("bookings")
+        .update(patch as any)
+        .eq("id", id);
       if (error) throw error;
       await Promise.all([
         qc.invalidateQueries({ queryKey: ["pending-bookings"] }),
@@ -205,53 +232,77 @@ function Dashboard() {
         />
       </div>
 
-      {setupQ.data && (() => {
-        const items = [
-          { done: setupQ.data.hasSchoolName, label: "Set your school name", to: "/settings" as const },
-          { done: setupQ.data.hasContact, label: "Add contact phone & email", to: "/settings" as const },
-          { done: setupQ.data.hasServiceArea, label: "Describe your service area", to: "/settings" as const },
-          { done: setupQ.data.hasInstructor, label: "Add at least one instructor", to: "/instructors" as const },
-          { done: setupQ.data.hasLessonTypes, label: "Publish your lesson types & pricing", to: "/settings" as const },
-        ];
-        const remaining = items.filter((i) => !i.done);
-        if (remaining.length === 0) return null;
-        const doneCount = items.length - remaining.length;
-        return (
-          <div className="card-premium p-5 mb-8 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100">
-            <div className="flex items-center justify-between mb-3 gap-3">
-              <div className="flex items-center gap-2 min-w-0">
-                <div className="size-8 rounded-lg bg-blue-600 text-white grid place-items-center shrink-0">
-                  <Sparkles className="size-4" />
-                </div>
-                <div className="min-w-0">
-                  <div className="font-semibold text-slate-900 truncate">Finish setting up your school</div>
-                  <div className="text-xs text-slate-500">{doneCount} of {items.length} complete</div>
+      {setupQ.data &&
+        (() => {
+          const items = [
+            {
+              done: setupQ.data.hasSchoolName,
+              label: "Set your school name",
+              to: "/settings" as const,
+            },
+            {
+              done: setupQ.data.hasContact,
+              label: "Add contact phone & email",
+              to: "/settings" as const,
+            },
+            {
+              done: setupQ.data.hasServiceArea,
+              label: "Describe your service area",
+              to: "/settings" as const,
+            },
+            {
+              done: setupQ.data.hasInstructor,
+              label: "Add at least one instructor",
+              to: "/instructors" as const,
+            },
+            {
+              done: setupQ.data.hasLessonTypes,
+              label: "Publish your lesson types & pricing",
+              to: "/settings" as const,
+            },
+          ];
+          const remaining = items.filter((i) => !i.done);
+          if (remaining.length === 0) return null;
+          const doneCount = items.length - remaining.length;
+          return (
+            <div className="card-premium p-5 mb-8 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100">
+              <div className="flex items-center justify-between mb-3 gap-3">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="size-8 rounded-lg bg-blue-600 text-white grid place-items-center shrink-0">
+                    <Sparkles className="size-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="font-semibold text-slate-900 truncate">
+                      Finish setting up your school
+                    </div>
+                    <div className="text-xs text-slate-500">
+                      {doneCount} of {items.length} complete
+                    </div>
+                  </div>
                 </div>
               </div>
+              <ul className="grid sm:grid-cols-2 gap-x-6 gap-y-2">
+                {items.map((it) => (
+                  <li key={it.label}>
+                    <Link
+                      to={it.to}
+                      className={`flex items-center gap-2 text-sm py-1 ${it.done ? "text-slate-400 line-through" : "text-slate-700 hover:text-blue-700"}`}
+                    >
+                      {it.done ? (
+                        <CheckCircle2 className="size-4 text-emerald-600 shrink-0" />
+                      ) : (
+                        <Circle className="size-4 text-slate-400 shrink-0" />
+                      )}
+                      <span className="truncate">{it.label}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </div>
-            <ul className="grid sm:grid-cols-2 gap-x-6 gap-y-2">
-              {items.map((it) => (
-                <li key={it.label}>
-                  <Link
-                    to={it.to}
-                    className={`flex items-center gap-2 text-sm py-1 ${it.done ? "text-slate-400 line-through" : "text-slate-700 hover:text-blue-700"}`}
-                  >
-                    {it.done ? (
-                      <CheckCircle2 className="size-4 text-emerald-600 shrink-0" />
-                    ) : (
-                      <Circle className="size-4 text-slate-400 shrink-0" />
-                    )}
-                    <span className="truncate">{it.label}</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        );
-      })()}
+          );
+        })()}
 
       <div className="grid lg:grid-cols-3 gap-6">
-
         <div className="lg:col-span-2">
           <div className="card-premium overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-center">
@@ -305,7 +356,10 @@ function Dashboard() {
         <div className="space-y-3">
           <div className="flex items-center justify-between px-1">
             <h3 className="eyebrow text-slate-500">Booking Queue</h3>
-            <Link to="/bookings" className="text-[11px] font-semibold text-blue-700 hover:underline">
+            <Link
+              to="/bookings"
+              className="text-[11px] font-semibold text-blue-700 hover:underline"
+            >
               View all →
             </Link>
           </div>
@@ -365,7 +419,10 @@ function Dashboard() {
                   Deny
                 </button>
               </div>
-              <Link to="/bookings" className="mt-3 inline-flex text-[11px] font-semibold text-blue-700 hover:underline">
+              <Link
+                to="/bookings"
+                className="mt-3 inline-flex text-[11px] font-semibold text-blue-700 hover:underline"
+              >
                 Open full queue →
               </Link>
             </div>

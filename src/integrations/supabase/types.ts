@@ -12,6 +12,7 @@ export type Database = {
         Row: {
           admin_notes: string | null;
           created_at: string;
+          deleted_at: string | null;
           dropoff_address: string | null;
           duration_minutes: number;
           id: string;
@@ -33,6 +34,7 @@ export type Database = {
         Insert: {
           admin_notes?: string | null;
           created_at?: string;
+          deleted_at?: string | null;
           dropoff_address?: string | null;
           duration_minutes?: number;
           id?: string;
@@ -54,6 +56,7 @@ export type Database = {
         Update: {
           admin_notes?: string | null;
           created_at?: string;
+          deleted_at?: string | null;
           dropoff_address?: string | null;
           duration_minutes?: number;
           id?: string;
@@ -312,6 +315,7 @@ export type Database = {
           approved_at: string | null;
           approved_by: string | null;
           created_at: string;
+          deleted_at: string | null;
           email: string | null;
           full_name: string;
           id: string;
@@ -329,6 +333,7 @@ export type Database = {
           approved_at?: string | null;
           approved_by?: string | null;
           created_at?: string;
+          deleted_at?: string | null;
           email?: string | null;
           full_name: string;
           id?: string;
@@ -346,6 +351,7 @@ export type Database = {
           approved_at?: string | null;
           approved_by?: string | null;
           created_at?: string;
+          deleted_at?: string | null;
           email?: string | null;
           full_name?: string;
           id?: string;
@@ -659,6 +665,7 @@ export type Database = {
       students: {
         Row: {
           created_at: string;
+          deleted_at: string | null;
           email: string | null;
           full_name: string;
           id: string;
@@ -673,6 +680,7 @@ export type Database = {
         };
         Insert: {
           created_at?: string;
+          deleted_at?: string | null;
           email?: string | null;
           full_name: string;
           id?: string;
@@ -687,6 +695,7 @@ export type Database = {
         };
         Update: {
           created_at?: string;
+          deleted_at?: string | null;
           email?: string | null;
           full_name?: string;
           id?: string;

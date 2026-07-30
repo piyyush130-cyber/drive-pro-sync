@@ -43,6 +43,7 @@ function InstructorsPage() {
       const { data, error } = await supabase
         .from("instructors")
         .select("*, bookings(id, status)")
+        .is("deleted_at", null)
         .order("full_name");
       if (error) throw error;
       return data ?? [];
@@ -100,6 +101,17 @@ function InstructorsPage() {
     qc.invalidateQueries({ queryKey: ["instructors-all"] });
   }
 
+  async function deleteInstructor(id: string, name: string) {
+    if (!window.confirm(`Delete ${name}? You can restore them from the recycle bin.`)) return;
+    const { error } = await supabase
+      .from("instructors")
+      .update({ deleted_at: new Date().toISOString() })
+      .eq("id", id);
+    if (error) return toast.error(error.message);
+    qc.invalidateQueries({ queryKey: ["instructors-all"] });
+    toast.success(`${name} deleted`);
+  }
+
   async function saveAvailability(id: string, avail: any) {
     const { error } = await supabase
       .from("instructors")
@@ -111,7 +123,8 @@ function InstructorsPage() {
     toast.success("Availability saved");
   }
 
-  const signupUrl = typeof window !== "undefined" ? window.location.origin + "/instructor-signup" : "";
+  const signupUrl =
+    typeof window !== "undefined" ? window.location.origin + "/instructor-signup" : "";
   const code = codeQ.data?.code;
 
   return (
@@ -134,7 +147,9 @@ function InstructorsPage() {
           </div>
           <div>
             <h2 className="font-semibold text-slate-900">Instructor Invite Code</h2>
-            <p className="text-sm text-slate-400">Share this code with instructors so they can create their login account.</p>
+            <p className="text-sm text-slate-400">
+              Share this code with instructors so they can create their login account.
+            </p>
           </div>
         </div>
         {code ? (
@@ -144,16 +159,34 @@ function InstructorsPage() {
             </div>
             <div className="flex flex-wrap gap-2">
               <button onClick={() => copy(code, "code")} className="btn-secondary text-xs">
-                {copied === "code" ? <><Check className="size-3.5" /> Copied!</> : <><Copy className="size-3.5" /> Copy code</>}
+                {copied === "code" ? (
+                  <>
+                    <Check className="size-3.5" /> Copied!
+                  </>
+                ) : (
+                  <>
+                    <Copy className="size-3.5" /> Copy code
+                  </>
+                )}
               </button>
               <button onClick={() => copy(signupUrl, "link")} className="btn-secondary text-xs">
-                {copied === "link" ? <><Check className="size-3.5" /> Copied!</> : <><LinkIcon className="size-3.5" /> Copy signup link</>}
+                {copied === "link" ? (
+                  <>
+                    <Check className="size-3.5" /> Copied!
+                  </>
+                ) : (
+                  <>
+                    <LinkIcon className="size-3.5" /> Copy signup link
+                  </>
+                )}
               </button>
               <button onClick={generate} className="btn-secondary text-xs">
                 <RefreshCw className="size-3.5" /> Generate new code
               </button>
             </div>
-            <p className="text-xs text-slate-500 mt-3">{codeQ.data?.used_count ?? 0} instructors have used this code</p>
+            <p className="text-xs text-slate-500 mt-3">
+              {codeQ.data?.used_count ?? 0} instructors have used this code
+            </p>
           </>
         ) : (
           <button onClick={generate} className="btn-primary text-sm">
@@ -181,23 +214,46 @@ function InstructorsPage() {
                 <div>
                   <div className="font-semibold text-slate-900">
                     {i.full_name}
-                    {!i.active && <span className="ml-2 text-[10px] uppercase tracking-wider bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full">Inactive</span>}
-                    {i.status === "pending_approval" && <span className="ml-2 text-[10px] uppercase tracking-wider bg-amber-500/15 text-amber-400 px-2 py-0.5 rounded-full">Pending</span>}
-                    {i.profile_id && <span className="ml-2 text-[10px] uppercase tracking-wider bg-[#3B82F6]/15 text-[#60A5FA] px-2 py-0.5 rounded-full">Login linked</span>}
+                    {!i.active && (
+                      <span className="ml-2 text-[10px] uppercase tracking-wider bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full">
+                        Inactive
+                      </span>
+                    )}
+                    {i.status === "pending_approval" && (
+                      <span className="ml-2 text-[10px] uppercase tracking-wider bg-amber-500/15 text-amber-400 px-2 py-0.5 rounded-full">
+                        Pending
+                      </span>
+                    )}
+                    {i.profile_id && (
+                      <span className="ml-2 text-[10px] uppercase tracking-wider bg-[#3B82F6]/15 text-[#60A5FA] px-2 py-0.5 rounded-full">
+                        Login linked
+                      </span>
+                    )}
                   </div>
                   <div className="text-xs text-slate-400 mt-1">
                     {i.phone ?? "—"} · {i.email ?? "—"}
                   </div>
                   <div className="text-xs text-slate-500 mt-2 font-mono">{summary}</div>
                 </div>
-                <div className="text-right text-xs text-slate-500">{(i.bookings ?? []).length} lessons</div>
+                <div className="text-right text-xs text-slate-500">
+                  {(i.bookings ?? []).length} lessons
+                </div>
               </div>
               <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-slate-800">
-                <button onClick={() => setEditing(isEditing ? null : i.id)} className="btn-secondary text-xs">
+                <button
+                  onClick={() => setEditing(isEditing ? null : i.id)}
+                  className="btn-secondary text-xs"
+                >
                   {isEditing ? "Close" : "Edit availability"}
                 </button>
                 <button onClick={() => toggle(i.id, i.active)} className="btn-secondary text-xs">
                   {i.active ? "Deactivate" : "Activate"}
+                </button>
+                <button
+                  onClick={() => deleteInstructor(i.id, i.full_name)}
+                  className="text-xs text-red-400 hover:underline ml-auto"
+                >
+                  Delete
                 </button>
               </div>
 
@@ -220,19 +276,24 @@ function formatAvail(avail: any): string {
   const days = DAYS.filter((d) => avail[d.key]?.enabled);
   if (days.length === 0) return "No days enabled";
   const first = avail[days[0].key];
-  const allSame = days.every((d) => avail[d.key].start === first.start && avail[d.key].end === first.end);
-  if (allSame) return `${days[0].label}–${days[days.length - 1].label}, ${first.start} – ${first.end}`;
+  const allSame = days.every(
+    (d) => avail[d.key].start === first.start && avail[d.key].end === first.end,
+  );
+  if (allSame)
+    return `${days[0].label}–${days[days.length - 1].label}, ${first.start} – ${first.end}`;
   return `${days.length} days configured`;
 }
 
 function AvailabilityEditor({ initial, onSave }: { initial: any; onSave: (v: any) => void }) {
-  const [v, setV] = useState<Record<string, { enabled: boolean; start: string; end: string }>>(() => {
-    const base: any = {};
-    for (const d of DAYS) {
-      base[d.key] = initial?.[d.key] ?? { enabled: false, start: "09:00", end: "17:00" };
-    }
-    return base;
-  });
+  const [v, setV] = useState<Record<string, { enabled: boolean; start: string; end: string }>>(
+    () => {
+      const base: any = {};
+      for (const d of DAYS) {
+        base[d.key] = initial?.[d.key] ?? { enabled: false, start: "09:00", end: "17:00" };
+      }
+      return base;
+    },
+  );
   return (
     <div className="mt-4 pt-4 border-t border-slate-800 space-y-2">
       {DAYS.map((d) => {
@@ -240,17 +301,38 @@ function AvailabilityEditor({ initial, onSave }: { initial: any; onSave: (v: any
         return (
           <div key={d.key} className="flex items-center gap-3">
             <label className="flex items-center gap-2 w-28 text-sm text-slate-300">
-              <input type="checkbox" checked={day.enabled} onChange={(e) => setV({ ...v, [d.key]: { ...day, enabled: e.target.checked } })} className="accent-[#3B82F6]" />
+              <input
+                type="checkbox"
+                checked={day.enabled}
+                onChange={(e) => setV({ ...v, [d.key]: { ...day, enabled: e.target.checked } })}
+                className="accent-[#3B82F6]"
+              />
               {d.label}
             </label>
             {day.enabled ? (
               <>
-                <select value={day.start} onChange={(e) => setV({ ...v, [d.key]: { ...day, start: e.target.value } })} className="glass-input flex-1 text-sm">
-                  {TIMES.map((t) => <option key={t} value={t} className="bg-[#0D1424]">{t}</option>)}
+                <select
+                  value={day.start}
+                  onChange={(e) => setV({ ...v, [d.key]: { ...day, start: e.target.value } })}
+                  className="glass-input flex-1 text-sm"
+                >
+                  {TIMES.map((t) => (
+                    <option key={t} value={t} className="bg-[#0D1424]">
+                      {t}
+                    </option>
+                  ))}
                 </select>
                 <span className="text-slate-500 text-xs">to</span>
-                <select value={day.end} onChange={(e) => setV({ ...v, [d.key]: { ...day, end: e.target.value } })} className="glass-input flex-1 text-sm">
-                  {TIMES.map((t) => <option key={t} value={t} className="bg-[#0D1424]">{t}</option>)}
+                <select
+                  value={day.end}
+                  onChange={(e) => setV({ ...v, [d.key]: { ...day, end: e.target.value } })}
+                  className="glass-input flex-1 text-sm"
+                >
+                  {TIMES.map((t) => (
+                    <option key={t} value={t} className="bg-[#0D1424]">
+                      {t}
+                    </option>
+                  ))}
                 </select>
               </>
             ) : (
@@ -259,7 +341,9 @@ function AvailabilityEditor({ initial, onSave }: { initial: any; onSave: (v: any
           </div>
         );
       })}
-      <button onClick={() => onSave(v)} className="btn-primary text-sm mt-3">Save availability</button>
+      <button onClick={() => onSave(v)} className="btn-primary text-sm mt-3">
+        Save availability
+      </button>
     </div>
   );
 }

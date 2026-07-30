@@ -11,6 +11,7 @@ import {
   CarFront,
   Tag,
   UserCircle,
+  Trash2,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -24,6 +25,7 @@ const items = [
   { title: "Payment Watch", url: "/payments", icon: Wallet },
   { title: "Settings", url: "/settings", icon: Settings },
   { title: "My Account", url: "/account", icon: UserCircle },
+  { title: "Recycle Bin", url: "/recycle-bin", icon: Trash2 },
 ];
 
 export function AppSidebar({ schoolName }: { schoolName: string }) {

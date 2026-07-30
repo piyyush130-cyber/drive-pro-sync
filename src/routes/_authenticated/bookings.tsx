@@ -22,6 +22,7 @@ function BookingsPage() {
       let q = supabase
         .from("bookings")
         .select("*, students(*), instructors(id, full_name), lesson_types(name, price_cents)")
+        .is("deleted_at", null)
         .order("scheduled_at", { ascending: true });
       if (filter === "pending") q = q.eq("status", "pending");
       const { data, error } = await q;
@@ -37,6 +38,7 @@ function BookingsPage() {
         .from("instructors")
         .select("id, full_name")
         .eq("active", true)
+        .is("deleted_at", null)
         .order("full_name");
       return data ?? [];
     },
@@ -52,6 +54,17 @@ function BookingsPage() {
     qc.invalidateQueries({ queryKey: ["pending-bookings"] });
     toast.success("Updated");
     void notifyUpdate({ data: { bookingId: id, patch } });
+  }
+
+  async function deleteBooking(id: string) {
+    if (!window.confirm("Delete this booking? You can restore it from the recycle bin.")) return;
+    const { error } = await supabase
+      .from("bookings")
+      .update({ deleted_at: new Date().toISOString() })
+      .eq("id", id);
+    if (error) return toast.error(error.message);
+    qc.invalidateQueries({ queryKey: ["bookings"] });
+    toast.success("Booking deleted");
   }
 
   return (
@@ -191,6 +204,12 @@ function BookingsPage() {
                   Mark paid
                 </button>
               )}
+              <button
+                onClick={() => deleteBooking(b.id)}
+                className="text-xs text-red-600 hover:underline px-2"
+              >
+                Delete
+              </button>
             </div>
           </div>
         ))}

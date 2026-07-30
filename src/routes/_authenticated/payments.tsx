@@ -22,6 +22,7 @@ function PaymentsPage() {
       const { data, error } = await supabase
         .from("bookings")
         .select("*, students(full_name, phone), lesson_types(name)")
+        .is("deleted_at", null)
         .order("scheduled_at");
       if (error) throw error;
       return data ?? [];
@@ -30,7 +31,8 @@ function PaymentsPage() {
 
   const all = bookingsQ.data ?? [];
   const filtered = all.filter((b: any) => {
-    if (filter === "unpaid") return b.payment_status !== "paid" && b.payment_status !== "deposit_paid";
+    if (filter === "unpaid")
+      return b.payment_status !== "paid" && b.payment_status !== "deposit_paid";
     if (filter === "deposit") return b.payment_status === "deposit_paid";
     return b.payment_status === "paid";
   });
@@ -69,7 +71,9 @@ function PaymentsPage() {
       <div className="mb-6">
         <h1 className="text-2xl font-medium">Payments</h1>
         <p className="text-sm text-slate-500 mt-1">
-          {totals.count} {filter === "paid" ? "paid" : filter === "deposit" ? "with deposit" : "unpaid"} · {money(totals.amount)}
+          {totals.count}{" "}
+          {filter === "paid" ? "paid" : filter === "deposit" ? "with deposit" : "unpaid"} ·{" "}
+          {money(totals.amount)}
         </p>
       </div>
 

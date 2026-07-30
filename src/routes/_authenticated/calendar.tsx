@@ -40,6 +40,7 @@ function CalendarPage() {
       const { data } = await supabase
         .from("instructors")
         .select("id, full_name")
+        .is("deleted_at", null)
         .order("full_name");
       return data ?? [];
     },
@@ -51,6 +52,7 @@ function CalendarPage() {
       let q = supabase
         .from("bookings")
         .select("*, students(full_name), instructors(full_name)")
+        .is("deleted_at", null)
         .gte("scheduled_at", start.toISOString())
         .lt("scheduled_at", end.toISOString())
         .order("scheduled_at");
@@ -73,8 +75,7 @@ function CalendarPage() {
         <div>
           <h1 className="text-2xl font-medium">Calendar</h1>
           <p className="text-sm text-slate-500 mt-1">
-            Week of{" "}
-            {start.toLocaleDateString(undefined, { month: "long", day: "numeric" })}
+            Week of {start.toLocaleDateString(undefined, { month: "long", day: "numeric" })}
           </p>
         </div>
         <div className="flex gap-2 items-center">

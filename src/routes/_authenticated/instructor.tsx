@@ -76,6 +76,7 @@ function InstructorPage() {
         .from("instructors")
         .select("*")
         .eq("profile_id", u.user.id)
+        .is("deleted_at", null)
         .maybeSingle();
       return data;
     },
@@ -92,6 +93,7 @@ function InstructorPage() {
         .from("bookings")
         .select("*, students(full_name, phone, email), lesson_types(name)")
         .eq("instructor_id", meQ.data!.id)
+        .is("deleted_at", null)
         .order("scheduled_at");
       if (tab === "today")
         q = q.gte("scheduled_at", start.toISOString()).lt("scheduled_at", tomorrow.toISOString());

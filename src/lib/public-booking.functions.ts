@@ -68,6 +68,7 @@ async function pickInstructor(
     .from("bookings")
     .select("instructor_id, scheduled_at, duration_minutes")
     .eq("school_id", schoolId)
+    .is("deleted_at", null)
     .not("instructor_id", "is", null)
     .not("status", "in", "(cancelled,declined)")
     .gte("scheduled_at", dayStart.toISOString())
