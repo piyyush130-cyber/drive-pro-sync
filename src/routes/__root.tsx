@@ -1,9 +1,18 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Outlet, createRootRouteWithContext, HeadContent, Scripts } from "@tanstack/react-router";
-import { type ReactNode } from "react";
+import { createClientOnlyFn } from "@tanstack/start-client-core";
+import { type ReactNode, useEffect } from "react";
 
 import appCss from "../styles.css?url";
 import { Toaster } from "@/components/ui/sonner";
+
+const initClientSentry = createClientOnlyFn(() => {
+  import("@/lib/sentry.client").then((m) => m.initClientSentry());
+});
+
+const reportClientError = createClientOnlyFn((error: unknown) => {
+  import("@/lib/sentry.client").then((m) => m.captureClientError(error));
+});
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
@@ -64,7 +73,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       </div>
     </div>
   ),
-  errorComponent: ({ error }) => (
+  errorComponent: RootErrorFallback,
+});
+
+function RootErrorFallback({ error }: { error: Error }) {
+  useEffect(() => {
+    reportClientError(error);
+  }, [error]);
+  return (
     <div className="min-h-screen flex items-center justify-center bg-[#0A0F1E] p-6">
       <div className="text-center max-w-md">
         <div className="text-xl font-semibold text-[#F1F5F9]">Something went wrong</div>
@@ -84,8 +100,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         </div>
       </div>
     </div>
-  ),
-});
+  );
+}
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
@@ -103,6 +119,9 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  useEffect(() => {
+    initClientSentry();
+  }, []);
   return (
     <QueryClientProvider client={queryClient}>
       <Outlet />
