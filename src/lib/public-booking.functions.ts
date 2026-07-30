@@ -11,7 +11,16 @@ const BookingSchema = z.object({
   lesson_type_id: z.string().uuid(),
   scheduled_at: z.string().datetime(),
   school_id: z.string().uuid(),
+  // Spam/bot protection (not shown to real users, see ServicePicker/form):
+  // a honeypot field bots tend to fill in, and a form-render timestamp so
+  // we can reject submissions that came back impossibly fast.
+  website: z.string().max(200).optional(),
+  formRenderedAt: z.number().optional(),
 });
+
+const MIN_FILL_TIME_MS = 3000;
+const RATE_LIMIT_WINDOW_MINUTES = 10;
+const RATE_LIMIT_MAX_BOOKINGS = 3;
 
 const DAY_KEYS = [
   "sunday",
@@ -99,6 +108,16 @@ async function pickInstructor(
 export const submitPublicBooking = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => BookingSchema.parse(data))
   .handler(async ({ data }) => {
+    // Bot protection: a filled honeypot or an impossibly fast submission
+    // gets a fake success — no DB writes, and no signal to the bot that
+    // it was caught.
+    const tooFast =
+      typeof data.formRenderedAt === "number" &&
+      Date.now() - data.formRenderedAt < MIN_FILL_TIME_MS;
+    if (data.website || tooFast) {
+      return { ok: true, status: "pending" as const };
+    }
+
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     // Validate the lesson type exists, is active, AND belongs to this
@@ -112,6 +131,21 @@ export const submitPublicBooking = createServerFn({ method: "POST" })
       .maybeSingle();
     if (ltErr) throw new Error("Could not load lesson type");
     if (!lt || !lt.active) throw new Error("Invalid lesson type");
+
+    // Rate limit: cap repeat submissions from the same email in a short
+    // window so a script can't flood the booking queue.
+    const windowStart = new Date(Date.now() - RATE_LIMIT_WINDOW_MINUTES * 60000).toISOString();
+    const { count: recentCount } = await supabaseAdmin
+      .from("bookings")
+      .select("id, students!inner(email)", { count: "exact", head: true })
+      .eq("school_id", data.school_id)
+      .eq("students.email", data.email)
+      .gte("created_at", windowStart);
+    if ((recentCount ?? 0) >= RATE_LIMIT_MAX_BOOKINGS) {
+      throw new Error(
+        "Too many booking requests from this email recently. Please try again later.",
+      );
+    }
 
     const { data: student, error: sErr } = await supabaseAdmin
       .from("students")

@@ -49,8 +49,7 @@ type Settings = { school_name: string };
 
 // Light premium glass palette
 const C = {
-  pageBg:
-    "linear-gradient(160deg, #EFF6FF 0%, #F8FAFC 45%, #EEF2FF 100%)",
+  pageBg: "linear-gradient(160deg, #EFF6FF 0%, #F8FAFC 45%, #EEF2FF 100%)",
   surface: "rgba(255,255,255,0.78)",
   surfaceSolid: "#FFFFFF",
   surfaceTint: "rgba(248,250,252,0.85)",
@@ -169,23 +168,29 @@ function BookingPage() {
     dropoff_address: "",
     pickup_notes: "",
     notes: "",
+    website: "", // honeypot — real users never see or fill this field
   });
   const [errors, setErrors] = useState<Errors>({});
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [formRenderedAt] = useState(() => Date.now());
 
   const submit = useServerFn(submitPublicBooking);
   const school = settingsQ.data?.school_name ?? "Standard Driving School";
 
   if (!schoolQ.isLoading && schoolQ.data === null) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4" style={{ background: C.pageBg }}>
+      <div
+        className="min-h-screen flex items-center justify-center px-4"
+        style={{ background: C.pageBg }}
+      >
         <div className="text-center max-w-sm">
           <div className="text-lg font-semibold" style={{ color: C.text }}>
             We couldn't find that driving school.
           </div>
           <p className="mt-2 text-sm" style={{ color: C.muted }}>
-            Double-check the link your school gave you, or contact them directly to confirm your booking page.
+            Double-check the link your school gave you, or contact them directly to confirm your
+            booking page.
           </p>
         </div>
       </div>
@@ -199,7 +204,8 @@ function BookingPage() {
     if (!selectedTime) e.time = "Please pick a time.";
     if (!form.full_name.trim()) e.full_name = "Full name is required.";
     if (!form.phone.trim()) e.phone = "Phone number is required.";
-    else if (form.phone.replace(/\D/g, "").length !== 10) e.phone = "Enter a 10-digit phone number.";
+    else if (form.phone.replace(/\D/g, "").length !== 10)
+      e.phone = "Enter a 10-digit phone number.";
     if (!form.email.trim()) e.email = "Email is required.";
     else if (!emailOk(form.email.trim())) e.email = "Enter a valid email.";
     if (!form.pickup_address.trim()) e.pickup_address = "Pickup address is required.";
@@ -231,6 +237,8 @@ function BookingPage() {
           lesson_type_id: selected!.id,
           scheduled_at: dt.toISOString(),
           school_id: schoolId as string,
+          website: form.website,
+          formRenderedAt,
         },
       });
       setSubmitted(true);
@@ -256,18 +264,28 @@ function BookingPage() {
   }
 
   return (
-    <div className="public-booking-page min-h-screen" style={{ background: C.pageBg, color: C.text }}>
+    <div
+      className="public-booking-page min-h-screen"
+      style={{ background: C.pageBg, color: C.text }}
+    >
       <TopBar school={school} />
 
       <main className="relative max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12 pb-24">
         <div
           className="pointer-events-none absolute -top-10 left-1/2 -translate-x-1/2 size-[420px] rounded-full opacity-40 blur-3xl"
-          style={{ background: "radial-gradient(circle, rgba(79,70,229,0.16) 0%, rgba(14,165,233,0.08) 55%, transparent 75%)" }}
+          style={{
+            background:
+              "radial-gradient(circle, rgba(79,70,229,0.16) 0%, rgba(14,165,233,0.08) 55%, transparent 75%)",
+          }}
         />
         <div className="relative mb-9 sm:mb-11 max-w-2xl">
           <div
             className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] rounded-full px-3 py-1 mb-4"
-            style={{ background: C.primarySoft, color: C.primary, border: `1px solid rgba(79,70,229,0.18)` }}
+            style={{
+              background: C.primarySoft,
+              color: C.primary,
+              border: `1px solid rgba(79,70,229,0.18)`,
+            }}
           >
             <CarFront className="size-3" />
             {school}
@@ -280,7 +298,8 @@ function BookingPage() {
             <span style={{ color: C.primary }}>.</span>
           </h1>
           <p className="mt-3 text-[15px] leading-relaxed" style={{ color: C.muted }}>
-            Pick a lesson, choose a time, and you're on the road — no calls, no waiting on a callback.
+            Pick a lesson, choose a time, and you're on the road — no calls, no waiting on a
+            callback.
           </p>
         </div>
 
@@ -301,6 +320,28 @@ function BookingPage() {
             </Panel>
 
             <Panel eyebrow="Student" title="Your details" icon={User}>
+              {/* Honeypot — invisible to real users, tempting to bots that auto-fill every field */}
+              <div
+                aria-hidden="true"
+                style={{
+                  position: "absolute",
+                  left: "-9999px",
+                  width: 1,
+                  height: 1,
+                  overflow: "hidden",
+                }}
+              >
+                <label htmlFor="website">Website</label>
+                <input
+                  id="website"
+                  name="website"
+                  type="text"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  value={form.website}
+                  onChange={(e) => setForm({ ...form, website: e.target.value })}
+                />
+              </div>
               <div className="grid sm:grid-cols-2 gap-4">
                 <Field label="Full name" required error={errors.full_name}>
                   <GlassInput
@@ -465,10 +506,7 @@ function TopBar({ school }: { school: string }) {
               DriveProSync
             </span>
             <span className="h-4 w-px" style={{ background: C.border }} />
-            <span
-              className="text-[13px] truncate hidden sm:inline"
-              style={{ color: C.muted }}
-            >
+            <span className="text-[13px] truncate hidden sm:inline" style={{ color: C.muted }}>
               {school}
             </span>
           </div>
@@ -516,8 +554,7 @@ function Panel({
         backdropFilter: "saturate(180%) blur(12px)",
         WebkitBackdropFilter: "saturate(180%) blur(12px)",
         border: `1px solid ${C.border}`,
-        boxShadow:
-          "0 1px 2px rgba(15,23,42,0.04), 0 12px 40px -20px rgba(15,23,42,0.08)",
+        boxShadow: "0 1px 2px rgba(15,23,42,0.04), 0 12px 40px -20px rgba(15,23,42,0.08)",
       }}
     >
       <div className="flex items-center gap-3 mb-5">
@@ -588,8 +625,7 @@ function ServicePicker({
       </div>
     );
   }
-  const isCustom = (t: LessonType) =>
-    /custom|not sure/i.test(t.name) || t.price_cents === 0;
+  const isCustom = (t: LessonType) => /custom|not sure/i.test(t.name) || t.price_cents === 0;
   const regular = types.filter((t) => !isCustom(t));
   const customs = types.filter(isCustom);
 
@@ -680,22 +716,13 @@ function ServiceCard({
         <Clock className="size-3" />
         {t.duration_minutes} MIN
       </div>
-      <div
-        className="mt-3 font-semibold tracking-tight text-[16px] pr-7"
-        style={{ color: C.text }}
-      >
+      <div className="mt-3 font-semibold tracking-tight text-[16px] pr-7" style={{ color: C.text }}>
         {name}
       </div>
-      <div
-        className="text-[12px] mt-1 line-clamp-1"
-        style={{ color: C.muted }}
-      >
+      <div className="text-[12px] mt-1 line-clamp-1" style={{ color: C.muted }}>
         {blurb}
       </div>
-      <div
-        className="mt-4 text-2xl font-bold tracking-tight"
-        style={{ color: C.text }}
-      >
+      <div className="mt-4 text-2xl font-bold tracking-tight" style={{ color: C.text }}>
         {t.price_cents > 0 ? money(t.price_cents) : "Custom Quote"}
       </div>
     </button>
@@ -728,10 +755,7 @@ function Scheduler({
         style={{ background: C.surfaceSolid, border: `1px solid ${C.border}` }}
       >
         <div className="flex items-center justify-between mb-4">
-          <div
-            className="font-semibold tracking-tight text-[15px]"
-            style={{ color: C.text }}
-          >
+          <div className="font-semibold tracking-tight text-[15px]" style={{ color: C.text }}>
             {format(month, "MMMM yyyy")}
           </div>
           <div className="flex items-center gap-1">
@@ -911,8 +935,7 @@ function SummaryCard({
         backdropFilter: "saturate(180%) blur(12px)",
         WebkitBackdropFilter: "saturate(180%) blur(12px)",
         border: `1px solid ${C.border}`,
-        boxShadow:
-          "0 1px 2px rgba(15,23,42,0.04), 0 16px 40px -20px rgba(15,23,42,0.12)",
+        boxShadow: "0 1px 2px rgba(15,23,42,0.04), 0 16px 40px -20px rgba(15,23,42,0.12)",
       }}
     >
       <div
@@ -931,10 +954,7 @@ function SummaryCard({
       </div>
 
       <div className="p-6" style={{ borderBottom: `1px solid ${C.border}` }}>
-        <div
-          className="text-lg font-semibold tracking-tight"
-          style={{ color: C.text }}
-        >
+        <div className="text-lg font-semibold tracking-tight" style={{ color: C.text }}>
           {lesson ? lesson.name.replace(" Driving Lesson", " Lesson") : "Select a service"}
         </div>
         <div className="text-sm mt-1" style={{ color: C.muted }}>
@@ -946,10 +966,7 @@ function SummaryCard({
             </>
           )}
         </div>
-        <div
-          className="mt-4 text-3xl font-bold tracking-tight"
-          style={{ color: C.text }}
-        >
+        <div className="mt-4 text-3xl font-bold tracking-tight" style={{ color: C.text }}>
           {lesson ? (lesson.price_cents > 0 ? money(lesson.price_cents) : "Custom Quote") : "—"}
         </div>
       </div>
@@ -994,16 +1011,16 @@ function SummaryCard({
               ? C.mutedSoft
               : `linear-gradient(90deg, ${C.primary}, ${C.primaryDark})`,
             color: "#FFFFFF",
-            boxShadow: submitting
-              ? "none"
-              : "0 12px 28px -12px rgba(79,70,229,0.55)",
+            boxShadow: submitting ? "none" : "0 12px 28px -12px rgba(79,70,229,0.55)",
             cursor: submitting ? "not-allowed" : "pointer",
           }}
           onMouseEnter={(e) => {
-            if (!submitting) e.currentTarget.style.boxShadow = "0 16px 34px -12px rgba(79,70,229,0.65)";
+            if (!submitting)
+              e.currentTarget.style.boxShadow = "0 16px 34px -12px rgba(79,70,229,0.65)";
           }}
           onMouseLeave={(e) => {
-            if (!submitting) e.currentTarget.style.boxShadow = "0 12px 28px -12px rgba(79,70,229,0.55)";
+            if (!submitting)
+              e.currentTarget.style.boxShadow = "0 12px 28px -12px rgba(79,70,229,0.55)";
           }}
         >
           {submitting ? "Sending…" : "Request Lesson Time"}
@@ -1165,7 +1182,10 @@ function ConfirmationScreen({
   name: string;
 }) {
   return (
-    <div className="public-booking-page min-h-screen" style={{ background: C.pageBg, color: C.text }}>
+    <div
+      className="public-booking-page min-h-screen"
+      style={{ background: C.pageBg, color: C.text }}
+    >
       <TopBar school={school} />
       <main className="max-w-xl mx-auto px-4 sm:px-6 py-14">
         <div
@@ -1194,16 +1214,10 @@ function ConfirmationScreen({
             >
               Booking request received
             </div>
-            <h1
-              className="text-2xl font-semibold tracking-tight mt-3"
-              style={{ color: C.text }}
-            >
+            <h1 className="text-2xl font-semibold tracking-tight mt-3" style={{ color: C.text }}>
               Thank you, {name.split(" ")[0] || "driver"}
             </h1>
-            <p
-              className="mt-3 text-pretty max-w-md mx-auto text-sm"
-              style={{ color: C.muted }}
-            >
+            <p className="mt-3 text-pretty max-w-md mx-auto text-sm" style={{ color: C.muted }}>
               {school} will review your request and confirm by phone, text, or email.
             </p>
           </div>
