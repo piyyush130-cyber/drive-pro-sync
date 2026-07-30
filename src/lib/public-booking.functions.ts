@@ -1,5 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import {
+  RATE_LIMIT_MAX_BOOKINGS,
+  RATE_LIMIT_WINDOW_MINUTES,
+  isBotSubmission,
+  pickBestInstructor,
+} from "@/lib/booking-logic";
 
 const BookingSchema = z.object({
   full_name: z.string().trim().min(1).max(120),
@@ -18,39 +24,14 @@ const BookingSchema = z.object({
   formRenderedAt: z.number().optional(),
 });
 
-const MIN_FILL_TIME_MS = 3000;
-const RATE_LIMIT_WINDOW_MINUTES = 10;
-const RATE_LIMIT_MAX_BOOKINGS = 3;
-
-const DAY_KEYS = [
-  "sunday",
-  "monday",
-  "tuesday",
-  "wednesday",
-  "thursday",
-  "friday",
-  "saturday",
-] as const;
-
-type WeeklyAvailability = Partial<
-  Record<(typeof DAY_KEYS)[number], { enabled?: boolean; start?: string; end?: string }>
->;
-
-// Picks an active instructor who is available (per weekly_availability) for
-// the requested slot and has no overlapping booking, preferring whoever has
-// the fewest bookings that day. Returns null if no one qualifies — the
-// booking is still created, just unassigned, same as manual-assign mode.
+// Fetches active instructors + that day's bookings for the school, then
+// delegates the actual selection to the pure, unit-tested pickBestInstructor.
 async function pickInstructor(
   supabaseAdmin: any,
   schoolId: string,
   scheduledAt: string,
   durationMinutes: number,
 ): Promise<string | null> {
-  const start = new Date(scheduledAt);
-  const end = new Date(start.getTime() + durationMinutes * 60000);
-  const dayKey = DAY_KEYS[start.getUTCDay()];
-  const minutesOfDay = start.getUTCHours() * 60 + start.getUTCMinutes();
-
   const { data: instructors } = await supabaseAdmin
     .from("instructors")
     .select("id, weekly_availability")
@@ -59,6 +40,7 @@ async function pickInstructor(
     .eq("status", "active");
   if (!instructors || instructors.length === 0) return null;
 
+  const start = new Date(scheduledAt);
   const dayStart = new Date(start);
   dayStart.setUTCHours(0, 0, 0, 0);
   const dayEnd = new Date(start);
@@ -74,36 +56,12 @@ async function pickInstructor(
     .gte("scheduled_at", dayStart.toISOString())
     .lte("scheduled_at", dayEnd.toISOString());
 
-  const timeToMinutes = (t: string) => {
-    const [h, m] = t.split(":").map(Number);
-    return h * 60 + m;
-  };
-
-  let best: { id: string; load: number } | null = null;
-  for (const inst of instructors) {
-    const avail = (inst.weekly_availability ?? {}) as WeeklyAvailability;
-    const day = avail[dayKey];
-    if (!day?.enabled || !day.start || !day.end) continue;
-    if (
-      minutesOfDay < timeToMinutes(day.start) ||
-      minutesOfDay + durationMinutes > timeToMinutes(day.end)
-    ) {
-      continue;
-    }
-
-    const instBookings = (dayBookings ?? []).filter((b: any) => b.instructor_id === inst.id);
-    const conflicts = instBookings.some((b: any) => {
-      const bStart = new Date(b.scheduled_at);
-      const bEnd = new Date(bStart.getTime() + b.duration_minutes * 60000);
-      return start < bEnd && end > bStart;
-    });
-    if (conflicts) continue;
-
-    if (!best || instBookings.length < best.load) {
-      best = { id: inst.id, load: instBookings.length };
-    }
-  }
-  return best?.id ?? null;
+  return pickBestInstructor({
+    instructors: instructors ?? [],
+    dayBookings: dayBookings ?? [],
+    scheduledAt,
+    durationMinutes,
+  });
 }
 
 export const submitPublicBooking = createServerFn({ method: "POST" })
@@ -112,10 +70,7 @@ export const submitPublicBooking = createServerFn({ method: "POST" })
     // Bot protection: a filled honeypot or an impossibly fast submission
     // gets a fake success — no DB writes, and no signal to the bot that
     // it was caught.
-    const tooFast =
-      typeof data.formRenderedAt === "number" &&
-      Date.now() - data.formRenderedAt < MIN_FILL_TIME_MS;
-    if (data.website || tooFast) {
+    if (isBotSubmission(data)) {
       return { ok: true, status: "pending" as const };
     }
 

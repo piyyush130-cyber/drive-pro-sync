@@ -32,6 +32,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { submitPublicBooking } from "@/lib/public-booking.functions";
 import { money } from "@/lib/format";
+import { type BookingFormErrors, formatPhone, validateBookingForm } from "@/lib/booking-validation";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/$schoolSlug")({
@@ -91,26 +92,7 @@ function unavailableForDate(d: Date): Set<string> {
   return blocked;
 }
 
-type Errors = Partial<{
-  service: string;
-  date: string;
-  time: string;
-  full_name: string;
-  phone: string;
-  email: string;
-  pickup_address: string;
-}>;
-
-const emailOk = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
-
-function formatPhone(raw: string): string {
-  const digits = raw.replace(/\D/g, "").slice(0, 10);
-  const len = digits.length;
-  if (len === 0) return "";
-  if (len < 4) return `(${digits}`;
-  if (len < 7) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
-  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
-}
+type Errors = BookingFormErrors;
 
 function BookingPage() {
   const { schoolSlug } = Route.useParams();
@@ -198,18 +180,15 @@ function BookingPage() {
   }
 
   function validate(): Errors {
-    const e: Errors = {};
-    if (!selected) e.service = "Please choose a lesson.";
-    if (!selectedDate) e.date = "Please pick a date.";
-    if (!selectedTime) e.time = "Please pick a time.";
-    if (!form.full_name.trim()) e.full_name = "Full name is required.";
-    if (!form.phone.trim()) e.phone = "Phone number is required.";
-    else if (form.phone.replace(/\D/g, "").length !== 10)
-      e.phone = "Enter a 10-digit phone number.";
-    if (!form.email.trim()) e.email = "Email is required.";
-    else if (!emailOk(form.email.trim())) e.email = "Enter a valid email.";
-    if (!form.pickup_address.trim()) e.pickup_address = "Pickup address is required.";
-    return e;
+    return validateBookingForm({
+      hasSelectedService: !!selected,
+      hasSelectedDate: !!selectedDate,
+      hasSelectedTime: !!selectedTime,
+      full_name: form.full_name,
+      phone: form.phone,
+      email: form.email,
+      pickup_address: form.pickup_address,
+    });
   }
 
   async function handleSubmit() {
