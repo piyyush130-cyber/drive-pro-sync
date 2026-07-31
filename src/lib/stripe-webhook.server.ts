@@ -1,7 +1,7 @@
 // Raw Stripe webhook handler. Intercepted directly in server.ts, before the
 // TanStack Start router, so we get the unparsed request body Stripe's
 // signature verification requires.
-import { TRIAL_DAYS } from "@/lib/plans";
+import { TRIAL_DAYS, GRACE_PERIOD_DAYS } from "@/lib/plans";
 
 export async function handleStripeWebhook(request: Request): Promise<Response> {
   const Stripe = (await import("stripe")).default;
@@ -45,6 +45,54 @@ export async function handleStripeWebhook(request: Request): Promise<Response> {
       );
       if (error) console.error("[stripe-webhook] failed to record checkout completion:", error);
     }
+  }
+
+  // Failed charge (trial ending with no valid card, or a renewal charge
+  // failing) starts our own 3-day grace period — independent of Stripe's
+  // own retry/dunning schedule, so we control the exact window promised
+  // to schools ("3-day grace period").
+  if (event.type === "invoice.payment_failed") {
+    const invoice = event.data.object as import("stripe").Stripe.Invoice;
+    const subDetails = invoice.parent?.subscription_details?.subscription;
+    const subscriptionId = typeof subDetails === "string" ? subDetails : subDetails?.id;
+    if (subscriptionId) {
+      const { error } = await supabaseAdmin
+        .from("school_billing")
+        .update({
+          billing_status: "grace_period",
+          grace_period_ends_at: new Date(Date.now() + GRACE_PERIOD_DAYS * 86400000).toISOString(),
+        })
+        .eq("stripe_subscription_id", subscriptionId)
+        .neq("billing_status", "free_forever")
+        .neq("billing_status", "suspended");
+      if (error) console.error("[stripe-webhook] failed to record payment failure:", error);
+    }
+  }
+
+  if (event.type === "invoice.payment_succeeded") {
+    const invoice = event.data.object as import("stripe").Stripe.Invoice;
+    const subDetails = invoice.parent?.subscription_details?.subscription;
+    const subscriptionId = typeof subDetails === "string" ? subDetails : subDetails?.id;
+    if (subscriptionId) {
+      const { error } = await supabaseAdmin
+        .from("school_billing")
+        .update({ billing_status: "active", grace_period_ends_at: null })
+        .eq("stripe_subscription_id", subscriptionId)
+        .neq("billing_status", "free_forever")
+        .neq("billing_status", "suspended");
+      if (error) console.error("[stripe-webhook] failed to record payment success:", error);
+    }
+  }
+
+  if (event.type === "customer.subscription.deleted") {
+    const sub = event.data.object as import("stripe").Stripe.Subscription;
+    const { error } = await supabaseAdmin
+      .from("school_billing")
+      .update({ billing_status: "locked" })
+      .eq("stripe_subscription_id", sub.id)
+      .neq("billing_status", "free_forever")
+      .neq("billing_status", "suspended");
+    if (error) console.error("[stripe-webhook] failed to record subscription deletion:", error);
   }
 
   return new Response(JSON.stringify({ received: true }), {

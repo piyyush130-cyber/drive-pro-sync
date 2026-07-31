@@ -25,7 +25,10 @@ export function useRoles(userId: string | undefined) {
     queryKey: ["roles", userId],
     enabled: !!userId,
     queryFn: async () => {
-      const { data, error } = await supabase.from("user_roles").select("role").eq("user_id", userId!);
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId!);
       if (error) throw error;
       return (data ?? []).map((r) => r.role as "admin" | "instructor" | "student");
     },
@@ -43,6 +46,22 @@ export function useLatestPolicyAcceptance(userId: string | undefined) {
         .eq("user_id", userId!);
       if (error) throw error;
       return data ?? [];
+    },
+  });
+}
+
+export function useSchoolBilling(schoolId: string | undefined) {
+  return useQuery({
+    queryKey: ["school-billing-gate", schoolId],
+    enabled: !!schoolId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("school_billing")
+        .select("billing_status, trial_ends_at, grace_period_ends_at, plan, billing_interval")
+        .eq("school_id", schoolId!)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
     },
   });
 }
