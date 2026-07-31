@@ -31,13 +31,7 @@ export const generateInviteCode = createServerFn({ method: "POST" })
 
 export const useInviteCode = createServerFn({ method: "POST" })
   .inputValidator(
-    (d: {
-      code: string;
-      userId: string;
-      fullName: string;
-      email: string;
-      phone: string;
-    }) => d,
+    (d: { code: string; userId: string; fullName: string; email: string; phone: string }) => d,
   )
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -47,18 +41,19 @@ export const useInviteCode = createServerFn({ method: "POST" })
       .eq("code", data.code.toUpperCase())
       .eq("is_active", true)
       .maybeSingle();
-    if (!invite)
-      throw new Error("Invalid invite code. Please contact your driving school admin.");
+    if (!invite) throw new Error("Invalid invite code. Please contact your driving school admin.");
     if (invite.expires_at && new Date(invite.expires_at) < new Date())
       throw new Error("This invite code has expired. Ask your admin for a new one.");
     if (invite.max_uses && invite.used_count >= invite.max_uses)
       throw new Error("This invite code has reached its maximum uses.");
 
-    await supabaseAdmin.from("profiles").upsert(
-      { id: data.userId, email: data.email, full_name: data.fullName },
-      { onConflict: "id" },
-    );
-    await supabaseAdmin.from("instructors").insert({
+    await supabaseAdmin
+      .from("profiles")
+      .upsert(
+        { id: data.userId, email: data.email, full_name: data.fullName },
+        { onConflict: "id" },
+      );
+    const { error: instructorErr } = await supabaseAdmin.from("instructors").insert({
       profile_id: data.userId,
       full_name: data.fullName,
       email: data.email,
@@ -68,6 +63,7 @@ export const useInviteCode = createServerFn({ method: "POST" })
       invite_code_used: invite.code,
       school_id: invite.school_id,
     });
+    if (instructorErr) throw new Error(instructorErr.message);
     await supabaseAdmin
       .from("user_roles")
       .upsert(

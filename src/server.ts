@@ -40,9 +40,24 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
   });
 }
 
+// Raw HTTP endpoints that must not go through TanStack Start's router —
+// Stripe's webhook needs the unparsed body for signature verification, and
+// this is called before any TanStack request handling touches it.
+async function handleRawRoute(request: Request): Promise<Response | null> {
+  const { pathname } = new URL(request.url);
+  if (pathname === "/api/stripe-webhook" && request.method === "POST") {
+    const { handleStripeWebhook } = await import("./lib/stripe-webhook.server");
+    return handleStripeWebhook(request);
+  }
+  return null;
+}
+
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
+      const rawResponse = await handleRawRoute(request);
+      if (rawResponse) return rawResponse;
+
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
       return await normalizeCatastrophicSsrResponse(response);

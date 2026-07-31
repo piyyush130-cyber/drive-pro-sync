@@ -1,10 +1,11 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Copy, Check, Key, RefreshCw, Link as LinkIcon } from "lucide-react";
+import { Copy, Check, Key, RefreshCw, Link as LinkIcon, Lock } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { generateInviteCode } from "@/lib/invite-code.functions";
+import { checkInstructorLimit } from "@/lib/billing.functions";
 import { useAuthUser, useSchoolId } from "@/lib/auth";
 import { toast } from "sonner";
 
@@ -36,6 +37,12 @@ function InstructorsPage() {
   const [copied, setCopied] = useState<string | null>(null);
   const { user } = useAuthUser();
   const schoolIdQ = useSchoolId(user?.id);
+  const checkLimit = useServerFn(checkInstructorLimit);
+
+  const limitQ = useQuery({
+    queryKey: ["instructor-limit"],
+    queryFn: () => checkLimit({}),
+  });
 
   const instructorsQ = useQuery({
     queryKey: ["instructors-all"],
@@ -83,6 +90,11 @@ function InstructorsPage() {
   async function add(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!schoolIdQ.data) return toast.error("Could not determine your school — try refreshing.");
+    if (limitQ.data?.atLimit) {
+      return toast.error(
+        `You've reached your plan's limit of ${limitQ.data.limit} instructors. Upgrade to add more.`,
+      );
+    }
     const fd = new FormData(e.currentTarget);
     const { error } = await supabase.from("instructors").insert({
       full_name: String(fd.get("full_name") || ""),
@@ -93,6 +105,7 @@ function InstructorsPage() {
     if (error) return toast.error(error.message);
     setAdding(false);
     qc.invalidateQueries({ queryKey: ["instructors-all"] });
+    qc.invalidateQueries({ queryKey: ["instructor-limit"] });
     toast.success("Instructor added");
   }
 
@@ -109,6 +122,7 @@ function InstructorsPage() {
       .eq("id", id);
     if (error) return toast.error(error.message);
     qc.invalidateQueries({ queryKey: ["instructors-all"] });
+    qc.invalidateQueries({ queryKey: ["instructor-limit"] });
     toast.success(`${name} deleted`);
   }
 
@@ -127,17 +141,42 @@ function InstructorsPage() {
     typeof window !== "undefined" ? window.location.origin + "/instructor-signup" : "";
   const code = codeQ.data?.code;
 
+  const atLimit = !!limitQ.data?.atLimit;
+
   return (
     <div className="p-6 lg:p-10 max-w-5xl">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-semibold text-slate-900">Instructors</h1>
-          <p className="text-sm text-slate-400 mt-1">Manage your teaching team.</p>
+          <p className="text-sm text-slate-400 mt-1">
+            Manage your teaching team.
+            {limitQ.data?.limit != null && (
+              <span className="ml-1 text-slate-500">
+                ({limitQ.data.current}/{limitQ.data.limit} used)
+              </span>
+            )}
+          </p>
         </div>
-        <button onClick={() => setAdding(!adding)} className="btn-primary text-sm">
+        <button
+          onClick={() => (atLimit ? undefined : setAdding(!adding))}
+          disabled={atLimit && !adding}
+          className="btn-primary text-sm disabled:opacity-50"
+        >
           {adding ? "Cancel" : "+ Add instructor"}
         </button>
       </div>
+
+      {atLimit && (
+        <div className="glass-card p-4 mb-6 flex items-center gap-3 border border-amber-500/30">
+          <Lock className="size-4 text-amber-400 shrink-0" />
+          <p className="text-sm text-slate-300 flex-1">
+            You've reached your plan's limit of {limitQ.data?.limit} instructors.
+          </p>
+          <Link to="/settings" className="btn-secondary text-xs shrink-0">
+            Upgrade plan
+          </Link>
+        </div>
+      )}
 
       {/* Invite Code Card */}
       <div className="glass-card p-6 mb-6">

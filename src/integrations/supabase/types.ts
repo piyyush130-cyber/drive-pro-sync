@@ -519,6 +519,50 @@ export type Database = {
         };
         Relationships: [];
       };
+      school_billing: {
+        Row: {
+          billing_interval: Database["public"]["Enums"]["billing_interval"] | null;
+          billing_status: Database["public"]["Enums"]["billing_status"];
+          grace_period_ends_at: string | null;
+          plan: Database["public"]["Enums"]["plan_key"] | null;
+          school_id: string;
+          stripe_customer_id: string | null;
+          stripe_subscription_id: string | null;
+          trial_ends_at: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          billing_interval?: Database["public"]["Enums"]["billing_interval"] | null;
+          billing_status?: Database["public"]["Enums"]["billing_status"];
+          grace_period_ends_at?: string | null;
+          plan?: Database["public"]["Enums"]["plan_key"] | null;
+          school_id: string;
+          stripe_customer_id?: string | null;
+          stripe_subscription_id?: string | null;
+          trial_ends_at?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          billing_interval?: Database["public"]["Enums"]["billing_interval"] | null;
+          billing_status?: Database["public"]["Enums"]["billing_status"];
+          grace_period_ends_at?: string | null;
+          plan?: Database["public"]["Enums"]["plan_key"] | null;
+          school_id?: string;
+          stripe_customer_id?: string | null;
+          stripe_subscription_id?: string | null;
+          trial_ends_at?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "school_billing_school_id_fkey";
+            columns: ["school_id"];
+            isOneToOne: true;
+            referencedRelation: "schools";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       school_settings: {
         Row: {
           auto_assign_instructor: boolean;
@@ -773,6 +817,15 @@ export type Database = {
     };
     Enums: {
       app_role: "admin" | "instructor" | "student";
+      billing_interval: "monthly" | "annual";
+      billing_status:
+        | "trialing"
+        | "active"
+        | "past_due"
+        | "grace_period"
+        | "locked"
+        | "free_forever"
+        | "suspended";
       booking_status:
         | "pending"
         | "confirmed"
@@ -785,6 +838,7 @@ export type Database = {
       instructor_status: "pending_approval" | "active" | "deactivated" | "rejected";
       payment_method: "cash" | "etransfer" | "card" | "other";
       payment_status: "unpaid" | "deposit_paid" | "paid" | "refunded";
+      plan_key: "starter" | "professional" | "enterprise";
       road_test_readiness: "not_ready" | "improving" | "almost_ready" | "ready";
     };
     CompositeTypes: {
@@ -912,6 +966,16 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "instructor", "student"],
+      billing_interval: ["monthly", "annual"],
+      billing_status: [
+        "trialing",
+        "active",
+        "past_due",
+        "grace_period",
+        "locked",
+        "free_forever",
+        "suspended",
+      ],
       booking_status: [
         "pending",
         "confirmed",
@@ -925,6 +989,7 @@ export const Constants = {
       instructor_status: ["pending_approval", "active", "deactivated", "rejected"],
       payment_method: ["cash", "etransfer", "card", "other"],
       payment_status: ["unpaid", "deposit_paid", "paid", "refunded"],
+      plan_key: ["starter", "professional", "enterprise"],
       road_test_readiness: ["not_ready", "improving", "almost_ready", "ready"],
     },
   },

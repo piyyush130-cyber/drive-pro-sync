@@ -1,9 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthUser, useSchoolId } from "@/lib/auth";
 import { money } from "@/lib/format";
+import { createBillingPortalSession } from "@/lib/billing.functions";
+import { PLANS, type PlanKey } from "@/lib/plans";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/settings")({
@@ -35,6 +38,32 @@ function SettingsPage() {
       return data ?? [];
     },
   });
+  const billingQ = useQuery({
+    queryKey: ["school-billing", schoolIdQ.data],
+    enabled: !!schoolIdQ.data,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("school_billing")
+        .select("*")
+        .eq("school_id", schoolIdQ.data as string)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+  const openPortal = useServerFn(createBillingPortalSession);
+  const [openingPortal, setOpeningPortal] = useState(false);
+
+  async function manageBilling() {
+    setOpeningPortal(true);
+    try {
+      const { url } = await openPortal({});
+      window.location.href = url;
+    } catch (err: any) {
+      toast.error(err?.message || "Could not open billing portal");
+      setOpeningPortal(false);
+    }
+  }
 
   const [form, setForm] = useState<any>({});
   useEffect(() => {
@@ -91,6 +120,44 @@ function SettingsPage() {
   return (
     <div className="p-6 lg:p-10 max-w-3xl">
       <h1 className="text-2xl font-semibold text-slate-900 mb-6">Settings</h1>
+
+      <section className="glass-card p-6 mb-6 space-y-3">
+        <h2 className="font-semibold text-slate-900">Billing</h2>
+        {billingQ.isLoading ? (
+          <p className="text-sm text-slate-500">Loading…</p>
+        ) : billingQ.data?.billing_status === "free_forever" ? (
+          <p className="text-sm text-slate-600">
+            Your account is comped — no subscription, nothing to manage here.
+          </p>
+        ) : billingQ.data?.plan ? (
+          <>
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-sm font-medium text-slate-900">
+                  {PLANS[billingQ.data.plan as PlanKey].name} plan ·{" "}
+                  {money(PLANS[billingQ.data.plan as PlanKey].monthlyCents)}/mo
+                  {billingQ.data.billing_interval === "annual" && " (billed annually)"}
+                </div>
+                <div className="text-xs text-slate-500 mt-0.5">
+                  Status: {billingQ.data.billing_status}
+                  {billingQ.data.trial_ends_at && billingQ.data.billing_status === "trialing" && (
+                    <> · trial ends {new Date(billingQ.data.trial_ends_at).toLocaleDateString()}</>
+                  )}
+                </div>
+              </div>
+              <button
+                onClick={manageBilling}
+                disabled={openingPortal}
+                className="btn-secondary text-sm"
+              >
+                {openingPortal ? "Opening…" : "Manage billing"}
+              </button>
+            </div>
+          </>
+        ) : (
+          <p className="text-sm text-slate-500">No plan selected yet.</p>
+        )}
+      </section>
 
       <section className="glass-card p-6 mb-6 space-y-4">
         <h2 className="font-semibold text-slate-900">School details</h2>
