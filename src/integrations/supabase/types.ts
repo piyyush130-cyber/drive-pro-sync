@@ -492,6 +492,21 @@ export type Database = {
           },
         ];
       };
+      platform_owners: {
+        Row: {
+          created_at: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       profiles: {
         Row: {
           created_at: string;
@@ -814,6 +829,7 @@ export type Database = {
         };
         Returns: boolean;
       };
+      is_platform_owner: { Args: { _user_id: string }; Returns: boolean };
     };
     Enums: {
       app_role: "admin" | "instructor" | "student";

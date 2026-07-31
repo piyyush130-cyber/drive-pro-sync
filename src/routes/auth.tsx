@@ -11,6 +11,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 
 async function redirectByRole(_navigate: ReturnType<typeof useNavigate>, userId: string) {
+  const { data: isOwner } = await supabase.rpc("is_platform_owner", { _user_id: userId });
+  if (isOwner) {
+    window.location.href = "/owner";
+    return;
+  }
   const { data } = await supabase.from("user_roles").select("role,school_id").eq("user_id", userId);
   const roles = (data ?? []).map((r) => r.role);
   if (roles.includes("admin")) {

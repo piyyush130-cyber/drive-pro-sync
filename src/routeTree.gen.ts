@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as OwnerRouteImport } from './routes/owner'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as InstructorSignupRouteImport } from './routes/instructor-signup'
@@ -48,6 +49,11 @@ const ResetPasswordRoute = ResetPasswordRouteImport.update({
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OwnerRoute = OwnerRouteImport.update({
+  id: '/owner',
+  path: '/owner',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OnboardingRoute = OnboardingRouteImport.update({
@@ -170,6 +176,7 @@ export interface FileRoutesByFullPath {
   '/instructor-signup': typeof InstructorSignupRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
+  '/owner': typeof OwnerRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
@@ -196,6 +203,7 @@ export interface FileRoutesByTo {
   '/instructor-signup': typeof InstructorSignupRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
+  '/owner': typeof OwnerRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
@@ -224,6 +232,7 @@ export interface FileRoutesById {
   '/instructor-signup': typeof InstructorSignupRoute
   '/login': typeof LoginRoute
   '/onboarding': typeof OnboardingRoute
+  '/owner': typeof OwnerRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
@@ -252,6 +261,7 @@ export interface FileRouteTypes {
     | '/instructor-signup'
     | '/login'
     | '/onboarding'
+    | '/owner'
     | '/privacy'
     | '/reset-password'
     | '/terms'
@@ -278,6 +288,7 @@ export interface FileRouteTypes {
     | '/instructor-signup'
     | '/login'
     | '/onboarding'
+    | '/owner'
     | '/privacy'
     | '/reset-password'
     | '/terms'
@@ -305,6 +316,7 @@ export interface FileRouteTypes {
     | '/instructor-signup'
     | '/login'
     | '/onboarding'
+    | '/owner'
     | '/privacy'
     | '/reset-password'
     | '/terms'
@@ -333,6 +345,7 @@ export interface RootRouteChildren {
   InstructorSignupRoute: typeof InstructorSignupRoute
   LoginRoute: typeof LoginRoute
   OnboardingRoute: typeof OnboardingRoute
+  OwnerRoute: typeof OwnerRoute
   PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   TermsRoute: typeof TermsRoute
@@ -359,6 +372,13 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/owner': {
+      id: '/owner'
+      path: '/owner'
+      fullPath: '/owner'
+      preLoaderRoute: typeof OwnerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/onboarding': {
@@ -574,6 +594,7 @@ const rootRouteChildren: RootRouteChildren = {
   InstructorSignupRoute: InstructorSignupRoute,
   LoginRoute: LoginRoute,
   OnboardingRoute: OnboardingRoute,
+  OwnerRoute: OwnerRoute,
   PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   TermsRoute: TermsRoute,
