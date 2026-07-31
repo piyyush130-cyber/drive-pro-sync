@@ -72,6 +72,7 @@ function OnboardingPage() {
   // Step 4
   const [instructor, setInstructor] = useState({ full_name: "", email: "", phone: "" });
   const [instructorId, setInstructorId] = useState<string | null>(null);
+  const [alsoInstructor, setAlsoInstructor] = useState(false);
   // Step 5
   const [avail, setAvail] = useState(DEFAULT_AVAIL);
   // Step 6
@@ -173,7 +174,8 @@ function OnboardingPage() {
       toast.error("Instructor name is required");
       return;
     }
-    if (!schoolIdQ.data) return toast.error("Could not determine your school — try refreshing.");
+    if (!schoolIdQ.data || !user)
+      return toast.error("Could not determine your school — try refreshing.");
     setBusy(true);
     const { data, error } = await supabase
       .from("instructors")
@@ -183,11 +185,27 @@ function OnboardingPage() {
         phone: instructor.phone || null,
         active: true,
         school_id: schoolIdQ.data,
+        profile_id: alsoInstructor ? user.id : null,
       })
       .select()
       .single();
+    if (error) {
+      setBusy(false);
+      return toast.error(error.message);
+    }
+    if (alsoInstructor) {
+      const { error: roleErr } = await supabase
+        .from("user_roles")
+        .upsert(
+          { user_id: user.id, role: "instructor", school_id: schoolIdQ.data },
+          { onConflict: "user_id,school_id,role" },
+        );
+      if (roleErr) {
+        setBusy(false);
+        return toast.error(roleErr.message);
+      }
+    }
     setBusy(false);
-    if (error) return toast.error(error.message);
     setInstructorId(data.id);
     setStep(5);
   }
@@ -431,8 +449,36 @@ function OnboardingPage() {
               title="Add your first instructor"
               subtitle="You can add more anytime from the Instructors page."
             >
+              <label className="flex items-center justify-between cursor-pointer">
+                <span className="text-sm text-slate-300">I also teach lessons myself</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const next = !alsoInstructor;
+                    setAlsoInstructor(next);
+                    if (next && !instructor.full_name) {
+                      setInstructor({
+                        full_name: (user?.user_metadata?.full_name as string) || "",
+                        email: user?.email || "",
+                        phone: "",
+                      });
+                    }
+                  }}
+                  className={`w-11 h-6 rounded-full transition ${alsoInstructor ? "bg-[#3B82F6]" : "bg-slate-700"} relative`}
+                >
+                  <span
+                    className={`absolute top-0.5 size-5 rounded-full bg-white transition ${alsoInstructor ? "left-5" : "left-0.5"}`}
+                  />
+                </button>
+              </label>
+              {alsoInstructor && (
+                <p className="text-xs text-slate-400 -mt-3">
+                  This links your admin login to an instructor profile — no second account needed.
+                  You'll show up in scheduling and assignment like any other instructor.
+                </p>
+              )}
               <Input
-                label="Full name"
+                label={alsoInstructor ? "Your name (shown to students)" : "Full name"}
                 required
                 value={instructor.full_name}
                 onChange={(v) => setInstructor({ ...instructor, full_name: v })}
@@ -447,13 +493,15 @@ function OnboardingPage() {
                 value={instructor.phone}
                 onChange={(v) => setInstructor({ ...instructor, phone: v })}
               />
-              <div className="glass-card p-4 flex gap-3 items-start" style={{ borderRadius: 14 }}>
-                <Key className="size-5 text-[#60A5FA] shrink-0 mt-0.5" />
-                <p className="text-sm text-slate-300">
-                  After setup, your instructor invite code will be shown in the Instructors section.
-                  Share it with your instructors so they can create their login.
-                </p>
-              </div>
+              {!alsoInstructor && (
+                <div className="glass-card p-4 flex gap-3 items-start" style={{ borderRadius: 14 }}>
+                  <Key className="size-5 text-[#60A5FA] shrink-0 mt-0.5" />
+                  <p className="text-sm text-slate-300">
+                    After setup, your instructor invite code will be shown in the Instructors
+                    section. Share it with your instructors so they can create their login.
+                  </p>
+                </div>
+              )}
               <NextRow onBack={() => setStep(3)} onNext={saveStep4} busy={busy} />
             </Step>
           )}
