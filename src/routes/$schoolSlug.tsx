@@ -19,20 +19,18 @@ import {
 } from "lucide-react";
 import {
   addMonths,
-  endOfMonth,
   format,
   isBefore,
   isSameDay,
   isSameMonth,
   startOfDay,
   startOfMonth,
-  startOfWeek,
-  addDays,
 } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { submitPublicBooking } from "@/lib/public-booking.functions";
 import { money } from "@/lib/format";
 import { type BookingFormErrors, formatPhone, validateBookingForm } from "@/lib/booking-validation";
+import { TIME_SLOTS, unavailableForDate, buildMonthGrid } from "@/lib/booking-calendar";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/$schoolSlug")({
@@ -66,31 +64,6 @@ const C = {
   danger: "#DC2626",
   dangerBg: "rgba(254,226,226,0.7)",
 };
-
-const TIME_SLOTS: { time: string; label: string }[] = [
-  { time: "08:00", label: "8:00 AM" },
-  { time: "09:30", label: "9:30 AM" },
-  { time: "11:00", label: "11:00 AM" },
-  { time: "12:30", label: "12:30 PM" },
-  { time: "14:00", label: "2:00 PM" },
-  { time: "15:30", label: "3:30 PM" },
-  { time: "17:00", label: "5:00 PM" },
-  { time: "18:30", label: "6:30 PM" },
-  { time: "20:00", label: "8:00 PM" },
-  { time: "21:00", label: "9:00 PM" },
-];
-
-function unavailableForDate(d: Date): Set<string> {
-  const seed = (d.getFullYear() * 1000 + d.getMonth() * 50 + d.getDate()) % 7;
-  const blocked = new Set<string>();
-  if (d.getDay() === 0) {
-    blocked.add("08:00");
-    blocked.add("09:30");
-  }
-  blocked.add(TIME_SLOTS[seed % TIME_SLOTS.length].time);
-  blocked.add(TIME_SLOTS[(seed + 3) % TIME_SLOTS.length].time);
-  return blocked;
-}
 
 type Errors = BookingFormErrors;
 
@@ -872,19 +845,6 @@ function Scheduler({
       </div>
     </div>
   );
-}
-
-function buildMonthGrid(month: Date): Date[] {
-  const first = startOfWeek(startOfMonth(month), { weekStartsOn: 0 });
-  const last = endOfMonth(month);
-  const days: Date[] = [];
-  let cur = first;
-  while (cur <= addDays(last, 6 - last.getDay())) {
-    days.push(cur);
-    cur = addDays(cur, 1);
-    if (days.length > 42) break;
-  }
-  return days;
 }
 
 /* ---------------- Summary ---------------- */

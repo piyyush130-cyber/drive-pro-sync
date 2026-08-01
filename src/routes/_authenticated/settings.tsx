@@ -90,6 +90,7 @@ function SettingsPage() {
         default_buffer_minutes: Number(form.default_buffer_minutes) || 15,
         require_approval: !!form.require_approval,
         auto_assign_instructor: !!form.auto_assign_instructor,
+        auto_invitations_enabled: !!form.auto_invitations_enabled,
       })
       .eq("school_id", schoolIdQ.data);
     if (error) return toast.error(error.message);
@@ -279,6 +280,20 @@ function SettingsPage() {
         <p className="text-xs text-slate-500 -mt-2">
           When on, new bookings are assigned to an available instructor based on their weekly hours
           and existing schedule. When off, assign instructors manually from the Booking Queue.
+        </p>
+        <label className="flex items-center gap-2 text-sm text-slate-700">
+          <input
+            type="checkbox"
+            checked={!!form.auto_invitations_enabled}
+            onChange={(e) => setForm({ ...form, auto_invitations_enabled: e.target.checked })}
+            className="accent-[#3B82F6]"
+          />
+          Automatically text students to book their next lesson
+        </label>
+        <p className="text-xs text-slate-500 -mt-2">
+          When on, students with remaining lessons and no upcoming booking get a text after their
+          last completed lesson, with one follow-up reminder if they don't book. When off, send
+          invitations manually from a student's profile.
         </p>
         <button onClick={saveSettings} className="btn-primary text-sm">
           Save settings

@@ -374,6 +374,67 @@ export type Database = {
           },
         ];
       };
+      lesson_invitations: {
+        Row: {
+          booked_at: string | null;
+          booking_id: string | null;
+          created_at: string;
+          id: string;
+          reminder_sent_at: string | null;
+          school_id: string;
+          sent_at: string;
+          status: Database["public"]["Enums"]["invitation_status"];
+          student_id: string;
+          token: string;
+        };
+        Insert: {
+          booked_at?: string | null;
+          booking_id?: string | null;
+          created_at?: string;
+          id?: string;
+          reminder_sent_at?: string | null;
+          school_id: string;
+          sent_at?: string;
+          status?: Database["public"]["Enums"]["invitation_status"];
+          student_id: string;
+          token?: string;
+        };
+        Update: {
+          booked_at?: string | null;
+          booking_id?: string | null;
+          created_at?: string;
+          id?: string;
+          reminder_sent_at?: string | null;
+          school_id?: string;
+          sent_at?: string;
+          status?: Database["public"]["Enums"]["invitation_status"];
+          student_id?: string;
+          token?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "lesson_invitations_booking_id_fkey";
+            columns: ["booking_id"];
+            isOneToOne: false;
+            referencedRelation: "bookings";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "lesson_invitations_school_id_fkey";
+            columns: ["school_id"];
+            isOneToOne: false;
+            referencedRelation: "schools";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "lesson_invitations_student_id_fkey";
+            columns: ["student_id"];
+            isOneToOne: false;
+            referencedRelation: "students";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       lesson_notes: {
         Row: {
           booking_id: string;
@@ -581,6 +642,7 @@ export type Database = {
       school_settings: {
         Row: {
           auto_assign_instructor: boolean;
+          auto_invitations_enabled: boolean;
           cancellation_fee_cents: number;
           cancellation_notice_hours: number;
           cancellation_policy: string | null;
@@ -602,6 +664,7 @@ export type Database = {
         };
         Insert: {
           auto_assign_instructor?: boolean;
+          auto_invitations_enabled?: boolean;
           cancellation_fee_cents?: number;
           cancellation_notice_hours?: number;
           cancellation_policy?: string | null;
@@ -623,6 +686,7 @@ export type Database = {
         };
         Update: {
           auto_assign_instructor?: boolean;
+          auto_invitations_enabled?: boolean;
           cancellation_fee_cents?: number;
           cancellation_notice_hours?: number;
           cancellation_policy?: string | null;
@@ -852,6 +916,7 @@ export type Database = {
         | "no_show";
       cancel_status: "requested" | "approved" | "rejected";
       instructor_status: "pending_approval" | "active" | "deactivated" | "rejected";
+      invitation_status: "sent" | "reminded" | "booked" | "expired";
       payment_method: "cash" | "etransfer" | "card" | "other";
       payment_status: "unpaid" | "deposit_paid" | "paid" | "refunded";
       plan_key: "starter" | "professional" | "enterprise";
@@ -1003,6 +1068,7 @@ export const Constants = {
       ],
       cancel_status: ["requested", "approved", "rejected"],
       instructor_status: ["pending_approval", "active", "deactivated", "rejected"],
+      invitation_status: ["sent", "reminded", "booked", "expired"],
       payment_method: ["cash", "etransfer", "card", "other"],
       payment_status: ["unpaid", "deposit_paid", "paid", "refunded"],
       plan_key: ["starter", "professional", "enterprise"],

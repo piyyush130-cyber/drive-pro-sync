@@ -1,9 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { fmtDateTime, money, statusLabel, statusTone } from "@/lib/format";
 import { StatusPill } from "@/components/StatCard";
+import { sendInvitation, getLatestInvitation } from "@/lib/lesson-invitations.functions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/students/$id")({
@@ -98,6 +100,27 @@ function StudentDetail() {
     }
   }, [studentQ.data]);
 
+  const sendInvite = useServerFn(sendInvitation);
+  const getInvite = useServerFn(getLatestInvitation);
+  const [sendingInvite, setSendingInvite] = useState(false);
+  const invitationQ = useQuery({
+    queryKey: ["latest-invitation", id],
+    queryFn: () => getInvite({ data: { studentId: id } }),
+  });
+
+  async function handleSendInvitation() {
+    setSendingInvite(true);
+    try {
+      await sendInvite({ data: { studentId: id } });
+      toast.success("Invitation sent");
+      qc.invalidateQueries({ queryKey: ["latest-invitation", id] });
+    } catch (err: any) {
+      toast.error(err?.message || "Could not send invitation");
+    } finally {
+      setSendingInvite(false);
+    }
+  }
+
   const [addAmount, setAddAmount] = useState("");
 
   async function addLessons() {
@@ -186,6 +209,33 @@ function StudentDetail() {
             className="btn-primary text-sm font-medium px-4 py-2 rounded-md"
           >
             Add lessons
+          </button>
+        </div>
+      </section>
+
+      <section className="bg-white border border-slate-200 rounded-xl p-5 mb-6">
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div>
+            <h2 className="font-medium text-slate-900">Next lesson invitation</h2>
+            {invitationQ.data ? (
+              <p className="text-xs text-slate-500 mt-1">
+                Last sent {fmtDateTime(invitationQ.data.sent_at)} ·{" "}
+                <span className="capitalize">{invitationQ.data.status}</span>
+              </p>
+            ) : (
+              <p className="text-xs text-slate-500 mt-1">No invitation sent yet.</p>
+            )}
+          </div>
+          <button
+            onClick={handleSendInvitation}
+            disabled={sendingInvite}
+            className="btn-secondary text-sm font-medium px-4 py-2 rounded-md disabled:opacity-50"
+          >
+            {sendingInvite
+              ? "Sending…"
+              : invitationQ.data
+                ? "Resend Invitation"
+                : "Send Invitation"}
           </button>
         </div>
       </section>

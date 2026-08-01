@@ -26,7 +26,7 @@ const BookingSchema = z.object({
 
 // Fetches active instructors + that day's bookings for the school, then
 // delegates the actual selection to the pure, unit-tested pickBestInstructor.
-async function pickInstructor(
+export async function pickInstructor(
   supabaseAdmin: any,
   schoolId: string,
   scheduledAt: string,
