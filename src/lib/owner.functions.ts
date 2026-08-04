@@ -119,6 +119,44 @@ export const ownerSuspendSchool = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const ownerDeleteSchool = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { schoolId: string; confirmName: string }) => d)
+  .handler(async ({ data, context }) => {
+    await requireOwner(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: school } = await supabaseAdmin
+      .from("schools")
+      .select("id, name")
+      .eq("id", data.schoolId)
+      .maybeSingle();
+    if (!school) throw new Error("School not found");
+    if (data.confirmName !== school.name)
+      throw new Error("Name didn't match — nothing was deleted.");
+
+    const { data: billing } = await supabaseAdmin
+      .from("school_billing")
+      .select("stripe_subscription_id")
+      .eq("school_id", data.schoolId)
+      .maybeSingle();
+    if (billing?.stripe_subscription_id) {
+      const Stripe = (await import("stripe")).default;
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+      try {
+        await stripe.subscriptions.cancel(billing.stripe_subscription_id);
+      } catch (err: any) {
+        if (err?.code !== "resource_missing") throw err;
+      }
+    }
+
+    // schools is the root of an ON DELETE CASCADE chain covering every
+    // school-scoped table, so this one delete purges all related data.
+    const { error } = await supabaseAdmin.from("schools").delete().eq("id", data.schoolId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 export const ownerReactivateSchool = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: { schoolId: string }) => d)

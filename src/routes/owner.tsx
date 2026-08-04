@@ -10,6 +10,7 @@ import {
   ownerMarkFreeForever,
   ownerSuspendSchool,
   ownerReactivateSchool,
+  ownerDeleteSchool,
 } from "@/lib/owner.functions";
 import { PLANS, type PlanKey } from "@/lib/plans";
 import { toast } from "sonner";
@@ -67,6 +68,7 @@ function OwnerPage() {
   const markFreeForever = useServerFn(ownerMarkFreeForever);
   const suspend = useServerFn(ownerSuspendSchool);
   const reactivate = useServerFn(ownerReactivateSchool);
+  const deleteSchool = useServerFn(ownerDeleteSchool);
   const [busyId, setBusyId] = useState<string | null>(null);
 
   function refresh() {
@@ -127,6 +129,27 @@ function OwnerPage() {
       refresh();
     } catch (err: any) {
       toast.error(err?.message || "Could not reactivate");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function handleDelete(schoolId: string, name: string) {
+    const typed = window.prompt(
+      `This permanently deletes "${name}" and every student, booking, instructor, and billing record tied to it. This cannot be undone.\n\nType the school name exactly to confirm:`,
+    );
+    if (typed === null) return;
+    if (typed !== name) {
+      toast.error("Name didn't match — nothing was deleted.");
+      return;
+    }
+    setBusyId(schoolId);
+    try {
+      await deleteSchool({ data: { schoolId, confirmName: typed } });
+      toast.success(`${name} permanently deleted`);
+      refresh();
+    } catch (err: any) {
+      toast.error(err?.message || "Could not delete school");
     } finally {
       setBusyId(null);
     }
@@ -239,6 +262,13 @@ function OwnerPage() {
                               Suspend
                             </button>
                           )}
+                          <button
+                            disabled={isBusy}
+                            onClick={() => handleDelete(s.id, s.name)}
+                            className="text-xs text-red-700 bg-red-50 border border-red-200 px-2.5 py-1.5 rounded-md hover:bg-red-100 disabled:opacity-50"
+                          >
+                            Delete
+                          </button>
                         </div>
                       </td>
                     </tr>
