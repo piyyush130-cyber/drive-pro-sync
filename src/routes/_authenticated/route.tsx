@@ -169,7 +169,7 @@ function AcceptPoliciesScreen({ userId, onAccepted }: { userId: string; onAccept
           Our Terms of Service and Privacy Policy have been updated
         </h1>
         <p className="text-sm text-slate-500 mt-2">
-          Please review the updated policies and accept them to continue using DriveProSync.
+          Please review the updated policies and accept them to continue using DrivingOps.
         </p>
         <div className="mt-4 flex flex-col gap-1 text-sm">
           <a

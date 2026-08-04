@@ -7,9 +7,9 @@ export const Route = createFileRoute("/privacy")({
 
 function PrivacyPage() {
   return (
-    <LegalLayout title="Privacy Policy" updatedDate="July 28, 2026">
+    <LegalLayout title="Privacy Policy" updatedDate="August 4, 2026">
       <p>
-        This Privacy Policy explains how DriveProSync ("we," "us," "our") collects, uses, and
+        This Privacy Policy explains how DrivingOps ("we," "us," "our") collects, uses, and
         protects personal information.
       </p>
 

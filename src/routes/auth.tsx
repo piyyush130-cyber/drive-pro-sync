@@ -165,7 +165,7 @@ function AuthPage() {
             <CarFront className="size-4.5 text-white" />
           </div>
           <div className="text-xl font-bold" style={{ color: "#1B2B4B" }}>
-            DriveProSync
+            DrivingOps
           </div>
         </div>
         <div className="text-xs uppercase tracking-widest mb-1" style={{ color: "#C9A84C" }}>

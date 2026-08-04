@@ -168,7 +168,7 @@ function InstructorPage() {
             </div>
             <div className="min-w-0">
               <div className="text-xs uppercase tracking-widest text-blue-200">
-                DriveProSync · Instructor
+                DrivingOps · Instructor
               </div>
               <div className="font-semibold tracking-tight truncate">{meQ.data.full_name}</div>
             </div>

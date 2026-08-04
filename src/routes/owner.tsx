@@ -181,7 +181,7 @@ function OwnerPage() {
       <header className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
         <div>
           <h1 className="text-lg font-semibold text-slate-900">Owner Dashboard</h1>
-          <p className="text-xs text-slate-500">Every school on DriveProSync, in one place.</p>
+          <p className="text-xs text-slate-500">Every school on DrivingOps, in one place.</p>
         </div>
         <button onClick={signOut} className="text-sm text-slate-500 hover:text-slate-700">
           Sign out

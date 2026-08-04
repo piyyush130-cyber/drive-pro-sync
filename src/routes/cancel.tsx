@@ -35,7 +35,7 @@ function CancelPage() {
         <Link to="/" className="text-xs text-slate-500 hover:text-slate-900">
           ← Back to booking
         </Link>
-        <div className="eyebrow text-blue-700 mt-3">DriveProSync</div>
+        <div className="eyebrow text-blue-700 mt-3">DrivingOps</div>
         <h1 className="text-2xl font-semibold tracking-tight mt-1 mb-2">
           Cancel or reschedule
         </h1>

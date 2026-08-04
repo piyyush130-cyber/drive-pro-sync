@@ -421,7 +421,7 @@ function BookingPage() {
           <p className="text-xs" style={{ color: C.muted }}>
             Powered by{" "}
             <span className="font-semibold" style={{ color: C.primary }}>
-              DriveProSync
+              DrivingOps
             </span>
           </p>
         </div>
@@ -455,7 +455,7 @@ function TopBar({ school }: { school: string }) {
               className="font-semibold tracking-tight text-[15px] truncate"
               style={{ color: C.text }}
             >
-              DriveProSync
+              DrivingOps
             </span>
             <span className="h-4 w-px" style={{ background: C.border }} />
             <span className="text-[13px] truncate hidden sm:inline" style={{ color: C.muted }}>
@@ -1185,7 +1185,7 @@ function ConfirmationScreen({
         <p className="text-center text-xs mt-8" style={{ color: C.muted }}>
           Powered by{" "}
           <span className="font-semibold" style={{ color: C.primary }}>
-            DriveProSync
+            DrivingOps
           </span>
         </p>
       </main>

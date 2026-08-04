@@ -571,7 +571,7 @@ function OnboardingPage() {
           {step === 6 && (
             <Step
               title="Your school is live!"
-              subtitle="DriveProSync is ready. Here's your public booking link."
+              subtitle="DrivingOps is ready. Here's your public booking link."
             >
               <div className="glass-card p-5" style={{ borderRadius: 14 }}>
                 <div className="text-[10px] uppercase tracking-widest text-[#60A5FA] mb-2">
@@ -659,7 +659,7 @@ function Step({
     <div className="space-y-5">
       <div>
         <div className="text-[10px] uppercase tracking-[0.18em] text-[#60A5FA] mb-2">
-          DriveProSync setup
+          DrivingOps setup
         </div>
         <h1 className="text-2xl font-semibold text-white">{title}</h1>
         <p className="text-sm text-slate-400 mt-1">{subtitle}</p>

@@ -7,10 +7,10 @@ export const Route = createFileRoute("/terms")({
 
 function TermsPage() {
   return (
-    <LegalLayout title="Terms of Service" updatedDate="July 28, 2026">
+    <LegalLayout title="Terms of Service" updatedDate="August 4, 2026">
       <p>
-        Welcome to DriveProSync ("we," "us," "our"). These Terms of Service ("Terms") govern your
-        access to and use of the DriveProSync platform (the "Service"), operated for driving schools
+        Welcome to DrivingOps ("we," "us," "our"). These Terms of Service ("Terms") govern your
+        access to and use of the DrivingOps platform (the "Service"), operated for driving schools
         and their staff.
       </p>
       <p>

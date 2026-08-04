@@ -19,14 +19,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "DriveProSync — Driving School Booking System" },
+      { title: "DrivingOps — Driving School Booking System" },
       {
         name: "description",
         content:
           "Simple booking, scheduling, pickup coordination, instructor management, and payment tracking for driving schools.",
       },
-      { property: "og:title", content: "DriveProSync — Driving School Booking System" },
-      { name: "twitter:title", content: "DriveProSync — Driving School Booking System" },
+      { property: "og:title", content: "DrivingOps — Driving School Booking System" },
+      { name: "twitter:title", content: "DrivingOps — Driving School Booking System" },
       {
         property: "og:description",
         content:

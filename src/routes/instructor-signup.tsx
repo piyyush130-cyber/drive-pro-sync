@@ -69,7 +69,7 @@ function InstructorSignupPage() {
             <div className="size-9 rounded-xl bg-[#3B82F6]/20 grid place-items-center">
               <CarFront className="size-4.5 text-[#60A5FA]" />
             </div>
-            <div className="text-sm font-semibold text-white">DriveProSync</div>
+            <div className="text-sm font-semibold text-white">DrivingOps</div>
           </div>
 
           {done ? (

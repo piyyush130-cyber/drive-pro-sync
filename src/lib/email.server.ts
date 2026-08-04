@@ -5,7 +5,7 @@ import { Resend } from "resend";
 // Resend's shared test sender — works with no domain setup, but Resend
 // only actually delivers to the email address on the Resend account
 // until a sending domain is verified. Swap this once a domain is added.
-const FROM_ADDRESS = "DriveProSync <onboarding@resend.dev>";
+const FROM_ADDRESS = "DrivingOps <onboarding@resend.dev>";
 
 let _resend: Resend | undefined;
 function getResend(): Resend | null {

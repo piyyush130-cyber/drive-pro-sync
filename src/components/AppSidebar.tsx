@@ -44,7 +44,7 @@ export function AppSidebar({ schoolName }: { schoolName: string }) {
           </div>
           <div className="min-w-0">
             <div className="text-sm font-semibold tracking-tight text-white truncate">
-              DriveProSync
+              DrivingOps
             </div>
             <div className="text-[10px] text-[#C9A84C] uppercase tracking-widest truncate">
               {schoolName}

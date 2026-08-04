@@ -53,7 +53,7 @@ function ForgotPasswordPage() {
             <CarFront className="size-4.5 text-white" />
           </div>
           <div className="text-xl font-bold" style={{ color: "#1B2B4B" }}>
-            DriveProSync
+            DrivingOps
           </div>
         </div>
 
