@@ -47,6 +47,7 @@ export const PLAN_ORDER: PlanKey[] = ["starter", "professional", "enterprise"];
 
 export const TRIAL_DAYS = 14;
 export const GRACE_PERIOD_DAYS = 3;
+export const DORMANT_AFTER_DAYS = 365;
 
 export function annualCents(plan: PlanKey): number {
   return PLANS[plan].monthlyCents * 10; // 2 months free

@@ -1,6 +1,30 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { GRACE_PERIOD_DAYS } from "@/lib/plans";
+import { GRACE_PERIOD_DAYS, DORMANT_AFTER_DAYS } from "@/lib/plans";
+
+// A school counts as "locked out" the moment its data becomes inaccessible
+// to it: either Stripe fully canceled the subscription (billing_status
+// flips to "locked" immediately, so school_billing.updated_at is that
+// moment), or the grace period after a failed payment ran out without
+// billing_status ever changing (nothing flips it — see the shared
+// architecture note about lazily-computed lockout — so grace_period_ends_at
+// itself is the lockout moment).
+function lockedOutSince(billing: {
+  billing_status: string;
+  grace_period_ends_at: string | null;
+  updated_at: string;
+} | null): string | null {
+  if (!billing) return null;
+  if (billing.billing_status === "locked") return billing.updated_at;
+  if (
+    billing.billing_status === "grace_period" &&
+    billing.grace_period_ends_at &&
+    new Date(billing.grace_period_ends_at) < new Date()
+  ) {
+    return billing.grace_period_ends_at;
+  }
+  return null;
+}
 
 async function requireOwner(context: { supabase: any; userId: string }) {
   const { data, error } = await context.supabase.rpc("is_platform_owner", {
@@ -27,14 +51,21 @@ export const listSchoolsForOwner = createServerFn({ method: "GET" })
       instructorCounts.set(i.school_id, (instructorCounts.get(i.school_id) ?? 0) + 1);
     }
 
-    return (schools ?? []).map((s: any) => ({
-      id: s.id,
-      name: s.name,
-      slug: s.slug,
-      createdAt: s.created_at,
-      instructorCount: instructorCounts.get(s.id) ?? 0,
-      billing: billingBySchool.get(s.id) ?? null,
-    }));
+    return (schools ?? []).map((s: any) => {
+      const billing = (billingBySchool.get(s.id) as any) ?? null;
+      const since = lockedOutSince(billing);
+      const isDormant = !!since && Date.now() - new Date(since).getTime() >= DORMANT_AFTER_DAYS * 86400000;
+      return {
+        id: s.id,
+        name: s.name,
+        slug: s.slug,
+        createdAt: s.created_at,
+        instructorCount: instructorCounts.get(s.id) ?? 0,
+        billing,
+        lockedOutSince: since,
+        isDormant,
+      };
+    });
   });
 
 export const ownerExtendTrial = createServerFn({ method: "POST" })
@@ -150,11 +181,39 @@ export const ownerDeleteSchool = createServerFn({ method: "POST" })
       }
     }
 
+    const { data: roleRows } = await supabaseAdmin
+      .from("user_roles")
+      .select("user_id")
+      .eq("school_id", data.schoolId);
+    const affectedUserIds = [...new Set((roleRows ?? []).map((r: any) => r.user_id as string))];
+
     // schools is the root of an ON DELETE CASCADE chain covering every
     // school-scoped table, so this one delete purges all related data.
     const { error } = await supabaseAdmin.from("schools").delete().eq("id", data.schoolId);
     if (error) throw new Error(error.message);
-    return { ok: true };
+
+    // Anyone who only had a role at this school now has none anywhere —
+    // remove that dangling login too. Never touches the acting owner or
+    // any platform owner account (owner access isn't a user_roles row, so
+    // it wouldn't be caught by the role-count check below on its own).
+    let accountsRemoved = 0;
+    for (const uid of affectedUserIds) {
+      if (uid === context.userId) continue;
+      const { data: isOwnerAccount } = await supabaseAdmin.rpc("is_platform_owner", {
+        _user_id: uid,
+      });
+      if (isOwnerAccount) continue;
+      const { count } = await supabaseAdmin
+        .from("user_roles")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", uid);
+      if ((count ?? 0) === 0) {
+        const { error: delErr } = await supabaseAdmin.auth.admin.deleteUser(uid);
+        if (!delErr) accountsRemoved++;
+      }
+    }
+
+    return { ok: true, accountsRemoved };
   });
 
 export const ownerReactivateSchool = createServerFn({ method: "POST" })

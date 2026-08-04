@@ -70,6 +70,7 @@ function OwnerPage() {
   const reactivate = useServerFn(ownerReactivateSchool);
   const deleteSchool = useServerFn(ownerDeleteSchool);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [dormantOnly, setDormantOnly] = useState(false);
 
   function refresh() {
     qc.invalidateQueries({ queryKey: ["owner-schools"] });
@@ -145,8 +146,13 @@ function OwnerPage() {
     }
     setBusyId(schoolId);
     try {
-      await deleteSchool({ data: { schoolId, confirmName: typed } });
-      toast.success(`${name} permanently deleted`);
+      const res = await deleteSchool({ data: { schoolId, confirmName: typed } });
+      toast.success(
+        `${name} permanently deleted` +
+          (res.accountsRemoved > 0
+            ? ` — also removed ${res.accountsRemoved} login${res.accountsRemoved === 1 ? "" : "s"} with no remaining access`
+            : ""),
+      );
       refresh();
     } catch (err: any) {
       toast.error(err?.message || "Could not delete school");
@@ -166,6 +172,10 @@ function OwnerPage() {
     );
   }
 
+  const allSchools = schoolsQ.data ?? [];
+  const dormantCount = allSchools.filter((s) => s.isDormant).length;
+  const visibleSchools = dormantOnly ? allSchools.filter((s) => s.isDormant) : allSchools;
+
   return (
     <div className="min-h-screen bg-slate-50">
       <header className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
@@ -179,6 +189,20 @@ function OwnerPage() {
       </header>
 
       <main className="p-6 max-w-6xl mx-auto">
+        <div className="mb-4 flex items-center justify-between">
+          <label className="inline-flex items-center gap-2 text-sm text-slate-600">
+            <input
+              type="checkbox"
+              checked={dormantOnly}
+              onChange={(e) => setDormantOnly(e.target.checked)}
+              className="size-4 rounded border-slate-300"
+            />
+            Dormant only — locked out 12+ months, never auto-deleted
+          </label>
+          <span className="text-xs text-slate-400">
+            {dormantCount} dormant school{dormantCount === 1 ? "" : "s"}
+          </span>
+        </div>
         {schoolsQ.isLoading ? (
           <p className="text-sm text-slate-500">Loading schools…</p>
         ) : (
@@ -195,7 +219,7 @@ function OwnerPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {(schoolsQ.data ?? []).map((s) => {
+                {visibleSchools.map((s) => {
                   const status = s.billing?.billing_status ?? "no billing set up";
                   const plan = s.billing?.plan as PlanKey | undefined;
                   const isSuspended = status === "suspended";
@@ -213,6 +237,11 @@ function OwnerPage() {
                         >
                           {STATUS_LABEL[status] ?? status}
                         </span>
+                        {s.isDormant && (
+                          <span className="ml-1.5 text-xs px-2 py-1 rounded-full font-medium bg-slate-800 text-white">
+                            Dormant
+                          </span>
+                        )}
                         {s.billing?.trial_ends_at && status === "trialing" && (
                           <div className="text-xs text-slate-400 mt-1">
                             ends {new Date(s.billing.trial_ends_at).toLocaleDateString()}
@@ -222,6 +251,11 @@ function OwnerPage() {
                           <div className="text-xs text-slate-400 mt-1">
                             grace ends{" "}
                             {new Date(s.billing.grace_period_ends_at).toLocaleDateString()}
+                          </div>
+                        )}
+                        {s.lockedOutSince && (
+                          <div className="text-xs text-slate-400 mt-1">
+                            locked out since {new Date(s.lockedOutSince).toLocaleDateString()}
                           </div>
                         )}
                       </td>
@@ -276,8 +310,10 @@ function OwnerPage() {
                 })}
               </tbody>
             </table>
-            {(schoolsQ.data ?? []).length === 0 && (
-              <div className="text-center py-10 text-sm text-slate-500">No schools yet.</div>
+            {visibleSchools.length === 0 && (
+              <div className="text-center py-10 text-sm text-slate-500">
+                {dormantOnly ? "No dormant schools." : "No schools yet."}
+              </div>
             )}
           </div>
         )}
