@@ -25,7 +25,7 @@ export function LegalLayout({
         }}
       >
         <Link to="/" className="text-xs" style={{ color: "#6B6B7B" }}>
-          ← Back to booking
+          ← Back to home
         </Link>
         <div className="flex items-center gap-2.5 mt-4 mb-6">
           <div

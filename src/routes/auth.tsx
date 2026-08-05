@@ -35,12 +35,16 @@ async function redirectByRole(_navigate: ReturnType<typeof useNavigate>, userId:
 }
 
 export const Route = createFileRoute("/auth")({
+  validateSearch: (search: Record<string, unknown>): { mode?: "signin" | "signup" } => ({
+    mode: search.mode === "signup" ? "signup" : undefined,
+  }),
   component: AuthPage,
 });
 
 function AuthPage() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const { mode: initialMode } = Route.useSearch();
+  const [mode, setMode] = useState<"signin" | "signup">(initialMode ?? "signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -155,7 +159,7 @@ function AuthPage() {
           onMouseEnter={(e) => (e.currentTarget.style.color = "#1B2B4B")}
           onMouseLeave={(e) => (e.currentTarget.style.color = "#6B6B7B")}
         >
-          ← Back to booking
+          ← Back to home
         </Link>
         <div className="flex items-center gap-2.5 mt-4 mb-2">
           <div

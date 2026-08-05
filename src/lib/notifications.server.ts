@@ -33,6 +33,9 @@ function layout(title: string, bodyHtml: string): string {
     <div style="font-family: -apple-system, sans-serif; max-width: 480px; margin: 0 auto; color: #1A1A2E;">
       <h2 style="margin-bottom: 8px;">${title}</h2>
       ${bodyHtml}
+      <p style="color: #94A3B8; font-size: 11px; margin-top: 24px; padding-top: 12px; border-top: 1px solid #E2E8F0;">
+        Sent via DrivingOps
+      </p>
     </div>
   `;
 }
