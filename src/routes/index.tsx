@@ -7,6 +7,10 @@ import {
   ArrowRight,
   MessageSquareText,
   CheckCircle2,
+  ChevronDown,
+  UserCheck,
+  RefreshCw,
+  UserCog,
 } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -46,7 +50,7 @@ const AUTOMATION_STEPS = [
   },
   {
     icon: Zap,
-    title: "Auto-assigned to Sarah M.",
+    title: "Auto-assigned to an instructor",
     meta: "Instant",
     tint: "#60A5FA",
   },
@@ -64,9 +68,27 @@ const AUTOMATION_STEPS = [
   },
 ];
 
+const DIFFERENTIATORS = [
+  {
+    icon: UserCheck,
+    title: "Assigns instructors automatically",
+    body: "Most platforms make an admin manually match every booking to an instructor. DrivingOps checks availability and conflicts and assigns one instantly — every time.",
+  },
+  {
+    icon: RefreshCw,
+    title: "Fills your calendar by itself",
+    body: "The moment a lesson wraps up, the student gets an automatic text to book their next one. No follow-up calls, no chasing — it keeps rebooking on its own.",
+  },
+  {
+    icon: UserCog,
+    title: "One login, whichever hat you wear",
+    body: "Solo instructor who also runs the school? One account handles both — no separate admin and instructor logins to juggle.",
+  },
+];
+
 function LandingPage() {
   return (
-    <div className="relative min-h-screen brand-gradient brand-grid-bg text-white flex flex-col overflow-hidden">
+    <div className="relative brand-gradient brand-grid-bg text-white overflow-x-hidden">
       <div
         className="pointer-events-none absolute -top-40 -left-32 size-[600px] rounded-full opacity-[0.35] blur-3xl"
         style={{ background: "radial-gradient(circle, rgba(201,168,76,0.6) 0%, transparent 70%)" }}
@@ -80,142 +102,205 @@ function LandingPage() {
         style={{ background: "radial-gradient(circle, rgba(255,255,255,0.45) 0%, transparent 70%)" }}
       />
 
-      <header
-        className="relative px-6 py-5 flex items-center justify-between max-w-6xl w-full mx-auto border-b"
-        style={{ borderColor: "rgba(255,255,255,0.06)" }}
-      >
-        <div className="flex items-center gap-2.5">
-          <div className="size-9 rounded-xl bg-white/10 ring-1 ring-white/15 grid place-items-center">
-            <CarFront className="size-4.5 text-blue-300" />
-          </div>
-          <div className="text-lg font-bold tracking-tight">DrivingOps</div>
-        </div>
-        <Link to="/auth" className="text-sm font-medium text-white/80 hover:text-white transition">
-          Log In
-        </Link>
-      </header>
-
-      <main className="relative flex-1 flex items-center px-6 py-14">
-        <div className="max-w-6xl w-full mx-auto grid lg:grid-cols-[1.1fr_0.9fr] gap-16 items-center">
-          <div className="text-center lg:text-left min-w-0">
-            <div
-              className="inline-flex items-center gap-1.5 text-[10px] sm:text-[11px] font-semibold uppercase tracking-[0.1em] sm:tracking-[0.18em] rounded-full px-3 py-1.5 mb-7 max-w-full"
-              style={{
-                background: "rgba(201,168,76,0.14)",
-                color: "#C9A84C",
-                border: "1px solid rgba(201,168,76,0.25)",
-              }}
-            >
-              <Zap className="size-3 shrink-0" />
-              <span>Fully automated, start to finish</span>
+      {/* Hero: header + primary pitch, sized to fit one screen with no scroll */}
+      <div className="relative min-h-screen flex flex-col">
+        <header
+          className="relative px-6 py-3.5 flex items-center justify-between max-w-6xl w-full mx-auto border-b shrink-0"
+          style={{ borderColor: "rgba(255,255,255,0.06)" }}
+        >
+          <div className="flex items-center gap-2.5">
+            <div className="size-9 rounded-xl bg-white/10 ring-1 ring-white/15 grid place-items-center">
+              <CarFront className="size-4.5 text-blue-300" />
             </div>
-            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.05] sm:leading-[1.02]">
-              Run your driving school
-              <br className="hidden sm:block" /> on{" "}
-              <span
+            <div className="text-lg font-bold tracking-tight">DrivingOps</div>
+          </div>
+          <Link to="/auth" className="text-sm font-medium text-white/80 hover:text-white transition">
+            Log In
+          </Link>
+        </header>
+
+        <section className="relative flex-1 flex flex-col items-center justify-center px-6 py-8">
+          <div className="max-w-6xl w-full mx-auto grid lg:grid-cols-[1.1fr_0.9fr] gap-10 lg:gap-16 items-center">
+            <div className="text-center lg:text-left min-w-0">
+              <div
+                className="inline-flex items-center gap-2 text-xs sm:text-sm font-bold uppercase tracking-[0.08em] sm:tracking-[0.12em] rounded-full px-4 py-2 mb-6 max-w-full"
                 style={{
-                  background: "linear-gradient(90deg, #C9A84C, #F0DFA0)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  backgroundClip: "text",
+                  background: "rgba(201,168,76,0.2)",
+                  color: "#F0DFA0",
+                  border: "1px solid rgba(201,168,76,0.5)",
+                  boxShadow: "0 0 24px rgba(201,168,76,0.25)",
                 }}
               >
-                autopilot
-              </span>
-              .
-            </h1>
-            <p className="mt-6 text-lg text-white/65 max-w-lg mx-auto lg:mx-0 leading-relaxed">
-              Booking, scheduling, and instructor coordination happen automatically. No admin
-              chasing a spreadsheet, no student waiting on a callback.
-            </p>
-            <div className="mt-10 flex flex-col items-center lg:items-start gap-3">
-              <Link
-                to="/auth"
-                search={{ mode: "signup" }}
-                className="group inline-flex items-center gap-2 rounded-xl px-7 py-3.5 text-sm font-semibold text-[#1B2B4B] shadow-[0_8px_30px_rgba(201,168,76,0.35)] hover:shadow-[0_8px_36px_rgba(201,168,76,0.5)] hover:brightness-105 transition-all"
-                style={{ background: "linear-gradient(135deg, #E8D48A, #C9A84C)" }}
-              >
-                Get Started
-                <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
-              </Link>
-              <span className="text-xs text-white/40">14-day free trial · Set up in minutes</span>
+                <span className="relative flex size-2 shrink-0">
+                  <span
+                    className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+                    style={{ background: "#C9A84C" }}
+                  />
+                  <span className="relative inline-flex rounded-full size-2" style={{ background: "#F0DFA0" }} />
+                </span>
+                <span>Fully automated, start to finish</span>
+              </div>
+              <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.05] sm:leading-[1.02]">
+                Run your driving school
+                <br className="hidden sm:block" /> on{" "}
+                <span
+                  style={{
+                    background: "linear-gradient(90deg, #C9A84C, #F0DFA0)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    backgroundClip: "text",
+                  }}
+                >
+                  autopilot
+                </span>
+                .
+              </h1>
+              <p className="mt-5 text-lg text-white/65 max-w-lg mx-auto lg:mx-0 leading-relaxed">
+                Booking, scheduling, and instructor coordination happen automatically. No admin
+                chasing a spreadsheet, no student waiting on a callback.
+              </p>
+              <div className="mt-8 flex flex-col items-center lg:items-start gap-3">
+                <Link
+                  to="/auth"
+                  search={{ mode: "signup" }}
+                  className="group inline-flex items-center gap-2 rounded-xl px-7 py-3.5 text-sm font-semibold text-[#1B2B4B] shadow-[0_8px_30px_rgba(201,168,76,0.35)] hover:shadow-[0_8px_36px_rgba(201,168,76,0.5)] hover:brightness-105 transition-all"
+                  style={{ background: "linear-gradient(135deg, #E8D48A, #C9A84C)" }}
+                >
+                  Get Started
+                  <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+                </Link>
+                <span className="text-xs text-white/40">14-day free trial · Set up in minutes</span>
+              </div>
             </div>
 
-            <div className="mt-20 grid sm:grid-cols-3 gap-4 text-left">
-              {FEATURES.map((f) => (
+            <div className="hidden md:block relative">
+              <div
+                className="absolute -inset-8 rounded-[2rem] opacity-40 blur-3xl"
+                style={{ background: "radial-gradient(circle, rgba(201,168,76,0.3) 0%, transparent 70%)" }}
+              />
+              <div
+                className="relative rounded-2xl overflow-hidden rotate-1"
+                style={{
+                  background: "#FAF8F4",
+                  border: "1px solid rgba(201,168,76,0.25)",
+                  boxShadow: "0 32px 70px rgba(0,0,0,0.4)",
+                }}
+              >
                 <div
-                  key={f.title}
-                  className="rounded-2xl p-5 bg-white/[0.04] border border-white/10 hover:bg-white/[0.07] hover:border-white/20 hover:-translate-y-0.5 transition-all duration-200"
+                  className="px-4 py-3 flex items-center gap-2 border-b"
+                  style={{ borderColor: "rgba(201,168,76,0.2)" }}
                 >
-                  <div
-                    className="size-10 rounded-xl grid place-items-center shadow-inner"
-                    style={{ background: f.tintBg }}
-                  >
-                    <f.icon className="size-5" style={{ color: f.tint }} />
-                  </div>
-                  <div className="mt-3.5 text-sm font-semibold text-white">{f.title}</div>
-                  <p className="mt-1.5 text-xs text-white/55 leading-relaxed">{f.body}</p>
+                  <Zap className="size-3.5" style={{ color: "#C9A84C" }} />
+                  <span className="text-[11px] font-semibold" style={{ color: "#3A3A4A" }}>
+                    What happens automatically
+                  </span>
                 </div>
-              ))}
+                <div className="p-5">
+                  <div className="relative">
+                    <div
+                      className="absolute left-[15px] top-2 bottom-2 w-px"
+                      style={{ background: "rgba(201,168,76,0.25)" }}
+                    />
+                    <div className="space-y-4">
+                      {AUTOMATION_STEPS.map((s) => (
+                        <div key={s.title} className="relative flex items-start gap-3.5">
+                          <div
+                            className="relative z-10 size-[30px] rounded-full grid place-items-center shrink-0"
+                            style={{ background: "#FAF8F4", border: `2px solid ${s.tint}` }}
+                          >
+                            <s.icon className="size-3.5" style={{ color: s.tint }} />
+                          </div>
+                          <div className="pt-1">
+                            <div className="text-[13px] font-semibold" style={{ color: "#1A1A2E" }}>
+                              {s.title}
+                            </div>
+                            <div className="text-[11px] mt-0.5" style={{ color: "#8A8A9A" }}>
+                              {s.meta}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="hidden md:block relative">
+          <ChevronDown className="hidden sm:block mt-8 size-5 text-white/25 animate-bounce" />
+        </section>
+      </div>
+
+      {/* Features */}
+      <section className="relative px-6 py-20 max-w-6xl mx-auto">
+        <div className="grid sm:grid-cols-3 gap-4">
+          {FEATURES.map((f) => (
             <div
-              className="absolute -inset-8 rounded-[2rem] opacity-40 blur-3xl"
-              style={{ background: "radial-gradient(circle, rgba(201,168,76,0.3) 0%, transparent 70%)" }}
-            />
-            <div
-              className="relative rounded-2xl overflow-hidden rotate-1"
-              style={{
-                background: "#FAF8F4",
-                border: "1px solid rgba(201,168,76,0.25)",
-                boxShadow: "0 32px 70px rgba(0,0,0,0.4)",
-              }}
+              key={f.title}
+              className="rounded-2xl p-5 bg-white/[0.04] border border-white/10 hover:bg-white/[0.07] hover:border-white/20 hover:-translate-y-0.5 transition-all duration-200"
             >
               <div
-                className="px-4 py-3.5 flex items-center gap-1.5 border-b"
-                style={{ borderColor: "rgba(201,168,76,0.2)" }}
+                className="size-10 rounded-xl grid place-items-center shadow-inner"
+                style={{ background: f.tintBg }}
               >
-                <span className="size-2.5 rounded-full bg-red-400/70" />
-                <span className="size-2.5 rounded-full bg-amber-400/70" />
-                <span className="size-2.5 rounded-full bg-emerald-400/70" />
-                <span className="ml-3 text-[11px] font-medium" style={{ color: "#6B6B7B" }}>
-                  What happens automatically
-                </span>
+                <f.icon className="size-5" style={{ color: f.tint }} />
               </div>
-              <div className="p-6">
-                <div className="relative">
-                  <div
-                    className="absolute left-[15px] top-2 bottom-2 w-px"
-                    style={{ background: "rgba(201,168,76,0.25)" }}
-                  />
-                  <div className="space-y-5">
-                    {AUTOMATION_STEPS.map((s) => (
-                      <div key={s.title} className="relative flex items-start gap-3.5">
-                        <div
-                          className="relative z-10 size-[30px] rounded-full grid place-items-center shrink-0"
-                          style={{ background: "#FAF8F4", border: `2px solid ${s.tint}` }}
-                        >
-                          <s.icon className="size-3.5" style={{ color: s.tint }} />
-                        </div>
-                        <div className="pt-1">
-                          <div className="text-[13px] font-semibold" style={{ color: "#1A1A2E" }}>
-                            {s.title}
-                          </div>
-                          <div className="text-[11px] mt-0.5" style={{ color: "#8A8A9A" }}>
-                            {s.meta}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
+              <div className="mt-3.5 text-sm font-semibold text-white">{f.title}</div>
+              <p className="mt-1.5 text-xs text-white/55 leading-relaxed">{f.body}</p>
             </div>
-          </div>
+          ))}
         </div>
-      </main>
+      </section>
+
+      {/* Differentiators */}
+      <section className="relative px-6 pb-20 max-w-6xl mx-auto">
+        <div className="text-center max-w-2xl mx-auto mb-10">
+          <div
+            className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] rounded-full px-3 py-1 mb-4"
+            style={{ background: "rgba(96,165,250,0.14)", color: "#93C5FD" }}
+          >
+            Beyond basic booking
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
+            What most driving-school software doesn't do
+          </h2>
+        </div>
+        <div className="grid sm:grid-cols-3 gap-5">
+          {DIFFERENTIATORS.map((d) => (
+            <div
+              key={d.title}
+              className="rounded-2xl p-6"
+              style={{ background: "rgba(96,165,250,0.06)", border: "1px solid rgba(96,165,250,0.18)" }}
+            >
+              <div
+                className="size-10 rounded-xl grid place-items-center"
+                style={{ background: "rgba(96,165,250,0.16)" }}
+              >
+                <d.icon className="size-5 text-blue-300" />
+              </div>
+              <div className="mt-4 text-sm font-semibold text-white">{d.title}</div>
+              <p className="mt-2 text-xs text-white/60 leading-relaxed">{d.body}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Closing CTA */}
+      <section className="relative px-6 pb-20 text-center">
+        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
+          Ready to put your school on autopilot?
+        </h2>
+        <p className="mt-2 text-sm text-white/55">14-day free trial · Set up in minutes</p>
+        <Link
+          to="/auth"
+          search={{ mode: "signup" }}
+          className="group mt-6 inline-flex items-center gap-2 rounded-xl px-7 py-3.5 text-sm font-semibold text-[#1B2B4B] shadow-[0_8px_30px_rgba(201,168,76,0.35)] hover:shadow-[0_8px_36px_rgba(201,168,76,0.5)] hover:brightness-105 transition-all"
+          style={{ background: "linear-gradient(135deg, #E8D48A, #C9A84C)" }}
+        >
+          Get Started
+          <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+        </Link>
+      </section>
 
       <footer
         className="relative px-6 py-6 text-center text-xs text-white/40 border-t"
