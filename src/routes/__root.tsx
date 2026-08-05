@@ -37,20 +37,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content:
           "Simple booking, scheduling, pickup coordination, instructor management, and payment tracking for driving schools.",
       },
-      {
-        property: "og:image",
-        content:
-          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/db0a783a-6b7f-400c-b7e6-e8ac8d165ed7/id-preview-2a3032fd--a4ab71a0-4ab6-48b3-831d-8c01ad32c818.lovable.app-1781502457180.png",
-      },
-      {
-        name: "twitter:image",
-        content:
-          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/db0a783a-6b7f-400c-b7e6-e8ac8d165ed7/id-preview-2a3032fd--a4ab71a0-4ab6-48b3-831d-8c01ad32c818.lovable.app-1781502457180.png",
-      },
-      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:card", content: "summary" },
       { property: "og:type", content: "website" },
     ],
     links: [
+      { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
       { rel: "stylesheet", href: appCss },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "" },

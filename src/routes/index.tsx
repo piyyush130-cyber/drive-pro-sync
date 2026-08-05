@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { CarFront, CalendarCheck, Users, CreditCard, Clock, Check } from "lucide-react";
+import { CarFront, CalendarCheck, Zap, ClipboardList, Clock, Check } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   component: LandingPage,
@@ -14,16 +14,16 @@ const FEATURES = [
     tintBg: "rgba(201,168,76,0.14)",
   },
   {
-    icon: Users,
-    title: "Instructor scheduling",
-    body: "Availability, pickup coordination, and conflict-free assignment, handled for you.",
+    icon: Zap,
+    title: "Fully automatic scheduling",
+    body: "Availability, pickup coordination, and instructor assignment run themselves — no admin has to lift a finger.",
     tint: "#60A5FA",
     tintBg: "rgba(96,165,250,0.14)",
   },
   {
-    icon: CreditCard,
-    title: "Payments built in",
-    body: "Track lesson packages and payments in one place, no spreadsheets required.",
+    icon: ClipboardList,
+    title: "Payment tracking",
+    body: "Every lesson package and payment tracked automatically in one place — no spreadsheets, ever.",
     tint: "#34D399",
     tintBg: "rgba(52,211,153,0.14)",
   },
@@ -39,12 +39,16 @@ function LandingPage() {
   return (
     <div className="relative min-h-screen brand-gradient brand-grid-bg text-white flex flex-col overflow-hidden">
       <div
-        className="pointer-events-none absolute -top-32 -left-24 size-[420px] rounded-full opacity-30 blur-3xl"
-        style={{ background: "radial-gradient(circle, rgba(201,168,76,0.5) 0%, transparent 70%)" }}
+        className="pointer-events-none absolute -top-32 -left-24 size-[520px] rounded-full opacity-30 blur-3xl"
+        style={{ background: "radial-gradient(circle, rgba(201,168,76,0.55) 0%, transparent 70%)" }}
       />
       <div
-        className="pointer-events-none absolute top-1/3 -right-32 size-[480px] rounded-full opacity-20 blur-3xl"
+        className="pointer-events-none absolute top-1/4 -right-40 size-[560px] rounded-full opacity-25 blur-3xl"
         style={{ background: "radial-gradient(circle, rgba(96,165,250,0.5) 0%, transparent 70%)" }}
+      />
+      <div
+        className="pointer-events-none absolute bottom-0 left-1/3 size-[380px] rounded-full opacity-10 blur-3xl"
+        style={{ background: "radial-gradient(circle, rgba(255,255,255,0.4) 0%, transparent 70%)" }}
       />
 
       <header className="relative px-6 py-6 flex items-center justify-between max-w-6xl w-full mx-auto">
@@ -63,14 +67,30 @@ function LandingPage() {
         <div className="max-w-6xl w-full mx-auto grid lg:grid-cols-2 gap-12 items-center">
           <div className="text-center lg:text-left">
             <div
-              className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] rounded-full px-3 py-1 mb-5"
+              className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.18em] rounded-full px-3 py-1 mb-6"
               style={{ background: "rgba(201,168,76,0.14)", color: "#C9A84C" }}
             >
-              Built for driving schools
+              <Zap className="size-3" />
+              Fully automated
             </div>
-            <h1 className="text-4xl sm:text-5xl font-bold tracking-tight">DrivingOps</h1>
-            <p className="mt-4 text-lg text-white/70 max-w-lg mx-auto lg:mx-0">
-              Booking, scheduling, and payments — built for driving schools.
+            <h1 className="text-4xl sm:text-6xl font-bold tracking-tight leading-[1.05]">
+              Run your driving school
+              <br className="hidden sm:block" /> on{" "}
+              <span
+                style={{
+                  background: "linear-gradient(90deg, #C9A84C, #E8D48A)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                }}
+              >
+                autopilot
+              </span>
+              .
+            </h1>
+            <p className="mt-5 text-lg text-white/70 max-w-lg mx-auto lg:mx-0">
+              Booking, scheduling, and instructor coordination — fully automated, so nothing falls
+              through the cracks and nobody's chasing a spreadsheet.
             </p>
             <div className="mt-9 flex items-center justify-center lg:justify-start gap-3 flex-wrap">
               <Link
@@ -102,7 +122,7 @@ function LandingPage() {
             </div>
           </div>
 
-          <div className="hidden lg:block relative">
+          <div className="hidden md:block relative">
             <div
               className="absolute -inset-6 rounded-3xl opacity-40 blur-2xl"
               style={{ background: "radial-gradient(circle, rgba(201,168,76,0.25) 0%, transparent 70%)" }}
@@ -153,6 +173,15 @@ function LandingPage() {
                     </span>
                   </div>
                 ))}
+                <div
+                  className="flex items-center gap-2 rounded-lg px-3 py-2 mt-1"
+                  style={{ background: "rgba(96,165,250,0.1)" }}
+                >
+                  <Zap className="size-3 shrink-0" style={{ color: "#60A5FA" }} />
+                  <span className="text-[11px]" style={{ color: "#3A3A4A" }}>
+                    Auto-assigned to next available instructor
+                  </span>
+                </div>
               </div>
             </div>
           </div>

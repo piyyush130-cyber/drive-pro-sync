@@ -314,7 +314,7 @@ function BillingLockedScreen({ isAdmin, pastDue }: { isAdmin: boolean; pastDue: 
             </button>
           ) : (
             <div className="mt-5 text-left">
-              <PlanPicker ctaLabel="Resubscribe" />
+              <PlanPicker ctaLabel="Resubscribe" variant="light" />
             </div>
           )
         ) : (
@@ -339,7 +339,7 @@ function NeedsPlanScreen({ isAdmin }: { isAdmin: boolean }) {
         </p>
         {isAdmin && (
           <div className="mt-5 text-left">
-            <PlanPicker />
+            <PlanPicker variant="light" />
           </div>
         )}
       </div>

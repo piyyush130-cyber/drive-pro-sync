@@ -53,6 +53,10 @@ export function annualCents(plan: PlanKey): number {
   return PLANS[plan].monthlyCents * 10; // 2 months free
 }
 
+// 2 months free out of 12 — same percentage for every plan, since it's a
+// flat multiplier, not a per-plan discount.
+export const ANNUAL_DISCOUNT_PERCENT = Math.round((2 / 12) * 100);
+
 export function priceIdFor(plan: PlanKey, interval: BillingInterval): string {
   return PLANS[plan].priceIds[interval];
 }
