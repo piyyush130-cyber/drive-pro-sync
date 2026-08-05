@@ -3,7 +3,6 @@ import {
   CarFront,
   CalendarCheck,
   Zap,
-  ClipboardList,
   ArrowRight,
   MessageSquareText,
   CheckCircle2,
@@ -16,30 +15,6 @@ import {
 export const Route = createFileRoute("/")({
   component: LandingPage,
 });
-
-const FEATURES = [
-  {
-    icon: CalendarCheck,
-    title: "Online booking",
-    body: "A branded booking page for every school — students book lessons without calling.",
-    tint: "#C9A84C",
-    tintBg: "rgba(201,168,76,0.14)",
-  },
-  {
-    icon: Zap,
-    title: "Fully automatic scheduling",
-    body: "Availability, pickup coordination, and instructor assignment run themselves — no admin has to lift a finger.",
-    tint: "#60A5FA",
-    tintBg: "rgba(96,165,250,0.14)",
-  },
-  {
-    icon: ClipboardList,
-    title: "Payment tracking",
-    body: "Every lesson package and payment tracked automatically in one place — no spreadsheets, ever.",
-    tint: "#34D399",
-    tintBg: "rgba(52,211,153,0.14)",
-  },
-];
 
 const AUTOMATION_STEPS = [
   {
@@ -227,33 +202,21 @@ function LandingPage() {
             </div>
           </div>
 
-          <ChevronDown className="hidden sm:block mt-8 size-5 text-white/25 animate-bounce" />
+          <button
+            type="button"
+            onClick={() =>
+              document.getElementById("beyond-booking")?.scrollIntoView({ behavior: "smooth" })
+            }
+            className="hidden sm:flex mt-8 items-center justify-center text-white/25 hover:text-white/60 transition-colors"
+            aria-label="Scroll to learn more"
+          >
+            <ChevronDown className="size-5 animate-bounce" />
+          </button>
         </section>
       </div>
 
-      {/* Features */}
-      <section className="relative px-6 py-20 max-w-6xl mx-auto">
-        <div className="grid sm:grid-cols-3 gap-4">
-          {FEATURES.map((f) => (
-            <div
-              key={f.title}
-              className="rounded-2xl p-5 bg-white/[0.04] border border-white/10 hover:bg-white/[0.07] hover:border-white/20 hover:-translate-y-0.5 transition-all duration-200"
-            >
-              <div
-                className="size-10 rounded-xl grid place-items-center shadow-inner"
-                style={{ background: f.tintBg }}
-              >
-                <f.icon className="size-5" style={{ color: f.tint }} />
-              </div>
-              <div className="mt-3.5 text-sm font-semibold text-white">{f.title}</div>
-              <p className="mt-1.5 text-xs text-white/55 leading-relaxed">{f.body}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
       {/* Differentiators */}
-      <section className="relative px-6 pb-20 max-w-6xl mx-auto">
+      <section id="beyond-booking" className="relative px-6 py-20 max-w-6xl mx-auto scroll-mt-6">
         <div className="text-center max-w-2xl mx-auto mb-10">
           <div
             className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] rounded-full px-3 py-1 mb-4"
