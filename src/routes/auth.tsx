@@ -351,75 +351,41 @@ function AuthPage() {
         </form>
         <button
           onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
-          className="mt-4 text-xs w-full text-center transition-colors duration-150"
-          style={{ color: "#C9A84C" }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = "#1B2B4B")}
-          onMouseLeave={(e) => (e.currentTarget.style.color = "#C9A84C")}
+          className="mt-5 w-full rounded-xl py-2.5 text-sm font-semibold transition-colors duration-150"
+          style={{ border: "1px solid rgba(27,43,75,0.25)", color: "#1B2B4B" }}
+          onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(27,43,75,0.05)")}
+          onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
         >
-          {mode === "signin" ? "Need an account? Create one" : "Already have an account? Sign in"}
+          {mode === "signin" ? "Create an account" : "Already have an account? Sign in"}
         </button>
-        <Link
-          to="/instructor-signup"
-          className="block mt-2 text-xs w-full text-center transition-colors duration-150 hover:underline"
-          style={{ color: "#1B2B4B" }}
-          onMouseEnter={(e) => (e.currentTarget.style.textDecorationColor = "#C9A84C")}
-        >
-          Are you an instructor? Create your account with an invite code →
-        </Link>
 
-        <div className="my-5 flex items-center gap-3">
-          <div className="h-px flex-1" style={{ background: "rgba(201,168,76,0.3)" }} />
-          <span className="text-[10px] uppercase tracking-widest" style={{ color: "#C9A84C" }}>
-            or explore a live demo
-          </span>
-          <div className="h-px flex-1" style={{ background: "rgba(201,168,76,0.3)" }} />
-        </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="mt-5 flex items-center justify-center gap-4 text-xs">
+          <Link
+            to="/instructor-signup"
+            className="hover:underline"
+            style={{ color: "#6B6B7B" }}
+          >
+            Instructor invite code
+          </Link>
+          <span style={{ color: "rgba(201,168,76,0.4)" }}>·</span>
           <button
             type="button"
             disabled={loading}
             onClick={() => loadDemo("admin")}
-            className="rounded-xl py-2.5 text-xs font-semibold transition-all duration-150"
-            style={{
-              background: "#F0EBE1",
-              border: "1px solid rgba(201,168,76,0.3)",
-              color: "#1B2B4B",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = "#1B2B4B";
-              e.currentTarget.style.color = "#FFFFFF";
-              e.currentTarget.style.borderColor = "#C9A84C";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "#F0EBE1";
-              e.currentTarget.style.color = "#1B2B4B";
-              e.currentTarget.style.borderColor = "rgba(201,168,76,0.3)";
-            }}
+            className="hover:underline"
+            style={{ color: "#6B6B7B" }}
           >
-            Admin demo
+            Try admin demo
           </button>
+          <span style={{ color: "rgba(201,168,76,0.4)" }}>·</span>
           <button
             type="button"
             disabled={loading}
             onClick={() => loadDemo("instructor")}
-            className="rounded-xl py-2.5 text-xs font-semibold transition-all duration-150"
-            style={{
-              background: "#F0EBE1",
-              border: "1px solid rgba(201,168,76,0.3)",
-              color: "#1B2B4B",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = "#1B2B4B";
-              e.currentTarget.style.color = "#FFFFFF";
-              e.currentTarget.style.borderColor = "#C9A84C";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "#F0EBE1";
-              e.currentTarget.style.color = "#1B2B4B";
-              e.currentTarget.style.borderColor = "rgba(201,168,76,0.3)";
-            }}
+            className="hover:underline"
+            style={{ color: "#6B6B7B" }}
           >
-            Instructor demo
+            Try instructor demo
           </button>
         </div>
       </div>
