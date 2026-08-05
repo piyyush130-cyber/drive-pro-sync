@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { CarFront } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useServerFn } from "@tanstack/react-start";
@@ -71,12 +71,6 @@ function AuthPage() {
       setResending(false);
     }
   }
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session?.user) redirectByRole(navigate, data.session.user.id);
-    });
-  }, [navigate]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
