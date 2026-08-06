@@ -216,8 +216,15 @@ function LandingPage() {
       </div>
 
       {/* Differentiators */}
-      <section id="beyond-booking" className="relative px-6 py-20 max-w-6xl mx-auto scroll-mt-6">
-        <div className="text-center max-w-2xl mx-auto mb-10">
+      <section
+        id="beyond-booking"
+        className="relative px-6 py-14 max-w-6xl mx-auto scroll-mt-6 overflow-hidden"
+      >
+        <div
+          className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 size-[500px] rounded-full opacity-[0.18] blur-3xl"
+          style={{ background: "radial-gradient(circle, rgba(96,165,250,0.6) 0%, transparent 70%)" }}
+        />
+        <div className="relative text-center max-w-2xl mx-auto mb-8">
           <div
             className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] rounded-full px-3 py-1 mb-4"
             style={{ background: "rgba(96,165,250,0.14)", color: "#93C5FD" }}
@@ -228,7 +235,7 @@ function LandingPage() {
             What most driving-school software doesn't do
           </h2>
         </div>
-        <div className="grid sm:grid-cols-3 gap-5">
+        <div className="relative grid sm:grid-cols-3 gap-5">
           {DIFFERENTIATORS.map((d) => (
             <div
               key={d.title}
@@ -249,7 +256,7 @@ function LandingPage() {
       </section>
 
       {/* Closing CTA */}
-      <section className="relative px-6 pb-20 text-center">
+      <section className="relative px-6 pt-4 pb-16 text-center">
         <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
           Ready to put your school on autopilot?
         </h2>

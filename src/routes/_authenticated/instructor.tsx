@@ -159,8 +159,9 @@ function InstructorPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[color:var(--color-mist)]">
-      <header className="brand-gradient brand-grid-bg text-white">
+    <div className="relative min-h-screen bg-[color:var(--color-mist)] overflow-hidden">
+      <div className="ambient-glow" />
+      <header className="relative brand-gradient brand-grid-bg text-white">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-5 sm:py-6 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
             <div className="size-10 shrink-0 rounded-xl bg-white/10 ring-1 ring-white/15 grid place-items-center">
@@ -190,23 +191,35 @@ function InstructorPage() {
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+      <main className="relative max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {nextLesson && (
-          <div className="mb-6 rounded-2xl p-5 sm:p-6 bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-lg">
-            <div className="text-[11px] uppercase tracking-widest text-blue-100 flex items-center gap-1.5">
+          <div
+            className="mb-6 rounded-2xl p-5 sm:p-6 text-white shadow-lg relative overflow-hidden"
+            style={{ background: "linear-gradient(135deg, #1B2B4B 0%, #243660 100%)" }}
+          >
+            <div
+              className="pointer-events-none absolute -top-12 -right-12 size-48 rounded-full opacity-50 blur-2xl"
+              style={{ background: "radial-gradient(circle, rgba(201,168,76,0.5) 0%, transparent 70%)" }}
+            />
+            <div
+              className="relative text-[11px] uppercase tracking-widest flex items-center gap-1.5"
+              style={{ color: "#F0DFA0" }}
+            >
               <Sparkles className="size-3.5" /> Next lesson
             </div>
-            <div className="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <div className="relative mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
               <div className="text-2xl sm:text-3xl font-bold tracking-tight">
                 {fmtTime(nextLesson.scheduled_at)}
               </div>
-              <div className="text-blue-100">{fmtDate(nextLesson.scheduled_at)}</div>
+              <div className="text-white/70">{fmtDate(nextLesson.scheduled_at)}</div>
             </div>
-            <div className="mt-3 text-lg font-semibold">{nextLesson.students?.full_name}</div>
-            <div className="text-sm text-blue-100">
+            <div className="relative mt-3 text-lg font-semibold">
+              {nextLesson.students?.full_name}
+            </div>
+            <div className="relative text-sm text-white/70">
               {nextLesson.lesson_types?.name} · {nextLesson.duration_minutes} min
             </div>
-            <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm">
+            <div className="relative mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm">
               <span className="inline-flex items-center gap-1.5">
                 <MapPin className="size-4" />
                 {nextLesson.pickup_address}
@@ -222,7 +235,7 @@ function InstructorPage() {
               )}
             </div>
             {nextLesson.notes && (
-              <div className="mt-3 text-sm bg-white/10 rounded-lg px-3 py-2 italic">
+              <div className="relative mt-3 text-sm bg-white/10 rounded-lg px-3 py-2 italic">
                 "{nextLesson.notes}"
               </div>
             )}
@@ -247,6 +260,12 @@ function InstructorPage() {
 
         {list.length === 0 ? (
           <div className="card-premium p-8 sm:p-10 text-center">
+            <div
+              className="size-12 rounded-full mx-auto mb-4 grid place-items-center"
+              style={{ background: "rgba(201,168,76,0.14)" }}
+            >
+              <CalendarClock className="size-5" style={{ color: "#C9A84C" }} />
+            </div>
             <div className="text-slate-500">No lessons in this view.</div>
             <button
               onClick={loadDemo}
@@ -338,7 +357,10 @@ function InstructorPage() {
                       {noteOpen === b.id ? "Close note" : "Add lesson note"}
                     </button>
                     {noteOpen === b.id && (
-                      <div className="card-premium mt-3 p-4 bg-blue-50/60 border border-blue-100 space-y-3">
+                      <div
+                        className="card-premium mt-3 p-4 space-y-3"
+                        style={{ background: "rgba(201,168,76,0.06)", borderColor: "rgba(201,168,76,0.3)" }}
+                      >
                         <div>
                           <label className="text-xs font-medium text-slate-700">
                             Practiced today

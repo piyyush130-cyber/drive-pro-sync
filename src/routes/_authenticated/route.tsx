@@ -139,9 +139,12 @@ function AuthLayout() {
   return (
     <div className="min-h-screen flex bg-[color:var(--color-mist)]">
       <AppSidebar schoolName={settingsQ.data?.school_name ?? "Standard Driving School"} />
-      <main className="flex-1 min-w-0">
-        {graceBanner}
-        <Outlet />
+      <main className="relative flex-1 min-w-0">
+        <div className="ambient-glow" />
+        <div className="relative">
+          {graceBanner}
+          <Outlet />
+        </div>
       </main>
     </div>
   );

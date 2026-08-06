@@ -192,8 +192,11 @@ function Dashboard() {
     <div className="p-6 lg:p-10 max-w-7xl">
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 mb-8">
         <div className="min-w-0">
-          <div className="eyebrow text-blue-700">Daily Dispatch</div>
-          <h1 className="text-2xl md:text-3xl font-semibold tracking-tight mt-1">
+          <div className="flex items-center gap-2">
+            <span className="h-px w-5 shrink-0" style={{ background: "#C9A84C" }} />
+            <div className="eyebrow">Daily Dispatch</div>
+          </div>
+          <h1 className="text-2xl md:text-3xl font-semibold tracking-tight mt-1.5">
             Today at a glance
           </h1>
           <p className="text-sm text-slate-500 mt-1">{today}</p>
@@ -265,31 +268,44 @@ function Dashboard() {
           if (remaining.length === 0) return null;
           const doneCount = items.length - remaining.length;
           return (
-            <div className="card-premium p-5 mb-8 bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100">
-              <div className="flex items-center justify-between mb-3 gap-3">
+            <div
+              className="rounded-2xl p-5 mb-8 relative overflow-hidden"
+              style={{
+                background: "linear-gradient(135deg, rgba(201,168,76,0.10), rgba(27,43,75,0.06))",
+                border: "1px solid rgba(201,168,76,0.30)",
+              }}
+            >
+              <div
+                className="pointer-events-none absolute -top-10 -right-10 size-40 rounded-full opacity-60 blur-2xl"
+                style={{ background: "radial-gradient(circle, rgba(201,168,76,0.35) 0%, transparent 70%)" }}
+              />
+              <div className="relative flex items-center justify-between mb-3 gap-3">
                 <div className="flex items-center gap-2 min-w-0">
-                  <div className="size-8 rounded-lg bg-blue-600 text-white grid place-items-center shrink-0">
+                  <div
+                    className="size-8 rounded-lg text-white grid place-items-center shrink-0"
+                    style={{ background: "#1B2B4B" }}
+                  >
                     <Sparkles className="size-4" />
                   </div>
                   <div className="min-w-0">
-                    <div className="font-semibold text-slate-900 truncate">
+                    <div className="font-semibold text-[#1B2B4B] truncate">
                       Finish setting up your school
                     </div>
-                    <div className="text-xs text-slate-500">
+                    <div className="text-xs text-[#6B6B7B]">
                       {doneCount} of {items.length} complete
                     </div>
                   </div>
                 </div>
               </div>
-              <ul className="grid sm:grid-cols-2 gap-x-6 gap-y-2">
+              <ul className="relative grid sm:grid-cols-2 gap-x-6 gap-y-2">
                 {items.map((it) => (
                   <li key={it.label}>
                     <Link
                       to={it.to}
-                      className={`flex items-center gap-2 text-sm py-1 ${it.done ? "text-slate-400 line-through" : "text-slate-700 hover:text-blue-700"}`}
+                      className={`flex items-center gap-2 text-sm py-1 ${it.done ? "text-slate-400 line-through" : "text-[#1B2B4B] hover:text-[#C9A84C]"}`}
                     >
                       {it.done ? (
-                        <CheckCircle2 className="size-4 text-emerald-600 shrink-0" />
+                        <CheckCircle2 className="size-4 shrink-0" style={{ color: "#0F9D6D" }} />
                       ) : (
                         <Circle className="size-4 text-slate-400 shrink-0" />
                       )}

@@ -14,25 +14,25 @@ export function StatCard({
   icon?: LucideIcon;
 }) {
   const toneText: Record<string, string> = {
-    default: "text-[#F1F5F9]",
-    warn: "text-[#F59E0B]",
-    success: "text-[#10B981]",
-    danger: "text-[#EF4444]",
-    info: "text-[#60A5FA]",
+    default: "text-[#1B2B4B]",
+    warn: "text-[#C9A84C]",
+    success: "text-[#0F9D6D]",
+    danger: "text-[#DC2626]",
+    info: "text-[#2563A8]",
   };
   const toneIcon: Record<string, string> = {
-    default: "bg-[#1E2D4A] text-[#94A3B8]",
-    warn: "bg-[#F59E0B]/15 text-[#F59E0B]",
-    success: "bg-[#10B981]/15 text-[#10B981]",
-    danger: "bg-[#EF4444]/15 text-[#EF4444]",
-    info: "bg-[#3B82F6]/15 text-[#60A5FA]",
+    default: "bg-[rgba(27,43,75,0.08)] text-[#1B2B4B]",
+    warn: "bg-[rgba(201,168,76,0.16)] text-[#C9A84C]",
+    success: "bg-[rgba(15,157,109,0.14)] text-[#0F9D6D]",
+    danger: "bg-[rgba(220,38,38,0.12)] text-[#DC2626]",
+    info: "bg-[rgba(37,99,168,0.12)] text-[#2563A8]",
   };
   const toneBorder: Record<string, string> = {
-    default: "border-t-[#3B82F6]",
-    warn: "border-t-[#F59E0B]",
-    success: "border-t-[#10B981]",
-    danger: "border-t-[#EF4444]",
-    info: "border-t-[#3B82F6]",
+    default: "border-t-[#C9A84C]",
+    warn: "border-t-[#C9A84C]",
+    success: "border-t-[#0F9D6D]",
+    danger: "border-t-[#DC2626]",
+    info: "border-t-[#2563A8]",
   };
   return (
     <div
@@ -40,7 +40,7 @@ export function StatCard({
       style={{ borderTopWidth: 2 }}
     >
       <div className="flex items-start justify-between">
-        <div className="eyebrow text-[#94A3B8]">{label}</div>
+        <div className="eyebrow">{label}</div>
         {Icon && (
           <div className={`size-8 grid place-items-center rounded-lg ${toneIcon[tone]}`}>
             <Icon className="size-4" />
@@ -50,7 +50,7 @@ export function StatCard({
       <div className={`text-3xl font-semibold mt-3 tracking-tight font-mono ${toneText[tone]}`}>
         {value}
       </div>
-      {hint && <div className="text-xs text-[#94A3B8] mt-1">{hint}</div>}
+      {hint && <div className="text-xs text-[#6B6B7B] mt-1">{hint}</div>}
     </div>
   );
 }
