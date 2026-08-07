@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { emailOk, formatPhone, validateBookingForm } from "./booking-validation";
+import { emailOk, formatPhone, normalizePhoneDigits, validateBookingForm } from "./booking-validation";
 
 describe("emailOk", () => {
   it("accepts a plausible email", () => {
@@ -78,5 +78,20 @@ describe("validateBookingForm", () => {
   it("requires a pickup address", () => {
     const errors = validateBookingForm({ ...valid, pickup_address: "   " });
     expect(errors.pickup_address).toBeDefined();
+  });
+});
+
+describe("normalizePhoneDigits", () => {
+  it("matches the same number regardless of formatting", () => {
+    expect(normalizePhoneDigits("(204) 555-0101")).toBe(normalizePhoneDigits("2045550101"));
+    expect(normalizePhoneDigits("204-555-0101")).toBe(normalizePhoneDigits("204.555.0101"));
+  });
+
+  it("ignores a leading country code, comparing only the last 10 digits", () => {
+    expect(normalizePhoneDigits("+1 204 555 0101")).toBe(normalizePhoneDigits("2045550101"));
+  });
+
+  it("produces different values for different numbers", () => {
+    expect(normalizePhoneDigits("2045550101")).not.toBe(normalizePhoneDigits("2045550102"));
   });
 });

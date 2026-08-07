@@ -35,7 +35,9 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedCalendarRouteImport } from './routes/_authenticated/calendar'
 import { Route as AuthenticatedBookingsRouteImport } from './routes/_authenticated/bookings'
 import { Route as AuthenticatedAccountRouteImport } from './routes/_authenticated/account'
+import { Route as SchoolSlugPortalRouteImport } from './routes/$schoolSlug.portal'
 import { Route as AuthenticatedStudentsIdRouteImport } from './routes/_authenticated/students.$id'
+import { Route as SchoolSlugPortalVerifyRouteImport } from './routes/$schoolSlug.portal.verify'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
@@ -167,15 +169,25 @@ const AuthenticatedAccountRoute = AuthenticatedAccountRouteImport.update({
   path: '/account',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const SchoolSlugPortalRoute = SchoolSlugPortalRouteImport.update({
+  id: '/portal',
+  path: '/portal',
+  getParentRoute: () => SchoolSlugRoute,
+} as any)
 const AuthenticatedStudentsIdRoute = AuthenticatedStudentsIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => AuthenticatedStudentsRoute,
 } as any)
+const SchoolSlugPortalVerifyRoute = SchoolSlugPortalVerifyRouteImport.update({
+  id: '/verify',
+  path: '/verify',
+  getParentRoute: () => SchoolSlugPortalRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/$schoolSlug': typeof SchoolSlugRoute
+  '/$schoolSlug': typeof SchoolSlugRouteWithChildren
   '/auth': typeof AuthRoute
   '/cancel': typeof CancelRoute
   '/forgot-password': typeof ForgotPasswordRoute
@@ -186,6 +198,7 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
+  '/$schoolSlug/portal': typeof SchoolSlugPortalRouteWithChildren
   '/account': typeof AuthenticatedAccountRoute
   '/bookings': typeof AuthenticatedBookingsRoute
   '/calendar': typeof AuthenticatedCalendarRoute
@@ -199,11 +212,12 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/students': typeof AuthenticatedStudentsRouteWithChildren
   '/next-lesson/$token': typeof NextLessonTokenRoute
+  '/$schoolSlug/portal/verify': typeof SchoolSlugPortalVerifyRoute
   '/students/$id': typeof AuthenticatedStudentsIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/$schoolSlug': typeof SchoolSlugRoute
+  '/$schoolSlug': typeof SchoolSlugRouteWithChildren
   '/auth': typeof AuthRoute
   '/cancel': typeof CancelRoute
   '/forgot-password': typeof ForgotPasswordRoute
@@ -214,6 +228,7 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
+  '/$schoolSlug/portal': typeof SchoolSlugPortalRouteWithChildren
   '/account': typeof AuthenticatedAccountRoute
   '/bookings': typeof AuthenticatedBookingsRoute
   '/calendar': typeof AuthenticatedCalendarRoute
@@ -227,13 +242,14 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/students': typeof AuthenticatedStudentsRouteWithChildren
   '/next-lesson/$token': typeof NextLessonTokenRoute
+  '/$schoolSlug/portal/verify': typeof SchoolSlugPortalVerifyRoute
   '/students/$id': typeof AuthenticatedStudentsIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
-  '/$schoolSlug': typeof SchoolSlugRoute
+  '/$schoolSlug': typeof SchoolSlugRouteWithChildren
   '/auth': typeof AuthRoute
   '/cancel': typeof CancelRoute
   '/forgot-password': typeof ForgotPasswordRoute
@@ -244,6 +260,7 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
+  '/$schoolSlug/portal': typeof SchoolSlugPortalRouteWithChildren
   '/_authenticated/account': typeof AuthenticatedAccountRoute
   '/_authenticated/bookings': typeof AuthenticatedBookingsRoute
   '/_authenticated/calendar': typeof AuthenticatedCalendarRoute
@@ -257,6 +274,7 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/students': typeof AuthenticatedStudentsRouteWithChildren
   '/next-lesson/$token': typeof NextLessonTokenRoute
+  '/$schoolSlug/portal/verify': typeof SchoolSlugPortalVerifyRoute
   '/_authenticated/students/$id': typeof AuthenticatedStudentsIdRoute
 }
 export interface FileRouteTypes {
@@ -274,6 +292,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/reset-password'
     | '/terms'
+    | '/$schoolSlug/portal'
     | '/account'
     | '/bookings'
     | '/calendar'
@@ -287,6 +306,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/students'
     | '/next-lesson/$token'
+    | '/$schoolSlug/portal/verify'
     | '/students/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -302,6 +322,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/reset-password'
     | '/terms'
+    | '/$schoolSlug/portal'
     | '/account'
     | '/bookings'
     | '/calendar'
@@ -315,6 +336,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/students'
     | '/next-lesson/$token'
+    | '/$schoolSlug/portal/verify'
     | '/students/$id'
   id:
     | '__root__'
@@ -331,6 +353,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/reset-password'
     | '/terms'
+    | '/$schoolSlug/portal'
     | '/_authenticated/account'
     | '/_authenticated/bookings'
     | '/_authenticated/calendar'
@@ -344,13 +367,14 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/_authenticated/students'
     | '/next-lesson/$token'
+    | '/$schoolSlug/portal/verify'
     | '/_authenticated/students/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
-  SchoolSlugRoute: typeof SchoolSlugRoute
+  SchoolSlugRoute: typeof SchoolSlugRouteWithChildren
   AuthRoute: typeof AuthRoute
   CancelRoute: typeof CancelRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
@@ -548,12 +572,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAccountRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/$schoolSlug/portal': {
+      id: '/$schoolSlug/portal'
+      path: '/portal'
+      fullPath: '/$schoolSlug/portal'
+      preLoaderRoute: typeof SchoolSlugPortalRouteImport
+      parentRoute: typeof SchoolSlugRoute
+    }
     '/_authenticated/students/$id': {
       id: '/_authenticated/students/$id'
       path: '/$id'
       fullPath: '/students/$id'
       preLoaderRoute: typeof AuthenticatedStudentsIdRouteImport
       parentRoute: typeof AuthenticatedStudentsRoute
+    }
+    '/$schoolSlug/portal/verify': {
+      id: '/$schoolSlug/portal/verify'
+      path: '/verify'
+      fullPath: '/$schoolSlug/portal/verify'
+      preLoaderRoute: typeof SchoolSlugPortalVerifyRouteImport
+      parentRoute: typeof SchoolSlugPortalRoute
     }
   }
 }
@@ -604,10 +642,33 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface SchoolSlugPortalRouteChildren {
+  SchoolSlugPortalVerifyRoute: typeof SchoolSlugPortalVerifyRoute
+}
+
+const SchoolSlugPortalRouteChildren: SchoolSlugPortalRouteChildren = {
+  SchoolSlugPortalVerifyRoute: SchoolSlugPortalVerifyRoute,
+}
+
+const SchoolSlugPortalRouteWithChildren =
+  SchoolSlugPortalRoute._addFileChildren(SchoolSlugPortalRouteChildren)
+
+interface SchoolSlugRouteChildren {
+  SchoolSlugPortalRoute: typeof SchoolSlugPortalRouteWithChildren
+}
+
+const SchoolSlugRouteChildren: SchoolSlugRouteChildren = {
+  SchoolSlugPortalRoute: SchoolSlugPortalRouteWithChildren,
+}
+
+const SchoolSlugRouteWithChildren = SchoolSlugRoute._addFileChildren(
+  SchoolSlugRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
-  SchoolSlugRoute: SchoolSlugRoute,
+  SchoolSlugRoute: SchoolSlugRouteWithChildren,
   AuthRoute: AuthRoute,
   CancelRoute: CancelRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,

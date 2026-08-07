@@ -223,6 +223,10 @@ function SettingsPage() {
               onChange={(e) => setForm({ ...form, cancellation_notice_hours: e.target.value })}
               className="glass-input"
             />
+            <p className="text-xs text-slate-500 mt-1">
+              Students can cancel a lesson themselves in the portal with at least this much notice.
+              Cancelling with less notice sends a request for your approval instead.
+            </p>
           </Field>
           <Field label="Cancellation fee ($)">
             <input

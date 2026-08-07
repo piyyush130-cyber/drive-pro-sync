@@ -16,7 +16,7 @@ export const getPortalHome = createServerFn({ method: "POST" })
       supabaseAdmin.from("students").select("full_name").eq("id", studentId).maybeSingle(),
       supabaseAdmin
         .from("school_settings")
-        .select("school_name, self_cancel_hours")
+        .select("school_name, cancellation_notice_hours")
         .eq("school_id", schoolId)
         .maybeSingle(),
       supabaseAdmin
@@ -35,7 +35,7 @@ export const getPortalHome = createServerFn({ method: "POST" })
     return {
       studentName: student?.full_name ?? "",
       schoolName: settings?.school_name ?? "your driving school",
-      selfCancelHours: settings?.self_cancel_hours ?? 0,
+      selfCancelHours: settings?.cancellation_notice_hours ?? 0,
       remaining,
       upcoming: upcoming ?? [],
     };
@@ -177,10 +177,10 @@ export const submitPortalCancellation = createServerFn({ method: "POST" })
 
     const { data: settings } = await supabaseAdmin
       .from("school_settings")
-      .select("self_cancel_hours")
+      .select("cancellation_notice_hours")
       .eq("school_id", schoolId)
       .maybeSingle();
-    const selfCancelHours = settings?.self_cancel_hours ?? 0;
+    const selfCancelHours = settings?.cancellation_notice_hours ?? 0;
     const hoursUntil = (new Date(booking.scheduled_at).getTime() - Date.now()) / 3600000;
 
     if (selfCancelHours > 0 && hoursUntil >= selfCancelHours) {

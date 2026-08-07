@@ -701,7 +701,6 @@ export type Database = {
           require_approval: boolean
           school_id: string
           school_name: string
-          self_cancel_hours: number | null
           service_area: string | null
           updated_at: string
         }
@@ -724,7 +723,6 @@ export type Database = {
           require_approval?: boolean
           school_id: string
           school_name?: string
-          self_cancel_hours?: number | null
           service_area?: string | null
           updated_at?: string
         }
@@ -747,7 +745,6 @@ export type Database = {
           require_approval?: boolean
           school_id?: string
           school_name?: string
-          self_cancel_hours?: number | null
           service_area?: string | null
           updated_at?: string
         }
