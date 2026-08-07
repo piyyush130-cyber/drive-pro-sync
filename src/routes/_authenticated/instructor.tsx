@@ -13,6 +13,7 @@ import {
   Mail,
   Sparkles,
   UserCircle,
+  History,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { fmtTime, fmtDate, statusTone, statusLabel } from "@/lib/format";
@@ -33,6 +34,7 @@ function InstructorPage() {
   const qc = useQueryClient();
   const [tab, setTab] = useState<"today" | "upcoming" | "past">("today");
   const [noteOpen, setNoteOpen] = useState<string | null>(null);
+  const [historyOpen, setHistoryOpen] = useState<string | null>(null);
   const [practiced, setPracticed] = useState("");
   const [nextFocus, setNextFocus] = useState("");
   const [readiness, setReadiness] = useState<"not_ready" | "improving" | "almost_ready" | "ready">(
@@ -347,8 +349,17 @@ function InstructorPage() {
                     </button>
                   </div>
                 )}
-                {(b.status === "confirmed" || b.status === "completed") && (
-                  <div className="mt-3">
+                <div className="mt-3 flex gap-2 flex-wrap">
+                  <button
+                    onClick={() =>
+                      setHistoryOpen(historyOpen === b.id ? null : b.id)
+                    }
+                    className="text-xs btn-secondary"
+                  >
+                    <History className="size-3.5 text-blue-600" />
+                    {historyOpen === b.id ? "Close history" : "Student history"}
+                  </button>
+                  {(b.status === "confirmed" || b.status === "completed") && (
                     <button
                       onClick={() => (noteOpen === b.id ? setNoteOpen(null) : openNote(b.id))}
                       className="text-xs btn-secondary"
@@ -356,6 +367,11 @@ function InstructorPage() {
                       <NotebookPen className="size-3.5 text-blue-600" />
                       {noteOpen === b.id ? "Close note" : "Add lesson note"}
                     </button>
+                  )}
+                </div>
+                {historyOpen === b.id && <StudentHistoryPanel studentId={b.student_id} />}
+                {(b.status === "confirmed" || b.status === "completed") && (
+                  <div className="mt-3">
                     {noteOpen === b.id && (
                       <div
                         className="card-premium mt-3 p-4 space-y-3"
@@ -416,6 +432,87 @@ function InstructorPage() {
           </div>
         )}
       </main>
+    </div>
+  );
+}
+
+const READINESS_LABEL: Record<string, string> = {
+  not_ready: "Not ready",
+  improving: "Improving",
+  almost_ready: "Almost ready",
+  ready: "Ready to test",
+};
+
+// Notes from every instructor who has ever taught this student, not just
+// the currently-viewing one — so a student reassigned to a new instructor
+// (unavailability, offboarding, etc.) doesn't lose continuity. RLS on
+// lesson_notes allows this broader read (any instructor with a booking for
+// the student) while still restricting writes to the original author.
+function StudentHistoryPanel({ studentId }: { studentId: string }) {
+  const historyQ = useQuery({
+    queryKey: ["student-history", studentId],
+    queryFn: async () => {
+      const [{ data: notes }, { data: progress }] = await Promise.all([
+        supabase
+          .from("lesson_notes")
+          .select("id, practiced_skills, next_focus, road_test_readiness, created_at, instructors(full_name)")
+          .eq("student_id", studentId)
+          .order("created_at", { ascending: false })
+          .limit(10),
+        supabase
+          .from("student_progress")
+          .select("general_notes, road_test_ready")
+          .eq("student_id", studentId)
+          .maybeSingle(),
+      ]);
+      return { notes: notes ?? [], progress };
+    },
+  });
+
+  if (historyQ.isLoading) {
+    return <div className="mt-3 text-xs text-slate-500">Loading history…</div>;
+  }
+
+  const notes = historyQ.data?.notes ?? [];
+  const progress = historyQ.data?.progress;
+
+  if (notes.length === 0 && !progress?.general_notes) {
+    return (
+      <div className="card-premium mt-3 p-4 text-xs text-slate-500">
+        No prior notes for this student yet.
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="card-premium mt-3 p-4 space-y-3"
+      style={{ background: "rgba(96,165,250,0.06)", borderColor: "rgba(96,165,250,0.25)" }}
+    >
+      {progress?.general_notes && (
+        <div>
+          <div className="text-xs font-medium text-slate-700">Overall progress</div>
+          <p className="text-xs text-slate-600 mt-0.5">{progress.general_notes}</p>
+        </div>
+      )}
+      {notes.length > 0 && (
+        <div>
+          <div className="text-xs font-medium text-slate-700 mb-1.5">Past lesson notes</div>
+          <div className="space-y-2">
+            {notes.map((n: any) => (
+              <div key={n.id} className="text-xs border-l-2 border-slate-200 pl-2.5">
+                <div className="text-slate-400">
+                  {fmtDate(n.created_at)}
+                  {n.instructors?.full_name ? ` · ${n.instructors.full_name}` : ""}
+                  {n.road_test_readiness && ` · ${READINESS_LABEL[n.road_test_readiness]}`}
+                </div>
+                {n.practiced_skills && <div className="text-slate-600">Practiced: {n.practiced_skills}</div>}
+                {n.next_focus && <div className="text-slate-600">Next focus: {n.next_focus}</div>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
