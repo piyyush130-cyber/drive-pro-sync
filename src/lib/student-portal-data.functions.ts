@@ -1,0 +1,203 @@
+import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+import { requireStudentSession } from "@/lib/student-portal-auth.server";
+import { remainingLessons } from "@/lib/student-balance";
+import { pickInstructor } from "@/lib/public-booking.functions";
+
+const SessionSchema = z.object({ sessionToken: z.string() });
+
+export const getPortalHome = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => SessionSchema.parse(d))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { studentId, schoolId } = await requireStudentSession(supabaseAdmin, data.sessionToken);
+
+    const [{ data: student }, { data: settings }, { data: upcoming }, remaining] = await Promise.all([
+      supabaseAdmin.from("students").select("full_name").eq("id", studentId).maybeSingle(),
+      supabaseAdmin
+        .from("school_settings")
+        .select("school_name, self_cancel_hours")
+        .eq("school_id", schoolId)
+        .maybeSingle(),
+      supabaseAdmin
+        .from("bookings")
+        .select(
+          "id, scheduled_at, duration_minutes, pickup_address, status, lesson_types(name, price_cents), instructors(full_name)",
+        )
+        .eq("student_id", studentId)
+        .is("deleted_at", null)
+        .gte("scheduled_at", new Date().toISOString())
+        .not("status", "in", "(cancelled,declined)")
+        .order("scheduled_at"),
+      remainingLessons(supabaseAdmin, studentId),
+    ]);
+
+    return {
+      studentName: student?.full_name ?? "",
+      schoolName: settings?.school_name ?? "your driving school",
+      selfCancelHours: settings?.self_cancel_hours ?? 0,
+      remaining,
+      upcoming: upcoming ?? [],
+    };
+  });
+
+export const getPortalHistory = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => SessionSchema.parse(d))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { studentId } = await requireStudentSession(supabaseAdmin, data.sessionToken);
+
+    const { data: rows } = await supabaseAdmin
+      .from("bookings")
+      .select("id, scheduled_at, status, lesson_types(name, price_cents), instructors(full_name)")
+      .eq("student_id", studentId)
+      .is("deleted_at", null)
+      .lt("scheduled_at", new Date().toISOString())
+      .order("scheduled_at", { ascending: false })
+      .limit(50);
+    return rows ?? [];
+  });
+
+export const getPortalBookingOptions = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => SessionSchema.parse(d))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { studentId, schoolId } = await requireStudentSession(supabaseAdmin, data.sessionToken);
+
+    const [{ data: lessonTypes }, remaining] = await Promise.all([
+      supabaseAdmin
+        .from("lesson_types")
+        .select("id, name, description, duration_minutes, price_cents")
+        .eq("school_id", schoolId)
+        .eq("active", true)
+        .order("sort_order"),
+      remainingLessons(supabaseAdmin, studentId),
+    ]);
+
+    return { lessonTypes: lessonTypes ?? [], remaining };
+  });
+
+const SubmitBookingSchema = z.object({
+  sessionToken: z.string(),
+  lesson_type_id: z.string().uuid(),
+  scheduled_at: z.string().datetime(),
+});
+
+export const submitPortalBooking = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => SubmitBookingSchema.parse(d))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { studentId, schoolId } = await requireStudentSession(supabaseAdmin, data.sessionToken);
+
+    const remaining = await remainingLessons(supabaseAdmin, studentId);
+    if (remaining <= 0) {
+      throw new Error(
+        "You have no remaining lessons in your package. Contact your school to purchase more.",
+      );
+    }
+
+    const { data: student } = await supabaseAdmin
+      .from("students")
+      .select("id, pickup_address")
+      .eq("id", studentId)
+      .maybeSingle();
+    if (!student) throw new Error("Student not found.");
+
+    const { data: lt, error: ltErr } = await supabaseAdmin
+      .from("lesson_types")
+      .select("id, duration_minutes, price_cents, active, school_id")
+      .eq("id", data.lesson_type_id)
+      .eq("school_id", schoolId)
+      .maybeSingle();
+    if (ltErr) throw new Error("Could not load lesson type");
+    if (!lt || !lt.active) throw new Error("Invalid lesson type");
+
+    const { data: settings } = await supabaseAdmin
+      .from("school_settings")
+      .select("require_approval, auto_assign_instructor")
+      .eq("school_id", schoolId)
+      .maybeSingle();
+    const initialStatus = settings?.require_approval === false ? "confirmed" : "pending";
+
+    const instructorId = settings?.auto_assign_instructor
+      ? await pickInstructor(supabaseAdmin, schoolId, data.scheduled_at, lt.duration_minutes)
+      : null;
+
+    const { data: booking, error: bErr } = await supabaseAdmin
+      .from("bookings")
+      .insert({
+        student_id: student.id,
+        instructor_id: instructorId,
+        lesson_type_id: lt.id,
+        scheduled_at: data.scheduled_at,
+        duration_minutes: lt.duration_minutes,
+        pickup_address: student.pickup_address,
+        dropoff_address: student.pickup_address,
+        price_cents: lt.price_cents,
+        status: initialStatus,
+        school_id: schoolId,
+      })
+      .select("id")
+      .single();
+    if (bErr || !booking) throw new Error("Could not create booking");
+
+    const { notifyBookingCreated } = await import("@/lib/notifications.server");
+    await notifyBookingCreated(supabaseAdmin, { bookingId: booking.id });
+
+    return { ok: true, status: initialStatus };
+  });
+
+const CancelSchema = z.object({
+  sessionToken: z.string(),
+  booking_id: z.string().uuid(),
+  reason: z.string().max(2000).optional(),
+});
+
+// Cancels immediately if the school's self-cancel window allows it at this
+// notice; otherwise falls back to the same request-and-await-admin-approval
+// flow already used by the public/admin cancellation paths.
+export const submitPortalCancellation = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => CancelSchema.parse(d))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { studentId, schoolId } = await requireStudentSession(supabaseAdmin, data.sessionToken);
+
+    const { data: booking } = await supabaseAdmin
+      .from("bookings")
+      .select("id, scheduled_at, status")
+      .eq("id", data.booking_id)
+      .eq("student_id", studentId)
+      .is("deleted_at", null)
+      .maybeSingle();
+    if (!booking) throw new Error("Booking not found.");
+    if (booking.status === "cancelled" || booking.status === "declined") {
+      throw new Error("This booking is already cancelled.");
+    }
+    if (booking.status === "completed") throw new Error("This lesson has already been completed.");
+
+    const { data: settings } = await supabaseAdmin
+      .from("school_settings")
+      .select("self_cancel_hours")
+      .eq("school_id", schoolId)
+      .maybeSingle();
+    const selfCancelHours = settings?.self_cancel_hours ?? 0;
+    const hoursUntil = (new Date(booking.scheduled_at).getTime() - Date.now()) / 3600000;
+
+    if (selfCancelHours > 0 && hoursUntil >= selfCancelHours) {
+      const { error } = await supabaseAdmin
+        .from("bookings")
+        .update({ status: "cancelled" })
+        .eq("id", booking.id);
+      if (error) throw new Error("Could not cancel booking.");
+      return { ok: true, mode: "cancelled" as const };
+    }
+
+    const { error } = await supabaseAdmin.from("cancellation_requests").insert({
+      booking_id: booking.id,
+      school_id: schoolId,
+      reason: data.reason ?? null,
+      status: "requested",
+    });
+    if (error) throw new Error("Could not submit cancellation request.");
+    return { ok: true, mode: "requested" as const };
+  });

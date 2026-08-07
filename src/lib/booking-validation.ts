@@ -10,6 +10,13 @@ export type BookingFormErrors = Partial<{
 
 export const emailOk = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
+// For matching, not display — students.phone is freeform text (however a
+// staff member happened to type it), so login lookups compare the last 10
+// digits rather than requiring an exact string match.
+export function normalizePhoneDigits(raw: string): string {
+  return raw.replace(/\D/g, "").slice(-10);
+}
+
 export function formatPhone(raw: string): string {
   const digits = raw.replace(/\D/g, "").slice(0, 10);
   const len = digits.length;

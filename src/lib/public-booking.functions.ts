@@ -166,13 +166,14 @@ export const submitPublicCancellation = createServerFn({ method: "POST" })
     // Confirm booking exists before recording the request
     const { data: b } = await supabaseAdmin
       .from("bookings")
-      .select("id")
+      .select("id, school_id")
       .eq("id", data.booking_id)
       .maybeSingle();
     if (!b) throw new Error("Booking not found");
 
     const { error } = await supabaseAdmin.from("cancellation_requests").insert({
       booking_id: data.booking_id,
+      school_id: b.school_id,
       reason: data.reason,
       status: "requested",
     });
