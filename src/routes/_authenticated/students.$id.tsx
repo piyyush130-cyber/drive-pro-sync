@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { fmtDateTime, money, statusLabel, statusTone } from "@/lib/format";
+import { computeRemaining } from "@/lib/student-balance";
 import { StatusPill } from "@/components/StatCard";
 import { sendInvitation, getLatestInvitation } from "@/lib/lesson-invitations.functions";
 import { toast } from "sonner";
@@ -190,7 +191,7 @@ function StudentDetail() {
           </div>
           <div>
             <div className="text-2xl font-semibold text-blue-600">
-              {Math.max(0, (s.lessons_purchased ?? 0) - completed)}
+              {computeRemaining(s.lessons_purchased, completed)}
             </div>
             <div className="text-xs text-slate-500 uppercase tracking-wider mt-0.5">Remaining</div>
           </div>

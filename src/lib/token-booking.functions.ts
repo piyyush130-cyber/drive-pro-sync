@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { pickInstructor } from "@/lib/public-booking.functions";
+import { remainingLessons } from "@/lib/student-balance";
 
 const TokenSchema = z.object({ token: z.string().uuid() });
 
@@ -26,17 +27,12 @@ export const getInvitationForToken = createServerFn({ method: "POST" })
 
     const { data: student } = await supabaseAdmin
       .from("students")
-      .select("id, full_name, lessons_purchased")
+      .select("id, full_name")
       .eq("id", invitation.student_id)
       .maybeSingle();
     if (!student) throw new Error("This link is no longer valid.");
 
-    const { count: completedCount } = await supabaseAdmin
-      .from("bookings")
-      .select("id", { count: "exact", head: true })
-      .eq("student_id", student.id)
-      .eq("status", "completed");
-    const remaining = Math.max(0, (student.lessons_purchased ?? 0) - (completedCount ?? 0));
+    const remaining = await remainingLessons(supabaseAdmin, student.id);
 
     const [{ data: settings }, { data: lessonTypes }] = await Promise.all([
       supabaseAdmin
@@ -84,17 +80,12 @@ export const submitTokenBooking = createServerFn({ method: "POST" })
 
     const { data: student } = await supabaseAdmin
       .from("students")
-      .select("id, full_name, phone, email, pickup_address, lessons_purchased")
+      .select("id, full_name, phone, email, pickup_address")
       .eq("id", invitation.student_id)
       .maybeSingle();
     if (!student) throw new Error("This link is no longer valid.");
 
-    const { count: completedCount } = await supabaseAdmin
-      .from("bookings")
-      .select("id", { count: "exact", head: true })
-      .eq("student_id", student.id)
-      .eq("status", "completed");
-    const remaining = Math.max(0, (student.lessons_purchased ?? 0) - (completedCount ?? 0));
+    const remaining = await remainingLessons(supabaseAdmin, student.id);
     if (remaining <= 0) throw new Error("You have no remaining lessons in your package.");
 
     const { data: lt, error: ltErr } = await supabaseAdmin

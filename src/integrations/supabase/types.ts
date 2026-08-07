@@ -701,6 +701,7 @@ export type Database = {
           require_approval: boolean
           school_id: string
           school_name: string
+          self_cancel_hours: number | null
           service_area: string | null
           updated_at: string
         }
@@ -723,6 +724,7 @@ export type Database = {
           require_approval?: boolean
           school_id: string
           school_name?: string
+          self_cancel_hours?: number | null
           service_area?: string | null
           updated_at?: string
         }
@@ -745,6 +747,7 @@ export type Database = {
           require_approval?: boolean
           school_id?: string
           school_name?: string
+          self_cancel_hours?: number | null
           service_area?: string | null
           updated_at?: string
         }
@@ -778,6 +781,54 @@ export type Database = {
           slug?: string
         }
         Relationships: []
+      }
+      student_login_links: {
+        Row: {
+          contact_method: string
+          created_at: string
+          expires_at: string
+          id: string
+          school_id: string
+          student_id: string
+          token_hash: string
+          used_at: string | null
+        }
+        Insert: {
+          contact_method: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          school_id: string
+          student_id: string
+          token_hash: string
+          used_at?: string | null
+        }
+        Update: {
+          contact_method?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          school_id?: string
+          student_id?: string
+          token_hash?: string
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_login_links_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_login_links_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       student_progress: {
         Row: {
@@ -822,6 +873,54 @@ export type Database = {
             foreignKeyName: "student_progress_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: true
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_sessions: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          last_used_at: string
+          revoked_at: string | null
+          school_id: string
+          student_id: string
+          token_hash: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          id?: string
+          last_used_at?: string
+          revoked_at?: string | null
+          school_id: string
+          student_id: string
+          token_hash: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          last_used_at?: string
+          revoked_at?: string | null
+          school_id?: string
+          student_id?: string
+          token_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_sessions_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_sessions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
             referencedRelation: "students"
             referencedColumns: ["id"]
           },

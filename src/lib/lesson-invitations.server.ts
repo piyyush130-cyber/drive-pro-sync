@@ -1,26 +1,12 @@
 // Server-only logic for the Next Lesson Invitation system, shared by the
 // manual "Send/Resend Invitation" button and the automatic pg_cron sweep.
+import { remainingLessons } from "@/lib/student-balance";
 
 const REMINDER_AFTER_MS = 4 * 3600000; // 4 hours
 const EXPIRE_AFTER_MS = 48 * 3600000; // stop considering this invitation cycle
 
 function bookingUrlFor(origin: string, token: string): string {
   return `${origin}/next-lesson/${token}`;
-}
-
-async function remainingLessons(supabaseAdmin: any, studentId: string): Promise<number> {
-  const { data: student } = await supabaseAdmin
-    .from("students")
-    .select("lessons_purchased")
-    .eq("id", studentId)
-    .maybeSingle();
-  if (!student) return 0;
-  const { count } = await supabaseAdmin
-    .from("bookings")
-    .select("id", { count: "exact", head: true })
-    .eq("student_id", studentId)
-    .eq("status", "completed");
-  return Math.max(0, (student.lessons_purchased ?? 0) - (count ?? 0));
 }
 
 export async function sendLessonInvitation(
