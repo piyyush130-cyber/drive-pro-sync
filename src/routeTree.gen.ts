@@ -24,6 +24,8 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PortalSchoolSlugRouteImport } from './routes/portal.$schoolSlug'
 import { Route as NextLessonTokenRouteImport } from './routes/next-lesson.$token'
+import { Route as ClaimTokenRouteImport } from './routes/claim.$token'
+import { Route as AuthenticatedWaitlistRouteImport } from './routes/_authenticated/waitlist'
 import { Route as AuthenticatedVehiclesRouteImport } from './routes/_authenticated/vehicles'
 import { Route as AuthenticatedStudentsRouteImport } from './routes/_authenticated/students'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
@@ -112,6 +114,16 @@ const NextLessonTokenRoute = NextLessonTokenRouteImport.update({
   id: '/next-lesson/$token',
   path: '/next-lesson/$token',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ClaimTokenRoute = ClaimTokenRouteImport.update({
+  id: '/claim/$token',
+  path: '/claim/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedWaitlistRoute = AuthenticatedWaitlistRouteImport.update({
+  id: '/waitlist',
+  path: '/waitlist',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedVehiclesRoute = AuthenticatedVehiclesRouteImport.update({
   id: '/vehicles',
@@ -211,6 +223,8 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/students': typeof AuthenticatedStudentsRouteWithChildren
   '/vehicles': typeof AuthenticatedVehiclesRoute
+  '/waitlist': typeof AuthenticatedWaitlistRoute
+  '/claim/$token': typeof ClaimTokenRoute
   '/next-lesson/$token': typeof NextLessonTokenRoute
   '/portal/$schoolSlug': typeof PortalSchoolSlugRoute
   '/students/$id': typeof AuthenticatedStudentsIdRoute
@@ -241,6 +255,8 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/students': typeof AuthenticatedStudentsRouteWithChildren
   '/vehicles': typeof AuthenticatedVehiclesRoute
+  '/waitlist': typeof AuthenticatedWaitlistRoute
+  '/claim/$token': typeof ClaimTokenRoute
   '/next-lesson/$token': typeof NextLessonTokenRoute
   '/portal/$schoolSlug': typeof PortalSchoolSlugRoute
   '/students/$id': typeof AuthenticatedStudentsIdRoute
@@ -273,6 +289,8 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/students': typeof AuthenticatedStudentsRouteWithChildren
   '/_authenticated/vehicles': typeof AuthenticatedVehiclesRoute
+  '/_authenticated/waitlist': typeof AuthenticatedWaitlistRoute
+  '/claim/$token': typeof ClaimTokenRoute
   '/next-lesson/$token': typeof NextLessonTokenRoute
   '/portal/$schoolSlug': typeof PortalSchoolSlugRoute
   '/_authenticated/students/$id': typeof AuthenticatedStudentsIdRoute
@@ -305,6 +323,8 @@ export interface FileRouteTypes {
     | '/settings'
     | '/students'
     | '/vehicles'
+    | '/waitlist'
+    | '/claim/$token'
     | '/next-lesson/$token'
     | '/portal/$schoolSlug'
     | '/students/$id'
@@ -335,6 +355,8 @@ export interface FileRouteTypes {
     | '/settings'
     | '/students'
     | '/vehicles'
+    | '/waitlist'
+    | '/claim/$token'
     | '/next-lesson/$token'
     | '/portal/$schoolSlug'
     | '/students/$id'
@@ -366,6 +388,8 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/_authenticated/students'
     | '/_authenticated/vehicles'
+    | '/_authenticated/waitlist'
+    | '/claim/$token'
     | '/next-lesson/$token'
     | '/portal/$schoolSlug'
     | '/_authenticated/students/$id'
@@ -385,6 +409,7 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   TermsRoute: typeof TermsRoute
+  ClaimTokenRoute: typeof ClaimTokenRoute
   NextLessonTokenRoute: typeof NextLessonTokenRoute
   PortalSchoolSlugRoute: typeof PortalSchoolSlugRoute
 }
@@ -495,6 +520,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/next-lesson/$token'
       preLoaderRoute: typeof NextLessonTokenRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/claim/$token': {
+      id: '/claim/$token'
+      path: '/claim/$token'
+      fullPath: '/claim/$token'
+      preLoaderRoute: typeof ClaimTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/waitlist': {
+      id: '/_authenticated/waitlist'
+      path: '/waitlist'
+      fullPath: '/waitlist'
+      preLoaderRoute: typeof AuthenticatedWaitlistRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/vehicles': {
       id: '/_authenticated/vehicles'
@@ -624,6 +663,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedStudentsRoute: typeof AuthenticatedStudentsRouteWithChildren
   AuthenticatedVehiclesRoute: typeof AuthenticatedVehiclesRoute
+  AuthenticatedWaitlistRoute: typeof AuthenticatedWaitlistRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -640,6 +680,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedStudentsRoute: AuthenticatedStudentsRouteWithChildren,
   AuthenticatedVehiclesRoute: AuthenticatedVehiclesRoute,
+  AuthenticatedWaitlistRoute: AuthenticatedWaitlistRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -659,6 +700,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   TermsRoute: TermsRoute,
+  ClaimTokenRoute: ClaimTokenRoute,
   NextLessonTokenRoute: NextLessonTokenRoute,
   PortalSchoolSlugRoute: PortalSchoolSlugRoute,
 }

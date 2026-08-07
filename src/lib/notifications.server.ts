@@ -153,6 +153,13 @@ export async function notifyBookingStatusChange(
         `${school}: your lesson on ${when} was cancelled.${reason ? ` ${reason}` : ""}`,
       );
     }
+    const { maybeOfferWaitlistSlot } = await import("@/lib/waitlist.server");
+    await maybeOfferWaitlistSlot(supabaseAdmin, b.id);
+  }
+
+  if (patch.status === "no_show") {
+    const { maybeOfferWaitlistSlot } = await import("@/lib/waitlist.server");
+    await maybeOfferWaitlistSlot(supabaseAdmin, b.id);
   }
 
   if ("instructor_id" in patch && patch.instructor_id && b.instructor_id && b.instructors?.email) {

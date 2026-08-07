@@ -218,6 +218,8 @@ export const submitPortalCancellation = createServerFn({ method: "POST" })
         .update({ status: "cancelled" })
         .eq("id", booking.id);
       if (error) throw new Error("Could not cancel booking.");
+      const { maybeOfferWaitlistSlot } = await import("@/lib/waitlist.server");
+      await maybeOfferWaitlistSlot(supabaseAdmin, booking.id);
       return { ok: true, mode: "cancelled" as const };
     }
 

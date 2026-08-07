@@ -1065,6 +1065,116 @@ export type Database = {
           },
         ]
       }
+      waitlist_entries: {
+        Row: {
+          created_at: string
+          id: string
+          school_id: string
+          status: string
+          student_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          school_id: string
+          status?: string
+          student_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          school_id?: string
+          status?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "waitlist_entries_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "waitlist_entries_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      waitlist_offers: {
+        Row: {
+          created_at: string
+          duration_minutes: number
+          expires_at: string
+          id: string
+          instructor_id: string | null
+          lesson_type_id: string | null
+          scheduled_at: string
+          school_id: string
+          status: string
+          token_hash: string
+          waitlist_entry_id: string
+        }
+        Insert: {
+          created_at?: string
+          duration_minutes: number
+          expires_at: string
+          id?: string
+          instructor_id?: string | null
+          lesson_type_id?: string | null
+          scheduled_at: string
+          school_id: string
+          status?: string
+          token_hash: string
+          waitlist_entry_id: string
+        }
+        Update: {
+          created_at?: string
+          duration_minutes?: number
+          expires_at?: string
+          id?: string
+          instructor_id?: string | null
+          lesson_type_id?: string | null
+          scheduled_at?: string
+          school_id?: string
+          status?: string
+          token_hash?: string
+          waitlist_entry_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "waitlist_offers_instructor_id_fkey"
+            columns: ["instructor_id"]
+            isOneToOne: false
+            referencedRelation: "instructors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "waitlist_offers_lesson_type_id_fkey"
+            columns: ["lesson_type_id"]
+            isOneToOne: false
+            referencedRelation: "lesson_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "waitlist_offers_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "waitlist_offers_waitlist_entry_id_fkey"
+            columns: ["waitlist_entry_id"]
+            isOneToOne: false
+            referencedRelation: "waitlist_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

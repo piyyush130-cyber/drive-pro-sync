@@ -13,6 +13,7 @@ import {
   Tag,
   UserCircle,
   Trash2,
+  ListOrdered,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -23,6 +24,7 @@ const items = [
   { title: "Students", url: "/students", icon: Users },
   { title: "Instructors", url: "/instructors", icon: GraduationCap },
   { title: "Vehicles", url: "/vehicles", icon: Car },
+  { title: "Waitlist", url: "/waitlist", icon: ListOrdered },
   { title: "Services & Pricing", url: "/services", icon: Tag },
   { title: "Payment Watch", url: "/payments", icon: Wallet },
   { title: "Settings", url: "/settings", icon: Settings },
