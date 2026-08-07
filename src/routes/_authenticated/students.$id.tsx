@@ -7,6 +7,7 @@ import { fmtDateTime, money, statusLabel, statusTone } from "@/lib/format";
 import { computeRemaining } from "@/lib/student-balance";
 import { StatusPill } from "@/components/StatCard";
 import { sendInvitation, getLatestInvitation } from "@/lib/lesson-invitations.functions";
+import { countNoShows, isNoShowFlagged } from "@/lib/no-show";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/students/$id")({
@@ -192,6 +193,13 @@ function StudentDetail() {
           </p>
         </div>
       </div>
+
+      {isNoShowFlagged(bookings) && (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 mb-6 text-sm text-red-800">
+          {countNoShows(bookings)} no-shows on record — new bookings from this student always land
+          as pending and require manual confirmation, regardless of your approval settings.
+        </div>
+      )}
 
       <section className="bg-white border border-slate-200 rounded-xl p-5 mb-6">
         <h2 className="font-medium text-slate-900 mb-4">Lesson package</h2>

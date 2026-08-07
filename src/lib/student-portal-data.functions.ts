@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireStudentSession } from "@/lib/student-portal-auth.server";
 import { remainingLessons } from "@/lib/student-balance";
 import { pickInstructor } from "@/lib/public-booking.functions";
+import { NO_SHOW_ESCALATION_THRESHOLD } from "@/lib/no-show";
 
 const SessionSchema = z.object({ sessionToken: z.string() });
 
@@ -130,7 +131,22 @@ export const submitPortalBooking = createServerFn({ method: "POST" })
     if (ltErr) throw new Error("Could not load lesson type");
     if (!lt || !lt.active) throw new Error("Invalid lesson type");
 
-    const initialStatus = settings?.require_approval === false ? "confirmed" : "pending";
+    // No-show escalation: a student with a history of no-shows never
+    // auto-confirms, regardless of the school's approval settings — there's
+    // no payment gateway to require prepayment against, so a manual admin
+    // confirmation is the only guardrail available.
+    const { count: noShowCount } = await supabaseAdmin
+      .from("bookings")
+      .select("id", { count: "exact", head: true })
+      .eq("student_id", studentId)
+      .eq("status", "no_show");
+    const flagged = (noShowCount ?? 0) >= NO_SHOW_ESCALATION_THRESHOLD;
+
+    const initialStatus = flagged
+      ? "pending"
+      : settings?.require_approval === false
+        ? "confirmed"
+        : "pending";
 
     const instructorId = settings?.auto_assign_instructor
       ? await pickInstructor(supabaseAdmin, schoolId, data.scheduled_at, lt.duration_minutes)

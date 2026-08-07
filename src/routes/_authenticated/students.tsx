@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthUser, useSchoolId } from "@/lib/auth";
+import { isNoShowFlagged } from "@/lib/no-show";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/students")({
@@ -125,6 +126,14 @@ function StudentsPage() {
                         className="ml-1.5 inline-block text-[10px] font-semibold text-amber-700 bg-amber-100 border border-amber-200 rounded px-1 align-middle"
                       >
                         !
+                      </span>
+                    )}
+                    {isNoShowFlagged(s.bookings ?? []) && (
+                      <span
+                        title="Repeated no-shows — future bookings require manual confirmation"
+                        className="ml-1.5 inline-block text-[10px] font-semibold text-red-700 bg-red-100 border border-red-200 rounded px-1 align-middle"
+                      >
+                        No-show
                       </span>
                     )}
                   </td>
