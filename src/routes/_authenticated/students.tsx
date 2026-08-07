@@ -119,6 +119,14 @@ function StudentsPage() {
                     <Link to="/students/$id" params={{ id: s.id }} className="hover:text-blue-600">
                       {s.full_name}
                     </Link>
+                    {s.incident_notes && (
+                      <span
+                        title="Has incident notes"
+                        className="ml-1.5 inline-block text-[10px] font-semibold text-amber-700 bg-amber-100 border border-amber-200 rounded px-1 align-middle"
+                      >
+                        !
+                      </span>
+                    )}
                   </td>
                   <td className="px-5 py-3 text-slate-600">
                     {s.phone}

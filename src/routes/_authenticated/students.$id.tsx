@@ -77,6 +77,7 @@ function StudentDetail() {
   const [skills, setSkills] = useState<Record<string, SkillStatus>>({});
   const [readiness, setReadiness] = useState<Readiness>("not_ready");
   const [notes, setNotes] = useState("");
+  const [incidentNotes, setIncidentNotes] = useState("");
 
   useEffect(() => {
     const sp: any = studentQ.data?.student_progress;
@@ -100,6 +101,10 @@ function StudentDetail() {
       }
     }
   }, [studentQ.data]);
+
+  useEffect(() => {
+    setIncidentNotes(studentQ.data?.incident_notes ?? "");
+  }, [studentQ.data?.incident_notes]);
 
   const sendInvite = useServerFn(sendInvitation);
   const getInvite = useServerFn(getLatestInvitation);
@@ -136,6 +141,16 @@ function StudentDetail() {
     setAddAmount("");
     qc.invalidateQueries({ queryKey: ["student", id] });
     toast.success(`Added ${n} lesson${n === 1 ? "" : "s"}`);
+  }
+
+  async function saveIncidentNotes() {
+    const { error } = await supabase
+      .from("students")
+      .update({ incident_notes: incidentNotes || null })
+      .eq("id", id);
+    if (error) return toast.error(error.message);
+    qc.invalidateQueries({ queryKey: ["student", id] });
+    toast.success("Incident notes saved");
   }
 
   async function saveProgress() {
@@ -332,6 +347,27 @@ function StudentDetail() {
             <span className="text-slate-400 text-xs uppercase tracking-wider">Road-test notes</span>
             <div className="text-slate-700">{s.road_test_notes ?? "—"}</div>
           </div>
+        </div>
+      </section>
+
+      <section className="bg-white border border-amber-200 rounded-xl p-5 mb-6">
+        <h2 className="font-medium text-slate-900 mb-1">Incidents & complaints</h2>
+        <p className="text-xs text-slate-500 mb-3">
+          Internal notes only — never shown to the student or instructor.
+        </p>
+        <textarea
+          value={incidentNotes}
+          onChange={(e) => setIncidentNotes(e.target.value)}
+          placeholder="No incidents recorded."
+          className="w-full text-sm border border-slate-200 rounded-md p-2 min-h-[70px] bg-white outline-none focus:border-amber-500"
+        />
+        <div className="flex justify-end mt-3">
+          <button
+            onClick={saveIncidentNotes}
+            className="btn-secondary text-sm font-medium px-4 py-2 rounded-md"
+          >
+            Save
+          </button>
         </div>
       </section>
 

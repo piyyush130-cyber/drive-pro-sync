@@ -933,6 +933,7 @@ export type Database = {
           email: string | null
           full_name: string
           id: string
+          incident_notes: string | null
           lessons_purchased: number
           notes: string | null
           phone: string | null
@@ -948,6 +949,7 @@ export type Database = {
           email?: string | null
           full_name: string
           id?: string
+          incident_notes?: string | null
           lessons_purchased?: number
           notes?: string | null
           phone?: string | null
@@ -963,6 +965,7 @@ export type Database = {
           email?: string | null
           full_name?: string
           id?: string
+          incident_notes?: string | null
           lessons_purchased?: number
           notes?: string | null
           phone?: string | null
