@@ -6,7 +6,9 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { generateInviteCode } from "@/lib/invite-code.functions";
 import { checkInstructorLimit } from "@/lib/billing.functions";
+import { notifyBookingUpdated } from "@/lib/notifications.functions";
 import { useAuthUser, useSchoolId } from "@/lib/auth";
+import { fmtDate, fmtTime } from "@/lib/format";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/instructors")({
@@ -35,9 +37,11 @@ function InstructorsPage() {
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
+  const [offboardingId, setOffboardingId] = useState<string | null>(null);
   const { user } = useAuthUser();
   const schoolIdQ = useSchoolId(user?.id);
   const checkLimit = useServerFn(checkInstructorLimit);
+  const notifyUpdate = useServerFn(notifyBookingUpdated);
 
   const limitQ = useQuery({
     queryKey: ["instructor-limit"],
@@ -115,7 +119,22 @@ function InstructorsPage() {
   }
 
   async function deleteInstructor(id: string, name: string) {
+    const { count } = await supabase
+      .from("bookings")
+      .select("id", { count: "exact", head: true })
+      .eq("instructor_id", id)
+      .is("deleted_at", null)
+      .not("status", "in", "(cancelled,declined,completed,no_show)")
+      .gte("scheduled_at", new Date().toISOString());
+    if ((count ?? 0) > 0) {
+      setOffboardingId(id);
+      return;
+    }
     if (!window.confirm(`Delete ${name}? You can restore them from the recycle bin.`)) return;
+    await finishDelete(id, name);
+  }
+
+  async function finishDelete(id: string, name: string) {
     const { error } = await supabase
       .from("instructors")
       .update({ deleted_at: new Date().toISOString() })
@@ -123,6 +142,7 @@ function InstructorsPage() {
     if (error) return toast.error(error.message);
     qc.invalidateQueries({ queryKey: ["instructors-all"] });
     qc.invalidateQueries({ queryKey: ["instructor-limit"] });
+    setOffboardingId(null);
     toast.success(`${name} deleted`);
   }
 
@@ -243,6 +263,26 @@ function InstructorsPage() {
         </form>
       )}
 
+      {offboardingId && (
+        <OffboardPanel
+          instructorId={offboardingId}
+          instructorName={
+            (instructorsQ.data ?? []).find((i: any) => i.id === offboardingId)?.full_name ?? ""
+          }
+          otherInstructors={(instructorsQ.data ?? []).filter(
+            (i: any) => i.id !== offboardingId && i.active,
+          )}
+          notifyUpdate={notifyUpdate}
+          onDone={() => setOffboardingId(null)}
+          onConfirmDelete={() =>
+            finishDelete(
+              offboardingId,
+              (instructorsQ.data ?? []).find((i: any) => i.id === offboardingId)?.full_name ?? "",
+            )
+          }
+        />
+      )}
+
       <div className="space-y-3">
         {(instructorsQ.data ?? []).map((i: any) => {
           const summary = formatAvail(i.weekly_availability);
@@ -305,6 +345,154 @@ function InstructorsPage() {
             </div>
           );
         })}
+      </div>
+    </div>
+  );
+}
+
+function OffboardPanel({
+  instructorId,
+  instructorName,
+  otherInstructors,
+  notifyUpdate,
+  onDone,
+  onConfirmDelete,
+}: {
+  instructorId: string;
+  instructorName: string;
+  otherInstructors: any[];
+  notifyUpdate: (opts: { data: { bookingId: string; patch: Record<string, unknown> } }) => Promise<any>;
+  onDone: () => void;
+  onConfirmDelete: () => void;
+}) {
+  const qc = useQueryClient();
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  const bookingsQ = useQuery({
+    queryKey: ["instructor-upcoming-bookings", instructorId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("bookings")
+        .select("id, scheduled_at, students(full_name), lesson_types(name)")
+        .eq("instructor_id", instructorId)
+        .is("deleted_at", null)
+        .not("status", "in", "(cancelled,declined,completed,no_show)")
+        .gte("scheduled_at", new Date().toISOString())
+        .order("scheduled_at");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  async function reassign(bookingId: string, newInstructorId: string) {
+    if (!newInstructorId) return;
+    setBusyId(bookingId);
+    try {
+      const { error } = await supabase
+        .from("bookings")
+        .update({ instructor_id: newInstructorId })
+        .eq("id", bookingId);
+      if (error) throw error;
+      void notifyUpdate({ data: { bookingId, patch: { instructor_id: newInstructorId } } });
+      toast.success("Lesson reassigned");
+      await qc.invalidateQueries({ queryKey: ["instructor-upcoming-bookings", instructorId] });
+    } catch (err: any) {
+      toast.error(err?.message || "Could not reassign lesson");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function cancelBooking(bookingId: string) {
+    setBusyId(bookingId);
+    try {
+      const { error } = await supabase
+        .from("bookings")
+        .update({ status: "cancelled" })
+        .eq("id", bookingId);
+      if (error) throw error;
+      void notifyUpdate({
+        data: {
+          bookingId,
+          patch: { status: "cancelled", cancellation_reason: `${instructorName} is no longer available.` },
+        },
+      });
+      toast.success("Lesson cancelled");
+      await qc.invalidateQueries({ queryKey: ["instructor-upcoming-bookings", instructorId] });
+    } catch (err: any) {
+      toast.error(err?.message || "Could not cancel lesson");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  const bookings = bookingsQ.data ?? [];
+  const allResolved = !bookingsQ.isLoading && bookings.length === 0;
+
+  return (
+    <div className="glass-card p-5 mb-6 border border-amber-500/30">
+      <h2 className="font-semibold text-slate-900">Offboard {instructorName}</h2>
+      <p className="text-sm text-slate-400 mt-1 mb-4">
+        {allResolved
+          ? "All upcoming lessons are resolved — you can now remove this instructor."
+          : `${bookings.length} upcoming lesson${bookings.length === 1 ? "" : "s"} need to be reassigned or cancelled before this instructor can be removed.`}
+      </p>
+
+      <div className="space-y-2">
+        {bookings.map((b: any) => (
+          <div
+            key={b.id}
+            className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-slate-50 border border-slate-200 px-3 py-2"
+          >
+            <div className="text-sm min-w-0">
+              <div className="font-medium text-slate-900 truncate">
+                {b.students?.full_name ?? "—"} · {b.lesson_types?.name ?? "Lesson"}
+              </div>
+              <div className="text-xs text-slate-500">
+                {fmtDate(b.scheduled_at)} at {fmtTime(b.scheduled_at)}
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <select
+                disabled={busyId === b.id}
+                defaultValue=""
+                onChange={(e) => reassign(b.id, e.target.value)}
+                className="rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs font-medium text-slate-700"
+              >
+                <option value="" disabled>
+                  Reassign to…
+                </option>
+                {otherInstructors.map((i) => (
+                  <option key={i.id} value={i.id}>
+                    {i.full_name}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                disabled={busyId === b.id}
+                onClick={() => cancelBooking(b.id)}
+                className="text-xs text-red-600 hover:underline disabled:opacity-50"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex gap-2 mt-4 pt-4 border-t border-slate-800">
+        <button
+          type="button"
+          disabled={!allResolved}
+          onClick={onConfirmDelete}
+          className="btn-primary text-sm disabled:opacity-50"
+        >
+          Confirm and remove instructor
+        </button>
+        <button type="button" onClick={onDone} className="btn-secondary text-sm">
+          Cancel
+        </button>
       </div>
     </div>
   );
