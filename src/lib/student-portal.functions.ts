@@ -59,7 +59,7 @@ async function sendLoginLink(
   });
   if (error) return;
 
-  const url = `${originFromRequest()}/${schoolSlug}/portal/verify?token=${rawToken}`;
+  const url = `${originFromRequest()}/portal/${schoolSlug}?token=${rawToken}`;
   const firstName = student.full_name?.split(" ")[0] || "there";
 
   if (contactMethod === "email" && student.email) {

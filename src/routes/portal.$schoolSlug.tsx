@@ -1,7 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   CarFront,
   Check,
@@ -12,7 +12,11 @@ import {
   MapPin,
   X,
 } from "lucide-react";
-import { requestPortalLogin, logoutPortalSession } from "@/lib/student-portal.functions";
+import {
+  requestPortalLogin,
+  verifyPortalLogin,
+  logoutPortalSession,
+} from "@/lib/student-portal.functions";
 import {
   getPortalHome,
   getPortalHistory,
@@ -25,7 +29,10 @@ import { money, fmtDate, fmtTime, statusLabel, statusTone } from "@/lib/format";
 import { toast } from "sonner";
 import { addMonths, format, isBefore, isSameDay, isSameMonth, startOfDay, startOfMonth } from "date-fns";
 
-export const Route = createFileRoute("/$schoolSlug/portal")({
+export const Route = createFileRoute("/portal/$schoolSlug")({
+  validateSearch: (search: Record<string, unknown>): { token?: string } => ({
+    token: typeof search.token === "string" ? search.token : undefined,
+  }),
   component: PortalPage,
 });
 
@@ -47,21 +54,70 @@ function sessionKey(schoolSlug: string) {
   return `portal_session_${schoolSlug}`;
 }
 
+// Handles both the login-link click (?token=... in the URL, exchanged for a
+// session once) and normal return visits (an existing session in
+// localStorage) in one route — kept as a single file rather than a nested
+// "verify" child route, since TanStack Router's file-based nesting would
+// otherwise require this component to render a child via <Outlet />, which
+// doesn't fit a page that's sometimes the login screen and sometimes the
+// full dashboard.
 function PortalPage() {
   const { schoolSlug } = Route.useParams();
+  const { token } = Route.useSearch();
+  const navigate = useNavigate();
+  const verify = useServerFn(verifyPortalLogin);
+  const verifyingRef = useRef(false);
   const [sessionToken, setSessionToken] = useState<string | null | undefined>(undefined);
+  const [verifyError, setVerifyError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (token) {
+      if (verifyingRef.current) return;
+      verifyingRef.current = true;
+      verify({ data: { token } })
+        .then(({ sessionToken: newToken }) => {
+          localStorage.setItem(sessionKey(schoolSlug), newToken);
+          setSessionToken(newToken);
+          navigate({ to: "/portal/$schoolSlug", params: { schoolSlug }, replace: true });
+        })
+        .catch((err: any) => setVerifyError(err?.message || "This link is invalid or has expired."));
+      return;
+    }
     setSessionToken(localStorage.getItem(sessionKey(schoolSlug)));
-  }, [schoolSlug]);
+  }, [schoolSlug, token, verify, navigate]);
 
   function handleSignedOut() {
     localStorage.removeItem(sessionKey(schoolSlug));
     setSessionToken(null);
   }
 
-  if (sessionToken === undefined) {
-    return <div className="min-h-screen" style={{ background: C.pageBg }} />;
+  if (verifyError) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center px-4"
+        style={{ background: C.pageBg }}
+      >
+        <div className="text-center max-w-sm">
+          <div className="text-lg font-semibold" style={{ color: C.text }}>
+            Link unavailable
+          </div>
+          <p className="mt-2 text-sm" style={{ color: C.muted }}>
+            {verifyError}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (token || sessionToken === undefined) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center"
+        style={{ background: C.pageBg, color: C.muted }}
+      >
+        {token ? "Logging you in…" : ""}
+      </div>
+    );
   }
 
   if (!sessionToken) {
