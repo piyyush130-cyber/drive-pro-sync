@@ -12,7 +12,9 @@ import {
   ArrowRight,
   Sparkles,
   Circle,
+  Scale,
 } from "lucide-react";
+import { startOfWeek, endOfWeek } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthUser, useSchoolId } from "@/lib/auth";
 import { StatCard, StatusPill } from "@/components/StatCard";
@@ -125,6 +127,47 @@ function Dashboard() {
         cancels: cancels.count ?? 0,
         completed: completed.count ?? 0,
       };
+    },
+  });
+
+  const weekLoadStart = startOfWeek(new Date(), { weekStartsOn: 1 }).toISOString();
+  const weekLoadEnd = endOfWeek(new Date(), { weekStartsOn: 1 }).toISOString();
+
+  const instructorLoadQ = useQuery({
+    queryKey: ["instructor-load", weekLoadStart],
+    queryFn: async () => {
+      const [{ data: instructors, error: iErr }, { data: bookings, error: bErr }] =
+        await Promise.all([
+          supabase
+            .from("instructors")
+            .select("id, full_name")
+            .eq("active", true)
+            .is("deleted_at", null)
+            .order("full_name"),
+          supabase
+            .from("bookings")
+            .select("instructor_id")
+            .is("deleted_at", null)
+            .not("instructor_id", "is", null)
+            .not("status", "in", "(cancelled,declined)")
+            .gte("scheduled_at", weekLoadStart)
+            .lte("scheduled_at", weekLoadEnd),
+        ]);
+      if (iErr) throw iErr;
+      if (bErr) throw bErr;
+      const counts = new Map<string, number>();
+      for (const b of bookings ?? []) {
+        counts.set(b.instructor_id as string, (counts.get(b.instructor_id as string) ?? 0) + 1);
+      }
+      const rows = (instructors ?? []).map((i) => ({
+        id: i.id,
+        name: i.full_name,
+        count: counts.get(i.id) ?? 0,
+      }));
+      const total = rows.reduce((a, r) => a + r.count, 0);
+      const avg = rows.length > 0 ? total / rows.length : 0;
+      rows.sort((a, b) => b.count - a.count);
+      return { rows, avg };
     },
   });
 
@@ -445,6 +488,56 @@ function Dashboard() {
           ))}
         </div>
       </div>
+
+      {instructorLoadQ.data && instructorLoadQ.data.rows.length > 1 && (
+        <div className="card-premium p-5 mt-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Scale className="size-4 text-slate-400" />
+            <h3 className="font-semibold tracking-tight">Instructor load this week</h3>
+          </div>
+          <div className="space-y-2.5">
+            {instructorLoadQ.data.rows.map((r) => {
+              const { avg } = instructorLoadQ.data;
+              const max = Math.max(1, instructorLoadQ.data.rows[0]?.count ?? 1);
+              const isOver = r.count - avg >= 2;
+              const isUnder = avg - r.count >= 2;
+              return (
+                <div key={r.id} className="flex items-center gap-3">
+                  <div className="w-28 shrink-0 text-sm text-slate-700 truncate">{r.name}</div>
+                  <div className="flex-1 h-2 rounded-full bg-slate-100 overflow-hidden">
+                    <div
+                      className="h-full rounded-full"
+                      style={{
+                        width: `${(r.count / max) * 100}%`,
+                        background: isOver ? "#DC2626" : isUnder ? "#94A3B8" : "#3B82F6",
+                      }}
+                    />
+                  </div>
+                  <div className="w-10 shrink-0 text-right text-sm font-semibold text-slate-900">
+                    {r.count}
+                  </div>
+                  <div className="w-20 shrink-0">
+                    {isOver && (
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-red-700 bg-red-50 border border-red-200 rounded px-1.5 py-0.5">
+                        Over
+                      </span>
+                    )}
+                    {isUnder && (
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5">
+                        Under
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <p className="text-xs text-slate-400 mt-4">
+            Lessons scheduled Mon–Sun this week, {Math.round(instructorLoadQ.data.avg * 10) / 10}{" "}
+            average per instructor.
+          </p>
+        </div>
+      )}
     </div>
   );
 }
