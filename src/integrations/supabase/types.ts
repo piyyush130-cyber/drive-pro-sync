@@ -685,6 +685,7 @@ export type Database = {
         Row: {
           auto_assign_instructor: boolean
           auto_invitations_enabled: boolean
+          booking_paused: boolean
           cancellation_fee_cents: number
           cancellation_notice_hours: number
           cancellation_policy: string | null
@@ -707,6 +708,7 @@ export type Database = {
         Insert: {
           auto_assign_instructor?: boolean
           auto_invitations_enabled?: boolean
+          booking_paused?: boolean
           cancellation_fee_cents?: number
           cancellation_notice_hours?: number
           cancellation_policy?: string | null
@@ -729,6 +731,7 @@ export type Database = {
         Update: {
           auto_assign_instructor?: boolean
           auto_invitations_enabled?: boolean
+          booking_paused?: boolean
           cancellation_fee_cents?: number
           cancellation_notice_hours?: number
           cancellation_policy?: string | null

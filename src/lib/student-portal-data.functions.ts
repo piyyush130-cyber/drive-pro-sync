@@ -64,17 +64,26 @@ export const getPortalBookingOptions = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { studentId, schoolId } = await requireStudentSession(supabaseAdmin, data.sessionToken);
 
-    const [{ data: lessonTypes }, remaining] = await Promise.all([
+    const [{ data: lessonTypes }, { data: settings }, remaining] = await Promise.all([
       supabaseAdmin
         .from("lesson_types")
         .select("id, name, description, duration_minutes, price_cents")
         .eq("school_id", schoolId)
         .eq("active", true)
         .order("sort_order"),
+      supabaseAdmin
+        .from("school_settings")
+        .select("booking_paused")
+        .eq("school_id", schoolId)
+        .maybeSingle(),
       remainingLessons(supabaseAdmin, studentId),
     ]);
 
-    return { lessonTypes: lessonTypes ?? [], remaining };
+    return {
+      lessonTypes: lessonTypes ?? [],
+      remaining,
+      bookingPaused: !!settings?.booking_paused,
+    };
   });
 
 const SubmitBookingSchema = z.object({
@@ -88,6 +97,15 @@ export const submitPortalBooking = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { studentId, schoolId } = await requireStudentSession(supabaseAdmin, data.sessionToken);
+
+    const { data: settings } = await supabaseAdmin
+      .from("school_settings")
+      .select("require_approval, auto_assign_instructor, booking_paused")
+      .eq("school_id", schoolId)
+      .maybeSingle();
+    if (settings?.booking_paused) {
+      throw new Error("This school isn't accepting new bookings right now. Please check back later.");
+    }
 
     const remaining = await remainingLessons(supabaseAdmin, studentId);
     if (remaining <= 0) {
@@ -112,11 +130,6 @@ export const submitPortalBooking = createServerFn({ method: "POST" })
     if (ltErr) throw new Error("Could not load lesson type");
     if (!lt || !lt.active) throw new Error("Invalid lesson type");
 
-    const { data: settings } = await supabaseAdmin
-      .from("school_settings")
-      .select("require_approval, auto_assign_instructor")
-      .eq("school_id", schoolId)
-      .maybeSingle();
     const initialStatus = settings?.require_approval === false ? "confirmed" : "pending";
 
     const instructorId = settings?.auto_assign_instructor

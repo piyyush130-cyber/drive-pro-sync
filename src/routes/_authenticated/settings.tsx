@@ -84,6 +84,7 @@ function SettingsPage() {
         cancellation_policy: form.cancellation_policy,
         cancellation_notice_hours: Number(form.cancellation_notice_hours) || 24,
         cancellation_fee_cents: Number(form.cancellation_fee_cents) || 0,
+        booking_paused: !!form.booking_paused,
         deposit_required: !!form.deposit_required,
         deposit_cents: Number(form.deposit_cents) || 0,
         default_duration_minutes: Number(form.default_duration_minutes) || 60,
@@ -158,6 +159,33 @@ function SettingsPage() {
         ) : (
           <p className="text-sm text-slate-500">No plan selected yet.</p>
         )}
+      </section>
+
+      <section
+        className="glass-card p-6 mb-6 space-y-2"
+        style={
+          form.booking_paused
+            ? { background: "rgba(254,226,226,0.5)", borderColor: "rgba(220,38,38,0.3)" }
+            : undefined
+        }
+      >
+        <label className="flex items-center gap-2 text-sm font-medium text-slate-900">
+          <input
+            type="checkbox"
+            checked={!!form.booking_paused}
+            onChange={(e) => setForm({ ...form, booking_paused: e.target.checked })}
+            className="accent-[#DC2626]"
+          />
+          Pause new bookings school-wide
+        </label>
+        <p className="text-xs text-slate-500">
+          When on, your public booking page, invite links, and student portal all stop accepting
+          new bookings — useful for a temporary closure. Existing bookings and instructor
+          availability are unaffected.
+        </p>
+        <button onClick={saveSettings} className="btn-primary text-sm mt-1">
+          Save settings
+        </button>
       </section>
 
       <section className="glass-card p-6 mb-6 space-y-4">

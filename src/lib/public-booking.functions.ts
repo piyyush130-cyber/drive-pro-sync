@@ -103,6 +103,17 @@ export const submitPublicBooking = createServerFn({ method: "POST" })
       );
     }
 
+    // Honor Approval Mode: auto-confirm when admin has disabled manual approval
+    const { data: settings } = await supabaseAdmin
+      .from("school_settings")
+      .select("require_approval, auto_assign_instructor, booking_paused")
+      .eq("school_id", data.school_id)
+      .maybeSingle();
+    if (settings?.booking_paused) {
+      throw new Error("This school isn't accepting new bookings right now. Please check back later.");
+    }
+    const initialStatus = settings?.require_approval === false ? "confirmed" : "pending";
+
     const { data: student, error: sErr } = await supabaseAdmin
       .from("students")
       .insert({
@@ -116,14 +127,6 @@ export const submitPublicBooking = createServerFn({ method: "POST" })
       .select("id")
       .single();
     if (sErr || !student) throw new Error("Could not create student");
-
-    // Honor Approval Mode: auto-confirm when admin has disabled manual approval
-    const { data: settings } = await supabaseAdmin
-      .from("school_settings")
-      .select("require_approval, auto_assign_instructor")
-      .eq("school_id", data.school_id)
-      .maybeSingle();
-    const initialStatus = settings?.require_approval === false ? "confirmed" : "pending";
 
     const instructorId = settings?.auto_assign_instructor
       ? await pickInstructor(supabaseAdmin, data.school_id, data.scheduled_at, lt.duration_minutes)

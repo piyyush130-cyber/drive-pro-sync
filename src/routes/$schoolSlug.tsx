@@ -44,7 +44,7 @@ type LessonType = {
   duration_minutes: number;
   price_cents: number;
 };
-type Settings = { school_name: string };
+type Settings = { school_name: string; booking_paused?: boolean };
 
 // Light premium glass palette
 const C = {
@@ -90,7 +90,7 @@ function BookingPage() {
     queryFn: async () => {
       const { data } = await supabase
         .from("school_settings")
-        .select("school_name")
+        .select("school_name, booking_paused")
         .eq("school_id", schoolId as string)
         .maybeSingle();
       return (data as Settings | null) ?? { school_name: schoolQ.data?.name ?? "Driving School" };
@@ -146,6 +146,24 @@ function BookingPage() {
           <p className="mt-2 text-sm" style={{ color: C.muted }}>
             Double-check the link your school gave you, or contact them directly to confirm your
             booking page.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (settingsQ.data?.booking_paused) {
+    return (
+      <div
+        className="min-h-screen flex items-center justify-center px-4"
+        style={{ background: C.pageBg }}
+      >
+        <div className="text-center max-w-sm">
+          <div className="text-lg font-semibold" style={{ color: C.text }}>
+            {school} isn't accepting new bookings right now.
+          </div>
+          <p className="mt-2 text-sm" style={{ color: C.muted }}>
+            Please check back later, or contact the school directly.
           </p>
         </div>
       </div>

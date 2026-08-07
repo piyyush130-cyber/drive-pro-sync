@@ -40,6 +40,7 @@ function NextLessonPage() {
     remaining: number;
     schoolName: string;
     lessonTypes: LessonType[];
+    bookingPaused: boolean;
   } | null>(null);
 
   useEffect(() => {
@@ -111,6 +112,19 @@ function NextLessonPage() {
           <div className="text-lg font-semibold text-slate-900">You're all set!</div>
           <p className="mt-2 text-sm text-slate-500">
             {info.schoolName} will be in touch to confirm your lesson.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (info.bookingPaused) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4 bg-slate-50">
+        <div className="text-center max-w-sm">
+          <div className="text-lg font-semibold text-slate-900">Not accepting bookings</div>
+          <p className="mt-2 text-sm text-slate-500">
+            {info.schoolName} isn't accepting new bookings right now. Please check back later.
           </p>
         </div>
       </div>

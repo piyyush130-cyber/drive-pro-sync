@@ -37,7 +37,7 @@ export const getInvitationForToken = createServerFn({ method: "POST" })
     const [{ data: settings }, { data: lessonTypes }] = await Promise.all([
       supabaseAdmin
         .from("school_settings")
-        .select("school_name")
+        .select("school_name, booking_paused")
         .eq("school_id", invitation.school_id)
         .maybeSingle(),
       supabaseAdmin
@@ -53,6 +53,7 @@ export const getInvitationForToken = createServerFn({ method: "POST" })
       remaining,
       schoolName: settings?.school_name ?? "your driving school",
       lessonTypes: lessonTypes ?? [],
+      bookingPaused: !!settings?.booking_paused,
     };
   });
 
@@ -88,6 +89,15 @@ export const submitTokenBooking = createServerFn({ method: "POST" })
     const remaining = await remainingLessons(supabaseAdmin, student.id);
     if (remaining <= 0) throw new Error("You have no remaining lessons in your package.");
 
+    const { data: settings } = await supabaseAdmin
+      .from("school_settings")
+      .select("require_approval, auto_assign_instructor, booking_paused")
+      .eq("school_id", invitation.school_id)
+      .maybeSingle();
+    if (settings?.booking_paused) {
+      throw new Error("This school isn't accepting new bookings right now. Please check back later.");
+    }
+
     const { data: lt, error: ltErr } = await supabaseAdmin
       .from("lesson_types")
       .select("id, duration_minutes, price_cents, active, school_id")
@@ -97,11 +107,6 @@ export const submitTokenBooking = createServerFn({ method: "POST" })
     if (ltErr) throw new Error("Could not load lesson type");
     if (!lt || !lt.active) throw new Error("Invalid lesson type");
 
-    const { data: settings } = await supabaseAdmin
-      .from("school_settings")
-      .select("require_approval, auto_assign_instructor")
-      .eq("school_id", invitation.school_id)
-      .maybeSingle();
     const initialStatus = settings?.require_approval === false ? "confirmed" : "pending";
 
     const instructorId = settings?.auto_assign_instructor

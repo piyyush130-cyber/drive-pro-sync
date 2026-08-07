@@ -559,6 +559,17 @@ function BookTab({
 
   if (optionsQ.isLoading || !optionsQ.data) return null;
 
+  if (optionsQ.data.bookingPaused) {
+    return (
+      <div
+        className="rounded-2xl p-8 text-center text-sm"
+        style={{ background: C.surfaceSolid, border: `1px solid ${C.border}`, color: C.muted }}
+      >
+        This school isn't accepting new bookings right now. Please check back later.
+      </div>
+    );
+  }
+
   if (optionsQ.data.remaining <= 0) {
     return (
       <div
