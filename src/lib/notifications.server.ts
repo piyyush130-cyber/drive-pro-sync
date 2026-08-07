@@ -12,7 +12,7 @@ async function loadBooking(supabaseAdmin: any, bookingId: string) {
     .from("bookings")
     .select(
       "id, scheduled_at, price_cents, status, school_id, instructor_id, " +
-        "students(full_name, email), lesson_types(name), instructors(full_name, email)",
+        "students(full_name, email, phone), lesson_types(name), instructors(full_name, email)",
     )
     .eq("id", bookingId)
     .maybeSingle();
@@ -134,12 +134,25 @@ export async function notifyBookingStatusChange(
     });
   }
 
-  if (patch.status === "cancelled" && b.students?.email) {
-    await sendEmail({
-      to: b.students.email,
-      subject: `Booking cancelled — ${school}`,
-      html: layout("Your lesson was cancelled", details),
-    });
+  if (patch.status === "cancelled") {
+    const reason = typeof patch.cancellation_reason === "string" ? patch.cancellation_reason : null;
+    if (b.students?.email) {
+      await sendEmail({
+        to: b.students.email,
+        subject: `Booking cancelled — ${school}`,
+        html: layout(
+          "Your lesson was cancelled",
+          details + (reason ? `<p style="font-size: 14px;">${reason}</p>` : ""),
+        ),
+      });
+    }
+    if (b.students?.phone) {
+      const { sendSms } = await import("@/lib/sms.server");
+      await sendSms(
+        b.students.phone,
+        `${school}: your lesson on ${when} was cancelled.${reason ? ` ${reason}` : ""}`,
+      );
+    }
   }
 
   if ("instructor_id" in patch && patch.instructor_id && b.instructor_id && b.instructors?.email) {
