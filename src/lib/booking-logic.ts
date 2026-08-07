@@ -76,3 +76,33 @@ export function pickBestInstructor(input: {
   }
   return best?.id ?? null;
 }
+
+export type VehicleBooking = {
+  id: string;
+  vehicle_id: string | null;
+  scheduled_at: string;
+  duration_minutes: number;
+};
+
+// True if assigning `vehicleId` to a lesson at [scheduledAt, +durationMinutes]
+// would overlap another booking already using that vehicle. `excludeBookingId`
+// lets a booking check against everyone else's schedule without conflicting
+// with its own existing assignment when reassigning.
+export function hasVehicleConflict(input: {
+  vehicleId: string;
+  dayBookings: VehicleBooking[];
+  scheduledAt: string;
+  durationMinutes: number;
+  excludeBookingId?: string;
+}): boolean {
+  const { vehicleId, dayBookings, scheduledAt, durationMinutes, excludeBookingId } = input;
+  const start = new Date(scheduledAt);
+  const end = new Date(start.getTime() + durationMinutes * 60000);
+  return dayBookings.some((b) => {
+    if (b.vehicle_id !== vehicleId) return false;
+    if (excludeBookingId && b.id === excludeBookingId) return false;
+    const bStart = new Date(b.scheduled_at);
+    const bEnd = new Date(bStart.getTime() + b.duration_minutes * 60000);
+    return start < bEnd && end > bStart;
+  });
+}

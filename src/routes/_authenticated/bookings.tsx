@@ -7,7 +7,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { fmtDateTime, money, statusLabel, statusTone } from "@/lib/format";
 import { StatusPill } from "@/components/StatCard";
 import { notifyBookingUpdated } from "@/lib/notifications.functions";
+import { hasVehicleConflict } from "@/lib/booking-logic";
 import { toast } from "sonner";
+
+function startOfDay(d: Date) {
+  const x = new Date(d);
+  x.setHours(0, 0, 0, 0);
+  return x;
+}
 
 export const Route = createFileRoute("/_authenticated/bookings")({
   component: BookingsPage,
@@ -44,6 +51,19 @@ function BookingsPage() {
     },
   });
 
+  const vehiclesQ = useQuery({
+    queryKey: ["vehicles-active"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("vehicles")
+        .select("id, name")
+        .eq("active", true)
+        .is("deleted_at", null)
+        .order("name");
+      return data ?? [];
+    },
+  });
+
   const notifyUpdate = useServerFn(notifyBookingUpdated);
 
   async function update(id: string, patch: any) {
@@ -54,6 +74,32 @@ function BookingsPage() {
     qc.invalidateQueries({ queryKey: ["pending-bookings"] });
     toast.success("Updated");
     void notifyUpdate({ data: { bookingId: id, patch } });
+  }
+
+  async function assignVehicle(b: any, vehicleId: string) {
+    if (!vehicleId) return update(b.id, { vehicle_id: null });
+    const dayStart = startOfDay(new Date(b.scheduled_at));
+    const dayEnd = new Date(dayStart.getTime() + 86400000);
+    const { data: dayBookings } = await supabase
+      .from("bookings")
+      .select("id, vehicle_id, scheduled_at, duration_minutes")
+      .eq("vehicle_id", vehicleId)
+      .is("deleted_at", null)
+      .not("status", "in", "(cancelled,declined)")
+      .gte("scheduled_at", dayStart.toISOString())
+      .lt("scheduled_at", dayEnd.toISOString());
+    const conflict = hasVehicleConflict({
+      vehicleId,
+      dayBookings: (dayBookings ?? []) as any,
+      scheduledAt: b.scheduled_at,
+      durationMinutes: b.duration_minutes,
+      excludeBookingId: b.id,
+    });
+    if (conflict) {
+      toast.error("This vehicle is already booked over that time — pick another.");
+      return;
+    }
+    update(b.id, { vehicle_id: vehicleId });
   }
 
   async function deleteBooking(id: string) {
@@ -150,6 +196,18 @@ function BookingsPage() {
                 {(instructorsQ.data ?? []).map((i) => (
                   <option key={i.id} value={i.id}>
                     {i.full_name}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={b.vehicle_id ?? ""}
+                onChange={(e) => assignVehicle(b, e.target.value)}
+                className="text-xs border border-slate-200 rounded-md px-2 py-1.5 bg-white font-medium"
+              >
+                <option value="">— Assign vehicle —</option>
+                {(vehiclesQ.data ?? []).map((v) => (
+                  <option key={v.id} value={v.id}>
+                    {v.name}
                   </option>
                 ))}
               </select>

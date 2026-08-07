@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { isBotSubmission, pickBestInstructor, MIN_FILL_TIME_MS } from "./booking-logic";
+import {
+  isBotSubmission,
+  pickBestInstructor,
+  hasVehicleConflict,
+  MIN_FILL_TIME_MS,
+} from "./booking-logic";
 
 describe("isBotSubmission", () => {
   it("flags a filled honeypot", () => {
@@ -101,5 +106,58 @@ describe("pickBestInstructor", () => {
       durationMinutes: 60,
     });
     expect(result).toBe("free");
+  });
+});
+
+describe("hasVehicleConflict", () => {
+  const MONDAY_9AM = "2026-08-03T09:00:00.000Z";
+
+  it("returns false when the vehicle has no bookings that overlap", () => {
+    const result = hasVehicleConflict({
+      vehicleId: "car-1",
+      dayBookings: [
+        { id: "b1", vehicle_id: "car-1", scheduled_at: "2026-08-03T13:00:00.000Z", duration_minutes: 60 },
+      ],
+      scheduledAt: MONDAY_9AM,
+      durationMinutes: 60,
+    });
+    expect(result).toBe(false);
+  });
+
+  it("returns true when another booking overlaps the same vehicle", () => {
+    const result = hasVehicleConflict({
+      vehicleId: "car-1",
+      dayBookings: [
+        { id: "b1", vehicle_id: "car-1", scheduled_at: MONDAY_9AM, duration_minutes: 60 },
+      ],
+      scheduledAt: MONDAY_9AM,
+      durationMinutes: 60,
+    });
+    expect(result).toBe(true);
+  });
+
+  it("ignores bookings for a different vehicle", () => {
+    const result = hasVehicleConflict({
+      vehicleId: "car-1",
+      dayBookings: [
+        { id: "b1", vehicle_id: "car-2", scheduled_at: MONDAY_9AM, duration_minutes: 60 },
+      ],
+      scheduledAt: MONDAY_9AM,
+      durationMinutes: 60,
+    });
+    expect(result).toBe(false);
+  });
+
+  it("excludes the booking's own existing assignment", () => {
+    const result = hasVehicleConflict({
+      vehicleId: "car-1",
+      dayBookings: [
+        { id: "b1", vehicle_id: "car-1", scheduled_at: MONDAY_9AM, duration_minutes: 60 },
+      ],
+      scheduledAt: MONDAY_9AM,
+      durationMinutes: 60,
+      excludeBookingId: "b1",
+    });
+    expect(result).toBe(false);
   });
 });

@@ -93,7 +93,7 @@ function InstructorPage() {
       const tomorrow = new Date(start.getTime() + 86400000);
       let q = supabase
         .from("bookings")
-        .select("*, students(full_name, phone, email), lesson_types(name)")
+        .select("*, students(full_name, phone, email), lesson_types(name), vehicles(name)")
         .eq("instructor_id", meQ.data!.id)
         .is("deleted_at", null)
         .order("scheduled_at");
@@ -323,6 +323,12 @@ function InstructorPage() {
                         )}
                       </span>
                     </div>
+                    {b.vehicles?.name && (
+                      <div className="mt-2 text-xs text-slate-500 inline-flex items-center gap-1.5">
+                        <CarFront className="size-3.5 text-slate-400" />
+                        Vehicle: {b.vehicles.name}
+                      </div>
+                    )}
                     {b.notes && (
                       <div className="mt-2 text-xs text-slate-500 italic">"{b.notes}"</div>
                     )}

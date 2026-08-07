@@ -9,12 +9,13 @@ export const Route = createFileRoute("/_authenticated/recycle-bin")({
   component: RecycleBinPage,
 });
 
-type Tab = "students" | "bookings" | "instructors";
+type Tab = "students" | "bookings" | "instructors" | "vehicles";
 
 const TABS: { key: Tab; label: string }[] = [
   { key: "students", label: "Students" },
   { key: "bookings", label: "Bookings" },
   { key: "instructors", label: "Instructors" },
+  { key: "vehicles", label: "Vehicles" },
 ];
 
 function RecycleBinPage() {
@@ -63,7 +64,21 @@ function RecycleBinPage() {
     },
   });
 
-  async function restore(table: "students" | "bookings" | "instructors", id: string) {
+  const vehiclesQ = useQuery({
+    queryKey: ["deleted-vehicles"],
+    enabled: tab === "vehicles",
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("vehicles")
+        .select("id, name, plate, deleted_at")
+        .not("deleted_at", "is", null)
+        .order("deleted_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  async function restore(table: "students" | "bookings" | "instructors" | "vehicles", id: string) {
     const { error } = await supabase.from(table).update({ deleted_at: null }).eq("id", id);
     if (error) return toast.error(error.message);
     qc.invalidateQueries({ queryKey: [`deleted-${table}`] });
@@ -72,7 +87,7 @@ function RecycleBinPage() {
   }
 
   async function destroyForever(
-    table: "students" | "bookings" | "instructors",
+    table: "students" | "bookings" | "instructors" | "vehicles",
     id: string,
     label: string,
   ) {
@@ -144,6 +159,15 @@ function RecycleBinPage() {
           ]}
           onRestore={(i: any) => restore("instructors", i.id)}
           onDestroy={(i: any) => destroyForever("instructors", i.id, i.full_name)}
+        />
+      )}
+      {tab === "vehicles" && (
+        <RecycleTable
+          rows={vehiclesQ.data ?? []}
+          empty="No deleted vehicles."
+          columns={(v: any) => [v.name, v.plate ?? "No plate on file", fmtDateTime(v.deleted_at)]}
+          onRestore={(v: any) => restore("vehicles", v.id)}
+          onDestroy={(v: any) => destroyForever("vehicles", v.id, v.name)}
         />
       )}
     </div>

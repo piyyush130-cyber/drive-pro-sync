@@ -36,6 +36,7 @@ export type Database = {
           status: Database["public"]["Enums"]["booking_status"]
           student_id: string
           updated_at: string
+          vehicle_id: string | null
         }
         Insert: {
           admin_notes?: string | null
@@ -58,6 +59,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["booking_status"]
           student_id: string
           updated_at?: string
+          vehicle_id?: string | null
         }
         Update: {
           admin_notes?: string | null
@@ -80,6 +82,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["booking_status"]
           student_id?: string
           updated_at?: string
+          vehicle_id?: string | null
         }
         Relationships: [
           {
@@ -108,6 +111,13 @@ export type Database = {
             columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
             referencedColumns: ["id"]
           },
         ]
@@ -1010,6 +1020,44 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "user_roles_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vehicles: {
+        Row: {
+          active: boolean
+          created_at: string
+          deleted_at: string | null
+          id: string
+          name: string
+          plate: string | null
+          school_id: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          name: string
+          plate?: string | null
+          school_id: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          name?: string
+          plate?: string | null
+          school_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicles_school_id_fkey"
             columns: ["school_id"]
             isOneToOne: false
             referencedRelation: "schools"
