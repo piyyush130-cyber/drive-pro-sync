@@ -32,6 +32,7 @@ export type Database = {
           pickup_address: string | null
           price_cents: number
           scheduled_at: string
+          scheduled_range: unknown
           school_id: string
           status: Database["public"]["Enums"]["booking_status"]
           student_id: string
@@ -55,6 +56,7 @@ export type Database = {
           pickup_address?: string | null
           price_cents?: number
           scheduled_at: string
+          scheduled_range?: unknown
           school_id: string
           status?: Database["public"]["Enums"]["booking_status"]
           student_id: string
@@ -78,6 +80,7 @@ export type Database = {
           pickup_address?: string | null
           price_cents?: number
           scheduled_at?: string
+          scheduled_range?: unknown
           school_id?: string
           status?: Database["public"]["Enums"]["booking_status"]
           student_id?: string

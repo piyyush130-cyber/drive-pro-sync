@@ -9,6 +9,7 @@ import { checkInstructorLimit } from "@/lib/billing.functions";
 import { notifyBookingUpdated } from "@/lib/notifications.functions";
 import { useAuthUser, useSchoolId } from "@/lib/auth";
 import { fmtDate, fmtTime } from "@/lib/format";
+import { isBookingConflictError } from "@/lib/booking-conflict-error";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/instructors")({
@@ -397,7 +398,11 @@ function OffboardPanel({
       toast.success("Lesson reassigned");
       await qc.invalidateQueries({ queryKey: ["instructor-upcoming-bookings", instructorId] });
     } catch (err: any) {
-      toast.error(err?.message || "Could not reassign lesson");
+      toast.error(
+        isBookingConflictError(err)
+          ? "That instructor already has an overlapping lesson at this time."
+          : err?.message || "Could not reassign lesson",
+      );
     } finally {
       setBusyId(null);
     }

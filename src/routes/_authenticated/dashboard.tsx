@@ -21,6 +21,7 @@ import { useAuthUser, useSchoolId } from "@/lib/auth";
 import { StatCard, StatusPill } from "@/components/StatCard";
 import { fmtTime, money, statusLabel, statusTone } from "@/lib/format";
 import { cancelTodayBookings } from "@/lib/bulk-cancel.functions";
+import { isBookingConflictError } from "@/lib/booking-conflict-error";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -232,7 +233,11 @@ function Dashboard() {
       ]);
       toast.success("Booking updated");
     } catch (err: any) {
-      toast.error(err?.message || "Could not update booking");
+      toast.error(
+        isBookingConflictError(err)
+          ? "That instructor already has an overlapping lesson at this time."
+          : err?.message || "Could not update booking",
+      );
     } finally {
       setUpdatingId(null);
     }

@@ -8,6 +8,7 @@ import { fmtDateTime, money, statusLabel, statusTone } from "@/lib/format";
 import { StatusPill } from "@/components/StatCard";
 import { notifyBookingUpdated } from "@/lib/notifications.functions";
 import { hasVehicleConflict } from "@/lib/booking-logic";
+import { isBookingConflictError, BOOKING_CONFLICT_MESSAGE } from "@/lib/booking-conflict-error";
 import { toast } from "sonner";
 
 function startOfDay(d: Date) {
@@ -68,6 +69,13 @@ function BookingsPage() {
 
   async function update(id: string, patch: any) {
     const { error } = await supabase.from("bookings").update(patch).eq("id", id);
+    if (error && isBookingConflictError(error)) {
+      return toast.error(
+        "instructor_id" in patch
+          ? "That instructor already has an overlapping lesson at this time."
+          : BOOKING_CONFLICT_MESSAGE,
+      );
+    }
     if (error) return toast.error(error.message);
     qc.invalidateQueries({ queryKey: ["bookings"] });
     qc.invalidateQueries({ queryKey: ["dashboard-stats"] });

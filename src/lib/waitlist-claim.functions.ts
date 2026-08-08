@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { hashToken } from "@/lib/student-portal-token.server";
+import { isBookingConflictError } from "@/lib/booking-conflict-error";
 
 const TokenSchema = z.object({ token: z.string().min(20) });
 
@@ -135,6 +136,10 @@ export const claimWaitlistOffer = createServerFn({ method: "POST" })
       })
       .select("id")
       .single();
+    if (bErr && isBookingConflictError(bErr)) {
+      await supabaseAdmin.from("waitlist_offers").update({ status: "expired" }).eq("id", offer.id);
+      throw new Error("Sorry, this slot was just filled another way.");
+    }
     if (bErr || !booking) throw new Error("Could not book this lesson.");
 
     await supabaseAdmin

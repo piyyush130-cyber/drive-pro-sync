@@ -3,6 +3,7 @@ import { z } from "zod";
 import { pickInstructor } from "@/lib/public-booking.functions";
 import { remainingLessons } from "@/lib/student-balance";
 import { NO_SHOW_ESCALATION_THRESHOLD } from "@/lib/no-show";
+import { isBookingConflictError, BOOKING_CONFLICT_MESSAGE } from "@/lib/booking-conflict-error";
 
 const TokenSchema = z.object({ token: z.string().uuid() });
 
@@ -150,6 +151,7 @@ export const submitTokenBooking = createServerFn({ method: "POST" })
       })
       .select("id")
       .single();
+    if (bErr && isBookingConflictError(bErr)) throw new Error(BOOKING_CONFLICT_MESSAGE);
     if (bErr || !booking) throw new Error("Could not create booking");
 
     await supabaseAdmin

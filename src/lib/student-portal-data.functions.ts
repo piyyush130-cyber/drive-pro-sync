@@ -4,6 +4,7 @@ import { requireStudentSession } from "@/lib/student-portal-auth.server";
 import { remainingLessons } from "@/lib/student-balance";
 import { pickInstructor } from "@/lib/public-booking.functions";
 import { NO_SHOW_ESCALATION_THRESHOLD } from "@/lib/no-show";
+import { isBookingConflictError, BOOKING_CONFLICT_MESSAGE } from "@/lib/booking-conflict-error";
 
 const SessionSchema = z.object({ sessionToken: z.string() });
 
@@ -168,6 +169,7 @@ export const submitPortalBooking = createServerFn({ method: "POST" })
       })
       .select("id")
       .single();
+    if (bErr && isBookingConflictError(bErr)) throw new Error(BOOKING_CONFLICT_MESSAGE);
     if (bErr || !booking) throw new Error("Could not create booking");
 
     const { notifyBookingCreated } = await import("@/lib/notifications.server");

@@ -7,6 +7,7 @@ import {
   pickBestInstructor,
 } from "@/lib/booking-logic";
 import { isValidPostalCode, isPickupAreaServiced } from "@/lib/postal-code";
+import { isBookingConflictError, BOOKING_CONFLICT_MESSAGE } from "@/lib/booking-conflict-error";
 
 const BookingSchema = z.object({
   full_name: z.string().trim().min(1).max(120),
@@ -166,6 +167,7 @@ export const submitPublicBooking = createServerFn({ method: "POST" })
       })
       .select("id")
       .single();
+    if (bErr && isBookingConflictError(bErr)) throw new Error(BOOKING_CONFLICT_MESSAGE);
     if (bErr || !booking) throw new Error("Could not create booking");
 
     const { notifyBookingCreated } = await import("@/lib/notifications.server");
