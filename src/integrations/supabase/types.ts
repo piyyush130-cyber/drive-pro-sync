@@ -535,6 +535,7 @@ export type Database = {
           duration_minutes: number
           id: string
           name: string
+          pickup_available: boolean
           price_cents: number
           school_id: string
           sort_order: number
@@ -548,6 +549,7 @@ export type Database = {
           duration_minutes?: number
           id?: string
           name: string
+          pickup_available?: boolean
           price_cents?: number
           school_id: string
           sort_order?: number
@@ -561,6 +563,7 @@ export type Database = {
           duration_minutes?: number
           id?: string
           name?: string
+          pickup_available?: boolean
           price_cents?: number
           school_id?: string
           sort_order?: number
@@ -709,6 +712,7 @@ export type Database = {
           logo_url: string | null
           mpi_permit_confirmed_at: string | null
           onboarding_complete: boolean
+          pickup_service_areas: string[]
           province: string | null
           require_approval: boolean
           school_id: string
@@ -733,6 +737,7 @@ export type Database = {
           logo_url?: string | null
           mpi_permit_confirmed_at?: string | null
           onboarding_complete?: boolean
+          pickup_service_areas?: string[]
           province?: string | null
           require_approval?: boolean
           school_id: string
@@ -757,6 +762,7 @@ export type Database = {
           logo_url?: string | null
           mpi_permit_confirmed_at?: string | null
           onboarding_complete?: boolean
+          pickup_service_areas?: string[]
           province?: string | null
           require_approval?: boolean
           school_id?: string

@@ -6,12 +6,17 @@ import {
   isBotSubmission,
   pickBestInstructor,
 } from "@/lib/booking-logic";
+import { isValidPostalCode, isPickupAreaServiced } from "@/lib/postal-code";
 
 const BookingSchema = z.object({
   full_name: z.string().trim().min(1).max(120),
   phone: z.string().trim().min(3).max(40),
   email: z.string().trim().email().max(200),
-  pickup_address: z.string().trim().min(1).max(300),
+  // Required only when the lesson type has pickup enabled — enforced in
+  // the handler once the lesson type is loaded, not here, since the schema
+  // has no way to know that yet.
+  pickup_address: z.string().trim().max(300).optional().default(""),
+  postal_code: z.string().trim().max(10).optional().default(""),
   dropoff_address: z.string().max(300).optional().nullable(),
   notes: z.string().max(2000).optional().nullable(),
   lesson_type_id: z.string().uuid(),
@@ -81,7 +86,7 @@ export const submitPublicBooking = createServerFn({ method: "POST" })
     // that belongs to a different school by tampering with the request.
     const { data: lt, error: ltErr } = await supabaseAdmin
       .from("lesson_types")
-      .select("id,duration_minutes,price_cents,active,school_id")
+      .select("id,duration_minutes,price_cents,active,school_id,pickup_available")
       .eq("id", data.lesson_type_id)
       .eq("school_id", data.school_id)
       .maybeSingle();
@@ -106,7 +111,7 @@ export const submitPublicBooking = createServerFn({ method: "POST" })
     // Honor Approval Mode: auto-confirm when admin has disabled manual approval
     const { data: settings } = await supabaseAdmin
       .from("school_settings")
-      .select("require_approval, auto_assign_instructor, booking_paused")
+      .select("require_approval, auto_assign_instructor, booking_paused, pickup_service_areas")
       .eq("school_id", data.school_id)
       .maybeSingle();
     if (settings?.booking_paused) {
@@ -114,13 +119,25 @@ export const submitPublicBooking = createServerFn({ method: "POST" })
     }
     const initialStatus = settings?.require_approval === false ? "confirmed" : "pending";
 
+    // Re-validate pickup on the server — the client-side check is UX, not
+    // a security boundary, and a tampered request could otherwise skip it.
+    let finalPickupAddress: string | null = null;
+    if (lt.pickup_available) {
+      if (!data.pickup_address.trim()) throw new Error("Pickup address is required.");
+      if (!isValidPostalCode(data.postal_code)) throw new Error("Enter a valid postal code.");
+      if (!isPickupAreaServiced(data.postal_code, settings?.pickup_service_areas ?? [])) {
+        throw new Error("Sorry, this address is outside our pickup area.");
+      }
+      finalPickupAddress = `${data.pickup_address.trim()}, ${data.postal_code.trim().toUpperCase()}`;
+    }
+
     const { data: student, error: sErr } = await supabaseAdmin
       .from("students")
       .insert({
         full_name: data.full_name,
         phone: data.phone,
         email: data.email,
-        pickup_address: data.pickup_address,
+        pickup_address: finalPickupAddress,
         notes: data.notes ?? null,
         school_id: data.school_id,
       })
@@ -140,8 +157,8 @@ export const submitPublicBooking = createServerFn({ method: "POST" })
         lesson_type_id: lt.id,
         scheduled_at: data.scheduled_at,
         duration_minutes: lt.duration_minutes,
-        pickup_address: data.pickup_address,
-        dropoff_address: data.dropoff_address ?? data.pickup_address,
+        pickup_address: finalPickupAddress,
+        dropoff_address: data.dropoff_address ?? finalPickupAddress,
         notes: data.notes ?? null,
         price_cents: lt.price_cents,
         status: initialStatus,

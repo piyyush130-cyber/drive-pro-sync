@@ -7,6 +7,7 @@ import { useAuthUser, useSchoolId } from "@/lib/auth";
 import { money } from "@/lib/format";
 import { createBillingPortalSession } from "@/lib/billing.functions";
 import { PLANS, type PlanKey } from "@/lib/plans";
+import { normalizeServiceAreaInput } from "@/lib/postal-code";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/settings")({
@@ -66,8 +67,12 @@ function SettingsPage() {
   }
 
   const [form, setForm] = useState<any>({});
+  const [pickupAreasText, setPickupAreasText] = useState("");
   useEffect(() => {
-    if (settingsQ.data) setForm(settingsQ.data);
+    if (settingsQ.data) {
+      setForm(settingsQ.data);
+      setPickupAreasText((settingsQ.data.pickup_service_areas ?? []).join(", "));
+    }
   }, [settingsQ.data]);
 
   async function saveSettings() {
@@ -92,6 +97,7 @@ function SettingsPage() {
         require_approval: !!form.require_approval,
         auto_assign_instructor: !!form.auto_assign_instructor,
         auto_invitations_enabled: !!form.auto_invitations_enabled,
+        pickup_service_areas: normalizeServiceAreaInput(pickupAreasText),
       })
       .eq("school_id", schoolIdQ.data);
     if (error) return toast.error(error.message);
@@ -235,6 +241,18 @@ function SettingsPage() {
             onChange={(e) => setForm({ ...form, service_area: e.target.value })}
             className="glass-input min-h-[60px]"
           />
+        </Field>
+        <Field label="Pickup service areas (postal code prefixes)">
+          <input
+            value={pickupAreasText}
+            onChange={(e) => setPickupAreasText(e.target.value)}
+            placeholder="e.g. R2C, R2G, R2J"
+            className="glass-input"
+          />
+          <p className="text-xs text-slate-500 mt-1">
+            Comma-separated. New bookings will be blocked if the pickup postal code isn't in one of
+            these areas. Leave blank to allow pickup anywhere (default).
+          </p>
         </Field>
         <Field label="Cancellation policy">
           <textarea

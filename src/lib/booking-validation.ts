@@ -1,3 +1,5 @@
+import { isValidPostalCode, isPickupAreaServiced } from "./postal-code";
+
 export type BookingFormErrors = Partial<{
   service: string;
   date: string;
@@ -6,6 +8,7 @@ export type BookingFormErrors = Partial<{
   phone: string;
   email: string;
   pickup_address: string;
+  postal_code: string;
 }>;
 
 export const emailOk = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
@@ -34,6 +37,9 @@ export function validateBookingForm(input: {
   phone: string;
   email: string;
   pickup_address: string;
+  postal_code: string;
+  pickupAvailable: boolean;
+  serviceAreas: string[];
 }): BookingFormErrors {
   const e: BookingFormErrors = {};
   if (!input.hasSelectedService) e.service = "Please choose a lesson.";
@@ -44,6 +50,13 @@ export function validateBookingForm(input: {
   else if (input.phone.replace(/\D/g, "").length !== 10) e.phone = "Enter a 10-digit phone number.";
   if (!input.email.trim()) e.email = "Email is required.";
   else if (!emailOk(input.email.trim())) e.email = "Enter a valid email.";
-  if (!input.pickup_address.trim()) e.pickup_address = "Pickup address is required.";
+  if (input.pickupAvailable) {
+    if (!input.pickup_address.trim()) e.pickup_address = "Pickup address is required.";
+    if (!input.postal_code.trim()) e.postal_code = "Postal code is required.";
+    else if (!isValidPostalCode(input.postal_code)) e.postal_code = "Enter a valid postal code.";
+    else if (!isPickupAreaServiced(input.postal_code, input.serviceAreas)) {
+      e.postal_code = "Sorry, this address is outside our pickup area.";
+    }
+  }
   return e;
 }

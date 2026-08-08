@@ -43,8 +43,13 @@ type LessonType = {
   description: string | null;
   duration_minutes: number;
   price_cents: number;
+  pickup_available: boolean;
 };
-type Settings = { school_name: string; booking_paused?: boolean };
+type Settings = {
+  school_name: string;
+  booking_paused?: boolean;
+  pickup_service_areas?: string[];
+};
 
 // Light premium glass palette
 const C = {
@@ -90,7 +95,7 @@ function BookingPage() {
     queryFn: async () => {
       const { data } = await supabase
         .from("school_settings")
-        .select("school_name, booking_paused")
+        .select("school_name, booking_paused, pickup_service_areas")
         .eq("school_id", schoolId as string)
         .maybeSingle();
       return (data as Settings | null) ?? { school_name: schoolQ.data?.name ?? "Driving School" };
@@ -102,7 +107,7 @@ function BookingPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("lesson_types")
-        .select("id,name,description,duration_minutes,price_cents")
+        .select("id,name,description,duration_minutes,price_cents,pickup_available")
         .eq("school_id", schoolId as string)
         .eq("active", true)
         .order("sort_order");
@@ -119,6 +124,7 @@ function BookingPage() {
     phone: "",
     email: "",
     pickup_address: "",
+    postal_code: "",
     dropoff_same: true,
     dropoff_address: "",
     pickup_notes: "",
@@ -170,6 +176,8 @@ function BookingPage() {
     );
   }
 
+  const pickupAvailable = selected?.pickup_available !== false;
+
   function validate(): Errors {
     return validateBookingForm({
       hasSelectedService: !!selected,
@@ -179,6 +187,9 @@ function BookingPage() {
       phone: form.phone,
       email: form.email,
       pickup_address: form.pickup_address,
+      postal_code: form.postal_code,
+      pickupAvailable: selected?.pickup_available !== false,
+      serviceAreas: settingsQ.data?.pickup_service_areas ?? [],
     });
   }
 
@@ -199,6 +210,7 @@ function BookingPage() {
           phone: form.phone,
           email: form.email.trim(),
           pickup_address: form.pickup_address.trim(),
+          postal_code: form.postal_code.trim(),
           dropoff_address: form.dropoff_same ? form.pickup_address : form.dropoff_address,
           notes:
             [form.pickup_notes && `Pickup: ${form.pickup_notes}`, form.notes]
@@ -351,49 +363,85 @@ function BookingPage() {
               </Field>
             </Panel>
 
-            <Panel eyebrow="Pickup & drop-off" title="Where shall we meet?" icon={MapPin}>
-              <Field label="Pickup address" required error={errors.pickup_address}>
-                <GlassInput
-                  value={form.pickup_address}
-                  invalid={!!errors.pickup_address}
-                  onChange={(v) => {
-                    setForm({ ...form, pickup_address: v });
-                    if (errors.pickup_address)
-                      setErrors((e) => ({ ...e, pickup_address: undefined }));
-                  }}
-                  placeholder="123 Street Name, City"
-                />
-              </Field>
-              <label
-                className="flex items-center gap-2.5 text-sm select-none"
-                style={{ color: C.muted }}
-              >
-                <input
-                  type="checkbox"
-                  checked={form.dropoff_same}
-                  onChange={(e) => setForm({ ...form, dropoff_same: e.target.checked })}
-                  className="size-4"
-                  style={{ accentColor: C.primary }}
-                />
-                Drop-off same as pickup
-              </label>
-              {!form.dropoff_same && (
-                <Field label="Drop-off address">
+            {pickupAvailable ? (
+              <Panel eyebrow="Pickup & drop-off" title="Where shall we meet?" icon={MapPin}>
+                <Field label="Pickup address" required error={errors.pickup_address}>
                   <GlassInput
-                    value={form.dropoff_address}
-                    onChange={(v) => setForm({ ...form, dropoff_address: v })}
-                    placeholder="Drop-off address"
+                    value={form.pickup_address}
+                    invalid={!!errors.pickup_address}
+                    onChange={(v) => {
+                      setForm({ ...form, pickup_address: v });
+                      if (errors.pickup_address)
+                        setErrors((e) => ({ ...e, pickup_address: undefined }));
+                    }}
+                    placeholder="123 Street Name, City"
                   />
                 </Field>
-              )}
-              <Field label="Pickup notes">
-                <GlassTextarea
-                  value={form.pickup_notes}
-                  onChange={(v) => setForm({ ...form, pickup_notes: v })}
-                  placeholder="Apartment buzzer, school entrance, meet outside…"
-                />
-              </Field>
-            </Panel>
+                <Field label="Postal code" required error={errors.postal_code}>
+                  <GlassInput
+                    value={form.postal_code}
+                    invalid={!!errors.postal_code}
+                    onChange={(v) => {
+                      setForm({ ...form, postal_code: v });
+                      if (errors.postal_code) setErrors((e) => ({ ...e, postal_code: undefined }));
+                    }}
+                    onBlur={() => {
+                      if (!form.postal_code.trim()) return;
+                      const { postal_code } = validateBookingForm({
+                        hasSelectedService: true,
+                        hasSelectedDate: true,
+                        hasSelectedTime: true,
+                        full_name: "x",
+                        phone: "1234567890",
+                        email: "x@x.com",
+                        pickup_address: "x",
+                        postal_code: form.postal_code,
+                        pickupAvailable: true,
+                        serviceAreas: settingsQ.data?.pickup_service_areas ?? [],
+                      });
+                      setErrors((e) => ({ ...e, postal_code }));
+                    }}
+                    placeholder="R2C 1A1"
+                  />
+                </Field>
+                <label
+                  className="flex items-center gap-2.5 text-sm select-none"
+                  style={{ color: C.muted }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={form.dropoff_same}
+                    onChange={(e) => setForm({ ...form, dropoff_same: e.target.checked })}
+                    className="size-4"
+                    style={{ accentColor: C.primary }}
+                  />
+                  Drop-off same as pickup
+                </label>
+                {!form.dropoff_same && (
+                  <Field label="Drop-off address">
+                    <GlassInput
+                      value={form.dropoff_address}
+                      onChange={(v) => setForm({ ...form, dropoff_address: v })}
+                      placeholder="Drop-off address"
+                    />
+                  </Field>
+                )}
+                <Field label="Pickup notes">
+                  <GlassTextarea
+                    value={form.pickup_notes}
+                    onChange={(v) => setForm({ ...form, pickup_notes: v })}
+                    placeholder="Apartment buzzer, school entrance, meet outside…"
+                  />
+                </Field>
+              </Panel>
+            ) : (
+              <Panel eyebrow="Pickup & drop-off" title="Where shall we meet?" icon={MapPin}>
+                <p className="text-sm" style={{ color: C.muted }}>
+                  This lesson requires in-person pickup at our location — no drive-to-you service
+                  for this one.
+                </p>
+              </Panel>
+            )}
 
             <Panel eyebrow="Notes" title="Anything else?" icon={ShieldCheck}>
               <GlassTextarea
@@ -1054,12 +1102,14 @@ const inputClass =
 function GlassInput({
   value,
   onChange,
+  onBlur,
   placeholder,
   type = "text",
   invalid,
 }: {
   value: string;
   onChange: (v: string) => void;
+  onBlur?: () => void;
   placeholder?: string;
   type?: string;
   invalid?: boolean;
@@ -1085,6 +1135,7 @@ function GlassInput({
       onBlur={(e) => {
         e.currentTarget.style.borderColor = invalid ? C.danger : C.border;
         e.currentTarget.style.boxShadow = "none";
+        onBlur?.();
       }}
     />
   );

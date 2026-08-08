@@ -40,6 +40,7 @@ function ServicesPage() {
       category: String(fd.get("category") || "lesson"),
       buffer_minutes: Number(fd.get("buffer") || 0),
       sort_order: Number(fd.get("sort_order") || 0),
+      pickup_available: fd.get("pickup_available") === "on",
       active: true,
       school_id: schoolIdQ.data,
     });
@@ -95,6 +96,10 @@ function ServicesPage() {
             <option value="custom">Custom</option>
           </select>
           <Input name="description" placeholder="Short description" className="sm:col-span-2 lg:col-span-3" />
+          <label className="flex items-center gap-2 text-sm text-slate-700 sm:col-span-2 lg:col-span-3">
+            <input type="checkbox" name="pickup_available" defaultChecked className="accent-blue-600" />
+            Offer pickup for this service
+          </label>
           <button className="btn-primary sm:col-span-2 lg:col-span-3">Save service</button>
         </form>
       )}
@@ -178,6 +183,15 @@ function ServicesPage() {
                     </select>
                   </Field>
                 </div>
+                <label className="flex items-center gap-2 text-sm text-slate-700 mt-3">
+                  <input
+                    type="checkbox"
+                    defaultChecked={s.pickup_available ?? true}
+                    onChange={(e) => update(s.id, { pickup_available: e.target.checked })}
+                    className="accent-blue-600"
+                  />
+                  Offer pickup for this service
+                </label>
               </div>
               <div className="flex flex-col gap-2">
                 <button

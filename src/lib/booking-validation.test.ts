@@ -47,6 +47,9 @@ describe("validateBookingForm", () => {
     phone: "2045551234",
     email: "sarah@example.com",
     pickup_address: "123 Main St",
+    postal_code: "R2C 1A1",
+    pickupAvailable: true,
+    serviceAreas: [] as string[],
   };
 
   it("returns no errors for a fully valid submission", () => {
@@ -78,6 +81,45 @@ describe("validateBookingForm", () => {
   it("requires a pickup address", () => {
     const errors = validateBookingForm({ ...valid, pickup_address: "   " });
     expect(errors.pickup_address).toBeDefined();
+  });
+
+  it("requires a postal code", () => {
+    const errors = validateBookingForm({ ...valid, postal_code: "   " });
+    expect(errors.postal_code).toBe("Postal code is required.");
+  });
+
+  it("rejects a malformed postal code", () => {
+    const errors = validateBookingForm({ ...valid, postal_code: "12345" });
+    expect(errors.postal_code).toBe("Enter a valid postal code.");
+  });
+
+  it("rejects a postal code outside the school's configured service area", () => {
+    const errors = validateBookingForm({
+      ...valid,
+      postal_code: "R3T 5V6",
+      serviceAreas: ["R2C", "R2G"],
+    });
+    expect(errors.postal_code).toBe("Sorry, this address is outside our pickup area.");
+  });
+
+  it("allows a postal code inside the school's configured service area", () => {
+    const errors = validateBookingForm({
+      ...valid,
+      postal_code: "R2C 1A1",
+      serviceAreas: ["R2C", "R2G"],
+    });
+    expect(errors.postal_code).toBeUndefined();
+  });
+
+  it("skips pickup/postal validation entirely when pickup isn't available for the lesson type", () => {
+    const errors = validateBookingForm({
+      ...valid,
+      pickupAvailable: false,
+      pickup_address: "",
+      postal_code: "",
+    });
+    expect(errors.pickup_address).toBeUndefined();
+    expect(errors.postal_code).toBeUndefined();
   });
 });
 
