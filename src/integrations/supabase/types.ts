@@ -712,8 +712,12 @@ export type Database = {
           default_duration_minutes: number
           deposit_cents: number
           deposit_required: boolean
+          late_cancel_fee_type: string
+          late_cancel_fee_value: number
           logo_url: string | null
           mpi_permit_confirmed_at: string | null
+          no_show_fee_type: string
+          no_show_fee_value: number
           onboarding_complete: boolean
           pickup_service_areas: string[]
           province: string | null
@@ -737,8 +741,12 @@ export type Database = {
           default_duration_minutes?: number
           deposit_cents?: number
           deposit_required?: boolean
+          late_cancel_fee_type?: string
+          late_cancel_fee_value?: number
           logo_url?: string | null
           mpi_permit_confirmed_at?: string | null
+          no_show_fee_type?: string
+          no_show_fee_value?: number
           onboarding_complete?: boolean
           pickup_service_areas?: string[]
           province?: string | null
@@ -762,8 +770,12 @@ export type Database = {
           default_duration_minutes?: number
           deposit_cents?: number
           deposit_required?: boolean
+          late_cancel_fee_type?: string
+          late_cancel_fee_value?: number
           logo_url?: string | null
           mpi_permit_confirmed_at?: string | null
+          no_show_fee_type?: string
+          no_show_fee_value?: number
           onboarding_complete?: boolean
           pickup_service_areas?: string[]
           province?: string | null

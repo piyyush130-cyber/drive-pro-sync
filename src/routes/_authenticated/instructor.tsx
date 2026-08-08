@@ -20,6 +20,7 @@ import { fmtTime, fmtDate, statusTone, statusLabel } from "@/lib/format";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
 import { seedDemoAccounts } from "@/lib/seed-demo.functions";
+import { notifyBookingUpdated } from "@/lib/notifications.functions";
 
 export const Route = createFileRoute("/_authenticated/instructor")({
   beforeLoad: async () => {
@@ -109,11 +110,18 @@ function InstructorPage() {
     },
   });
 
+  const notifyUpdate = useServerFn(notifyBookingUpdated);
+
   async function setStatus(id: string, status: "completed" | "no_show") {
     const { error } = await supabase.from("bookings").update({ status }).eq("id", id);
     if (error) return toast.error(error.message);
     toast.success("Updated");
     qc.invalidateQueries({ queryKey: ["instructor-bookings"] });
+    // Only no_show has side effects (no-show fee, waitlist offer) — this
+    // was previously a gap: an instructor marking no-show (the common
+    // case, since they're the one at the pickup) never triggered them,
+    // only an admin doing it via the Booking Queue did.
+    if (status === "no_show") void notifyUpdate({ data: { bookingId: id, patch: { status } } });
   }
 
   async function signOut() {

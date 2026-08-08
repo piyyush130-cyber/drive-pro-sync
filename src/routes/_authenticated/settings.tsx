@@ -88,7 +88,10 @@ function SettingsPage() {
         service_area: form.service_area,
         cancellation_policy: form.cancellation_policy,
         cancellation_notice_hours: Number(form.cancellation_notice_hours) || 24,
-        cancellation_fee_cents: Number(form.cancellation_fee_cents) || 0,
+        late_cancel_fee_type: form.late_cancel_fee_type ?? "none",
+        late_cancel_fee_value: Number(form.late_cancel_fee_value) || 0,
+        no_show_fee_type: form.no_show_fee_type ?? "none",
+        no_show_fee_value: Number(form.no_show_fee_value) || 0,
         booking_paused: !!form.booking_paused,
         deposit_required: !!form.deposit_required,
         deposit_cents: Number(form.deposit_cents) || 0,
@@ -258,36 +261,105 @@ function SettingsPage() {
           <textarea
             value={form.cancellation_policy || ""}
             onChange={(e) => setForm({ ...form, cancellation_policy: e.target.value })}
+            placeholder="e.g. Cancellations require 24 hours notice. Late cancellations are charged 50% of the lesson fee."
             className="glass-input min-h-[60px]"
           />
+          <p className="text-xs text-slate-500 mt-1">
+            Shown to students on your booking page and in booking/cancellation emails — use this
+            for anything the fields below don't cover (holidays, exceptions, etc).
+          </p>
+        </Field>
+        <Field label="Cancellation notice (hours)">
+          <input
+            type="number"
+            value={form.cancellation_notice_hours ?? 24}
+            onChange={(e) => setForm({ ...form, cancellation_notice_hours: e.target.value })}
+            className="glass-input"
+          />
+          <p className="text-xs text-slate-500 mt-1">
+            Students can cancel a lesson themselves in the portal with at least this much notice.
+            Cancelling with less notice sends a request for your approval instead.
+          </p>
         </Field>
         <div className="grid sm:grid-cols-2 gap-4">
-          <Field label="Cancellation notice (hours)">
-            <input
-              type="number"
-              value={form.cancellation_notice_hours ?? 24}
-              onChange={(e) => setForm({ ...form, cancellation_notice_hours: e.target.value })}
+          <Field label="Late cancellation fee">
+            <select
+              value={form.late_cancel_fee_type ?? "none"}
+              onChange={(e) => setForm({ ...form, late_cancel_fee_type: e.target.value })}
               className="glass-input"
-            />
-            <p className="text-xs text-slate-500 mt-1">
-              Students can cancel a lesson themselves in the portal with at least this much notice.
-              Cancelling with less notice sends a request for your approval instead.
-            </p>
+            >
+              <option value="none">No fee</option>
+              <option value="flat">Flat amount</option>
+              <option value="percentage">Percentage of lesson price</option>
+            </select>
           </Field>
-          <Field label="Cancellation fee ($)">
-            <input
-              type="number"
-              value={(form.cancellation_fee_cents ?? 0) / 100}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  cancellation_fee_cents: Math.round(Number(e.target.value) * 100),
-                })
+          {form.late_cancel_fee_type && form.late_cancel_fee_type !== "none" && (
+            <Field
+              label={
+                form.late_cancel_fee_type === "flat" ? "Fee amount ($)" : "Fee percentage (%)"
               }
-              className="glass-input"
-            />
-          </Field>
+            >
+              <input
+                type="number"
+                value={
+                  form.late_cancel_fee_type === "flat"
+                    ? (form.late_cancel_fee_value ?? 0) / 100
+                    : (form.late_cancel_fee_value ?? 0)
+                }
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    late_cancel_fee_value:
+                      form.late_cancel_fee_type === "flat"
+                        ? Math.round(Number(e.target.value) * 100)
+                        : Number(e.target.value),
+                  })
+                }
+                className="glass-input"
+              />
+            </Field>
+          )}
         </div>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <Field label="No-show fee">
+            <select
+              value={form.no_show_fee_type ?? "none"}
+              onChange={(e) => setForm({ ...form, no_show_fee_type: e.target.value })}
+              className="glass-input"
+            >
+              <option value="none">No fee</option>
+              <option value="flat">Flat amount</option>
+              <option value="percentage">Percentage of lesson price</option>
+            </select>
+          </Field>
+          {form.no_show_fee_type && form.no_show_fee_type !== "none" && (
+            <Field label={form.no_show_fee_type === "flat" ? "Fee amount ($)" : "Fee percentage (%)"}>
+              <input
+                type="number"
+                value={
+                  form.no_show_fee_type === "flat"
+                    ? (form.no_show_fee_value ?? 0) / 100
+                    : (form.no_show_fee_value ?? 0)
+                }
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    no_show_fee_value:
+                      form.no_show_fee_type === "flat"
+                        ? Math.round(Number(e.target.value) * 100)
+                        : Number(e.target.value),
+                  })
+                }
+                className="glass-input"
+              />
+            </Field>
+          )}
+        </div>
+        <p className="text-xs text-slate-500 -mt-2">
+          These fees aren't charged automatically — there's no payment gateway. When applied, they
+          show up as an amount owed on the Payments page for you to collect manually, same as any
+          other lesson charge.
+        </p>
         <label className="flex items-center gap-2 text-sm text-slate-700">
           <input
             type="checkbox"

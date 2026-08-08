@@ -49,6 +49,7 @@ type Settings = {
   school_name: string;
   booking_paused?: boolean;
   pickup_service_areas?: string[];
+  cancellation_policy?: string | null;
 };
 
 // Light premium glass palette
@@ -95,7 +96,7 @@ function BookingPage() {
     queryFn: async () => {
       const { data } = await supabase
         .from("school_settings")
-        .select("school_name, booking_paused, pickup_service_areas")
+        .select("school_name, booking_paused, pickup_service_areas, cancellation_policy")
         .eq("school_id", schoolId as string)
         .maybeSingle();
       return (data as Settings | null) ?? { school_name: schoolQ.data?.name ?? "Driving School" };
@@ -471,6 +472,18 @@ function BookingPage() {
               {errors.date && <InlineError msg={errors.date} />}
               {errors.time && <InlineError msg={errors.time} />}
             </Panel>
+
+            {settingsQ.data?.cancellation_policy && (
+              <div
+                className="rounded-2xl p-4 text-xs"
+                style={{ background: C.surfaceTint, border: `1px solid ${C.border}`, color: C.muted }}
+              >
+                <span className="font-semibold" style={{ color: C.text }}>
+                  Cancellation policy:
+                </span>{" "}
+                {settingsQ.data.cancellation_policy}
+              </div>
+            )}
 
             <SummaryCard
               lesson={selected}

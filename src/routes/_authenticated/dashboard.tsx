@@ -316,12 +316,14 @@ function Dashboard() {
           tone={statsQ.data && statsQ.data.unpaidTotal > 0 ? "warn" : "default"}
         />
         <StatCard label="Active instructors" value={statsQ.data?.instructors ?? "—"} icon={Users} />
-        <StatCard
-          label="Cancel requests"
-          value={statsQ.data?.cancels ?? "—"}
-          icon={XCircle}
-          tone={statsQ.data && statsQ.data.cancels > 0 ? "danger" : "default"}
-        />
+        <Link to="/bookings" className="block">
+          <StatCard
+            label="Cancel requests"
+            value={statsQ.data?.cancels ?? "—"}
+            icon={XCircle}
+            tone={statsQ.data && statsQ.data.cancels > 0 ? "danger" : "default"}
+          />
+        </Link>
         <StatCard
           label="Completed (7d)"
           value={statsQ.data?.completed ?? "—"}

@@ -7,7 +7,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { fmtDateTime, money, statusLabel, statusTone } from "@/lib/format";
 import { StatusPill } from "@/components/StatCard";
 import { notifyBookingUpdated } from "@/lib/notifications.functions";
+import { resolveCancellationRequest } from "@/lib/cancellation-requests.functions";
 import { hasVehicleConflict } from "@/lib/booking-logic";
+import { computeCancellationFeeCents } from "@/lib/cancellation-fee";
 import { isBookingConflictError, BOOKING_CONFLICT_MESSAGE } from "@/lib/booking-conflict-error";
 import { toast } from "sonner";
 
@@ -22,8 +24,36 @@ export const Route = createFileRoute("/_authenticated/bookings")({
 });
 
 function BookingsPage() {
-  const [filter, setFilter] = useState<"pending" | "all">("pending");
+  const [filter, setFilter] = useState<"pending" | "all" | "cancellations">("pending");
   const qc = useQueryClient();
+
+  const cancellationRequestsQ = useQuery({
+    queryKey: ["cancellation-requests"],
+    enabled: filter === "cancellations",
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("cancellation_requests")
+        .select(
+          "id, reason, created_at, bookings(id, scheduled_at, price_cents, students(full_name, phone, email), lesson_types(name))",
+        )
+        .eq("status", "requested")
+        .order("created_at");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const feeSettingsQ = useQuery({
+    queryKey: ["fee-settings"],
+    enabled: filter === "cancellations",
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("school_settings")
+        .select("late_cancel_fee_type, late_cancel_fee_value")
+        .maybeSingle();
+      return data;
+    },
+  });
   const bookingsQ = useQuery({
     queryKey: ["bookings", filter],
     queryFn: async () => {
@@ -134,7 +164,7 @@ function BookingsPage() {
           </p>
         </div>
         <div className="flex gap-1 bg-white rounded-lg p-1 ring-1 ring-slate-200 shrink-0">
-          {(["pending", "all"] as const).map((f) => (
+          {(["pending", "all", "cancellations"] as const).map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
@@ -144,12 +174,23 @@ function BookingsPage() {
                   : "text-slate-600 hover:bg-slate-50"
               }`}
             >
-              {f === "pending" ? "Pending" : "All"}
+              {f === "pending" ? "Pending" : f === "all" ? "All" : "Cancellation requests"}
             </button>
           ))}
         </div>
       </div>
 
+      {filter === "cancellations" ? (
+        <CancellationRequestsPanel
+          requests={cancellationRequestsQ.data ?? []}
+          feeSettings={feeSettingsQ.data}
+          onResolved={() => {
+            qc.invalidateQueries({ queryKey: ["cancellation-requests"] });
+            qc.invalidateQueries({ queryKey: ["bookings"] });
+            qc.invalidateQueries({ queryKey: ["dashboard-stats"] });
+          }}
+        />
+      ) : (
       <div className="space-y-3">
         {(bookingsQ.data ?? []).map((b: any) => (
           <div key={b.id} className="card-premium p-5">
@@ -285,6 +326,125 @@ function BookingsPage() {
           </div>
         )}
       </div>
+      )}
+    </div>
+  );
+}
+
+function CancellationRequestsPanel({
+  requests,
+  feeSettings,
+  onResolved,
+}: {
+  requests: any[];
+  feeSettings: { late_cancel_fee_type: string; late_cancel_fee_value: number } | null | undefined;
+  onResolved: () => void;
+}) {
+  const resolve = useServerFn(resolveCancellationRequest);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [waive, setWaive] = useState<Record<string, boolean>>({});
+
+  async function handle(requestId: string, decision: "approve" | "reject") {
+    setBusyId(requestId);
+    try {
+      const result = await resolve({
+        data: { requestId, decision, waiveFee: !!waive[requestId] },
+      });
+      if (decision === "approve") {
+        toast.success(
+          result.feeCents > 0
+            ? `Cancellation confirmed — ${money(result.feeCents)} fee recorded as owed.`
+            : "Cancellation confirmed — no fee applied.",
+        );
+      } else {
+        toast.success("Request denied — the lesson stays scheduled.");
+      }
+      onResolved();
+    } catch (err: any) {
+      toast.error(err?.message || "Could not resolve this request");
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  if (requests.length === 0) {
+    return (
+      <div className="card-premium text-center text-sm text-slate-500 py-12">
+        No pending cancellation requests.
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {requests.map((r: any) => {
+        const b = r.bookings;
+        const computedFee = feeSettings
+          ? computeCancellationFeeCents(
+              feeSettings.late_cancel_fee_type,
+              feeSettings.late_cancel_fee_value,
+              b?.price_cents ?? 0,
+            )
+          : 0;
+        const waived = !!waive[r.id];
+        return (
+          <div key={r.id} className="card-premium p-5">
+            <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-4 mb-3 items-start">
+              <div className="min-w-0">
+                <div className="text-sm font-semibold truncate">{b?.students?.full_name}</div>
+                <div className="text-xs text-slate-500 truncate">
+                  {b?.students?.phone} · {b?.students?.email ?? "no email"}
+                </div>
+              </div>
+              <div className="text-right shrink-0">
+                <div className="text-sm font-semibold">
+                  {b?.scheduled_at ? fmtDateTime(b.scheduled_at) : "—"}
+                </div>
+                <div className="text-xs text-slate-500">{b?.lesson_types?.name}</div>
+              </div>
+            </div>
+            {r.reason && (
+              <div className="text-xs text-slate-600 mb-3">
+                <span className="text-slate-400">Reason:</span> {r.reason}
+              </div>
+            )}
+            <div className="flex flex-wrap items-center gap-3 pt-3 border-t border-slate-100">
+              <div className="text-xs text-slate-600">
+                Late cancellation fee:{" "}
+                <span className="font-semibold text-slate-900">
+                  {computedFee > 0 ? money(computedFee) : "None configured"}
+                </span>
+              </div>
+              {computedFee > 0 && (
+                <label className="flex items-center gap-1.5 text-xs text-slate-600">
+                  <input
+                    type="checkbox"
+                    checked={waived}
+                    onChange={(e) => setWaive({ ...waive, [r.id]: e.target.checked })}
+                    className="accent-blue-600"
+                  />
+                  Waive this fee
+                </label>
+              )}
+              <div className="flex-1" />
+              <button
+                onClick={() => handle(r.id, "approve")}
+                disabled={busyId === r.id}
+                className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded-md font-semibold hover:bg-blue-700 disabled:opacity-50"
+              >
+                Approve cancellation
+              </button>
+              <button
+                onClick={() => handle(r.id, "reject")}
+                disabled={busyId === r.id}
+                className="text-xs bg-white ring-1 ring-slate-200 text-slate-700 px-3 py-1.5 rounded-md font-semibold hover:bg-slate-50 disabled:opacity-50"
+              >
+                Deny
+              </button>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

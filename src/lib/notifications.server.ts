@@ -2,6 +2,7 @@
 // logged (see sendEmail) but never throws back into the caller, so a
 // notification issue can't break a booking mutation.
 import { fmtDate, fmtTime, money } from "@/lib/format";
+import { computeCancellationFeeCents } from "@/lib/cancellation-fee";
 
 type Ctx = {
   bookingId: string;
@@ -60,12 +61,21 @@ export async function notifyBookingCreated(supabaseAdmin: any, { bookingId }: Ct
   const details = bookingDetailsHtml(school, lessonName, when, b.price_cents);
   const { sendEmail } = await import("@/lib/email.server");
 
+  const { data: policySettings } = await supabaseAdmin
+    .from("school_settings")
+    .select("cancellation_policy")
+    .eq("school_id", b.school_id)
+    .maybeSingle();
+  const policyHtml = policySettings?.cancellation_policy
+    ? `<p style="font-size: 12px; color: #6B6B7B; margin-top: 12px;"><strong>Cancellation policy:</strong> ${policySettings.cancellation_policy}</p>`
+    : "";
+
   if (b.students?.email) {
     if (b.status === "confirmed") {
       await sendEmail({
         to: b.students.email,
         subject: `Booking confirmed — ${school}`,
-        html: layout("Your lesson is confirmed", details),
+        html: layout("Your lesson is confirmed", details + policyHtml),
       });
     } else {
       await sendEmail({
@@ -73,7 +83,9 @@ export async function notifyBookingCreated(supabaseAdmin: any, { bookingId }: Ct
         subject: `Booking received — ${school}`,
         html: layout(
           "We've got your request",
-          details + `<p style="font-size: 14px;">${school} will confirm your booking shortly.</p>`,
+          details +
+            `<p style="font-size: 14px;">${school} will confirm your booking shortly.</p>` +
+            policyHtml,
         ),
       });
     }
@@ -158,6 +170,44 @@ export async function notifyBookingStatusChange(
   }
 
   if (patch.status === "no_show") {
+    // No-show is never school-initiated — always safe to apply the fee
+    // here, unlike the generic "cancelled" branch above (which is also
+    // hit by school-initiated cancellations like bulk-cancel and
+    // instructor offboarding, so fee logic deliberately does NOT live
+    // there — see resolveCancellationRequest for the late-cancel fee).
+    const { data: settings } = await supabaseAdmin
+      .from("school_settings")
+      .select("no_show_fee_type, no_show_fee_value")
+      .eq("school_id", b.school_id)
+      .maybeSingle();
+    const feeCents = computeCancellationFeeCents(
+      settings?.no_show_fee_type ?? "none",
+      settings?.no_show_fee_value ?? 0,
+      b.price_cents,
+    );
+    await supabaseAdmin
+      .from("bookings")
+      .update({ price_cents: feeCents, payment_status: "unpaid" })
+      .eq("id", b.id);
+
+    if (feeCents > 0 && b.students?.email) {
+      await sendEmail({
+        to: b.students.email,
+        subject: `Missed lesson — ${school}`,
+        html: layout(
+          "You missed your lesson",
+          `<p style="font-size: 14px;">${school} recorded your ${when} lesson as a no-show. A no-show fee of ${money(feeCents)} applies per their cancellation policy — please arrange payment directly with the school.</p>`,
+        ),
+      });
+    }
+    if (feeCents > 0 && b.students?.phone) {
+      const { sendSms } = await import("@/lib/sms.server");
+      await sendSms(
+        b.students.phone,
+        `${school}: you missed your lesson on ${when}. A no-show fee of ${money(feeCents)} applies — please arrange payment with the school.`,
+      );
+    }
+
     const { maybeOfferWaitlistSlot } = await import("@/lib/waitlist.server");
     await maybeOfferWaitlistSlot(supabaseAdmin, b.id);
   }
