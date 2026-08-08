@@ -25,6 +25,7 @@ export type Database = {
           instructor_id: string | null
           lesson_notes: string | null
           lesson_type_id: string | null
+          mpi_test_location: string | null
           notes: string | null
           paid_at: string | null
           payment_method: Database["public"]["Enums"]["payment_method"] | null
@@ -49,6 +50,7 @@ export type Database = {
           instructor_id?: string | null
           lesson_notes?: string | null
           lesson_type_id?: string | null
+          mpi_test_location?: string | null
           notes?: string | null
           paid_at?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"] | null
@@ -73,6 +75,7 @@ export type Database = {
           instructor_id?: string | null
           lesson_notes?: string | null
           lesson_type_id?: string | null
+          mpi_test_location?: string | null
           notes?: string | null
           paid_at?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"] | null
@@ -716,6 +719,7 @@ export type Database = {
           late_cancel_fee_value: number
           logo_url: string | null
           mpi_permit_confirmed_at: string | null
+          mpi_test_locations: string[]
           no_show_fee_type: string
           no_show_fee_value: number
           onboarding_complete: boolean
@@ -745,6 +749,7 @@ export type Database = {
           late_cancel_fee_value?: number
           logo_url?: string | null
           mpi_permit_confirmed_at?: string | null
+          mpi_test_locations?: string[]
           no_show_fee_type?: string
           no_show_fee_value?: number
           onboarding_complete?: boolean
@@ -774,6 +779,7 @@ export type Database = {
           late_cancel_fee_value?: number
           logo_url?: string | null
           mpi_permit_confirmed_at?: string | null
+          mpi_test_locations?: string[]
           no_show_fee_type?: string
           no_show_fee_value?: number
           onboarding_complete?: boolean

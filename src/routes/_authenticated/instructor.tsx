@@ -339,6 +339,12 @@ function InstructorPage() {
                         Vehicle: {b.vehicles.name}
                       </div>
                     )}
+                    {b.mpi_test_location && (
+                      <div className="mt-2 text-xs text-slate-500 inline-flex items-center gap-1.5">
+                        <MapPin className="size-3.5 text-slate-400" />
+                        MPI test: {b.mpi_test_location}
+                      </div>
+                    )}
                     {b.lesson_types?.category === "tsr_retest" && (
                       <TsrProgressPanel
                         studentId={b.student_id}

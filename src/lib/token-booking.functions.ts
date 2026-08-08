@@ -39,12 +39,12 @@ export const getInvitationForToken = createServerFn({ method: "POST" })
     const [{ data: settings }, { data: lessonTypes }] = await Promise.all([
       supabaseAdmin
         .from("school_settings")
-        .select("school_name, booking_paused")
+        .select("school_name, booking_paused, mpi_test_locations")
         .eq("school_id", invitation.school_id)
         .maybeSingle(),
       supabaseAdmin
         .from("lesson_types")
-        .select("id, name, description, duration_minutes, price_cents")
+        .select("id, name, description, duration_minutes, price_cents, category")
         .eq("school_id", invitation.school_id)
         .eq("active", true)
         .order("sort_order"),
@@ -56,6 +56,7 @@ export const getInvitationForToken = createServerFn({ method: "POST" })
       schoolName: settings?.school_name ?? "your driving school",
       lessonTypes: lessonTypes ?? [],
       bookingPaused: !!settings?.booking_paused,
+      mpiTestLocations: settings?.mpi_test_locations ?? [],
     };
   });
 
@@ -63,6 +64,7 @@ const BookSchema = z.object({
   token: z.string().uuid(),
   lesson_type_id: z.string().uuid(),
   scheduled_at: z.string().datetime(),
+  mpi_test_location: z.string().trim().max(200).optional().nullable(),
 });
 
 export const submitTokenBooking = createServerFn({ method: "POST" })
@@ -148,6 +150,7 @@ export const submitTokenBooking = createServerFn({ method: "POST" })
         price_cents: lt.price_cents,
         status: initialStatus,
         school_id: invitation.school_id,
+        mpi_test_location: data.mpi_test_location || null,
       })
       .select("id")
       .single();

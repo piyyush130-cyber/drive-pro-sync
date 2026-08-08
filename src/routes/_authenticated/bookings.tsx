@@ -222,6 +222,14 @@ function BookingsPage() {
                   <span className="text-slate-400">Drop-off:</span> {b.dropoff_address ?? "—"}
                 </span>
               </div>
+              {b.mpi_test_location && (
+                <div className="inline-flex items-start gap-1.5 min-w-0">
+                  <MapPin className="size-3.5 mt-0.5 shrink-0 text-slate-400" />
+                  <span className="truncate">
+                    <span className="text-slate-400">MPI test:</span> {b.mpi_test_location}
+                  </span>
+                </div>
+              )}
               {b.notes && (
                 <div className="sm:col-span-2 inline-flex items-start gap-1.5">
                   <StickyNote className="size-3.5 mt-0.5 shrink-0 text-slate-400" />

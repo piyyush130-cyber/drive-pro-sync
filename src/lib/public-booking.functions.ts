@@ -18,6 +18,7 @@ const BookingSchema = z.object({
   // has no way to know that yet.
   pickup_address: z.string().trim().max(300).optional().default(""),
   postal_code: z.string().trim().max(10).optional().default(""),
+  mpi_test_location: z.string().trim().max(200).optional().nullable(),
   dropoff_address: z.string().max(300).optional().nullable(),
   notes: z.string().max(2000).optional().nullable(),
   lesson_type_id: z.string().uuid(),
@@ -164,6 +165,7 @@ export const submitPublicBooking = createServerFn({ method: "POST" })
         price_cents: lt.price_cents,
         status: initialStatus,
         school_id: data.school_id,
+        mpi_test_location: data.mpi_test_location || null,
       })
       .select("id")
       .single();

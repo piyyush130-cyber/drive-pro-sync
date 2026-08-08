@@ -69,13 +69,13 @@ export const getPortalBookingOptions = createServerFn({ method: "POST" })
     const [{ data: lessonTypes }, { data: settings }, remaining] = await Promise.all([
       supabaseAdmin
         .from("lesson_types")
-        .select("id, name, description, duration_minutes, price_cents")
+        .select("id, name, description, duration_minutes, price_cents, category")
         .eq("school_id", schoolId)
         .eq("active", true)
         .order("sort_order"),
       supabaseAdmin
         .from("school_settings")
-        .select("booking_paused")
+        .select("booking_paused, mpi_test_locations")
         .eq("school_id", schoolId)
         .maybeSingle(),
       remainingLessons(supabaseAdmin, studentId),
@@ -85,6 +85,7 @@ export const getPortalBookingOptions = createServerFn({ method: "POST" })
       lessonTypes: lessonTypes ?? [],
       remaining,
       bookingPaused: !!settings?.booking_paused,
+      mpiTestLocations: settings?.mpi_test_locations ?? [],
     };
   });
 
@@ -92,6 +93,7 @@ const SubmitBookingSchema = z.object({
   sessionToken: z.string(),
   lesson_type_id: z.string().uuid(),
   scheduled_at: z.string().datetime(),
+  mpi_test_location: z.string().trim().max(200).optional().nullable(),
 });
 
 export const submitPortalBooking = createServerFn({ method: "POST" })
@@ -166,6 +168,7 @@ export const submitPortalBooking = createServerFn({ method: "POST" })
         price_cents: lt.price_cents,
         status: initialStatus,
         school_id: schoolId,
+        mpi_test_location: data.mpi_test_location || null,
       })
       .select("id")
       .single();

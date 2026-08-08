@@ -505,6 +505,7 @@ type LessonType = {
   description: string | null;
   duration_minutes: number;
   price_cents: number;
+  category: string;
 };
 
 function BookTab({
@@ -525,7 +526,9 @@ function BookTab({
   const [selected, setSelected] = useState<LessonType | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [mpiLocation, setMpiLocation] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const needsMpiLocation = selected?.category === "road_test" || selected?.category === "tsr_retest";
 
   const today = startOfDay(new Date());
   const [month, setMonth] = useState(startOfMonth(today));
@@ -546,7 +549,12 @@ function BookTab({
       const dt = new Date(selectedDate);
       dt.setHours(h, m, 0, 0);
       await bookLesson({
-        data: { sessionToken, lesson_type_id: selected.id, scheduled_at: dt.toISOString() },
+        data: {
+          sessionToken,
+          lesson_type_id: selected.id,
+          scheduled_at: dt.toISOString(),
+          mpi_test_location: mpiLocation.trim() || null,
+        },
       });
       toast.success("Lesson booked");
       onBooked();
@@ -709,6 +717,38 @@ function BookTab({
           </div>
         )}
       </div>
+
+      {needsMpiLocation && (
+        <div
+          className="rounded-2xl p-5"
+          style={{ background: C.surfaceSolid, border: `1px solid ${C.border}` }}
+        >
+          <h2 className="text-sm font-semibold mb-3">MPI test location</h2>
+          {optionsQ.data.mpiTestLocations.length > 0 ? (
+            <select
+              value={mpiLocation}
+              onChange={(e) => setMpiLocation(e.target.value)}
+              className="w-full border rounded-lg px-3 py-2 text-sm"
+              style={{ borderColor: C.border }}
+            >
+              <option value="">Select a location…</option>
+              {optionsQ.data.mpiTestLocations.map((loc: string) => (
+                <option key={loc} value={loc}>
+                  {loc}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <input
+              value={mpiLocation}
+              onChange={(e) => setMpiLocation(e.target.value)}
+              placeholder="Which MPI office is your test at?"
+              className="w-full border rounded-lg px-3 py-2 text-sm"
+              style={{ borderColor: C.border }}
+            />
+          )}
+        </div>
+      )}
 
       <button
         onClick={handleSubmit}

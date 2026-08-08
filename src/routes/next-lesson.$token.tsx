@@ -26,6 +26,7 @@ type LessonType = {
   description: string | null;
   duration_minutes: number;
   price_cents: number;
+  category: string;
 };
 
 function NextLessonPage() {
@@ -41,6 +42,7 @@ function NextLessonPage() {
     schoolName: string;
     lessonTypes: LessonType[];
     bookingPaused: boolean;
+    mpiTestLocations: string[];
   } | null>(null);
 
   useEffect(() => {
@@ -53,8 +55,10 @@ function NextLessonPage() {
   const [selected, setSelected] = useState<LessonType | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [mpiLocation, setMpiLocation] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const needsMpiLocation = selected?.category === "road_test" || selected?.category === "tsr_retest";
 
   const today = startOfDay(new Date());
   const [month, setMonth] = useState(startOfMonth(today));
@@ -75,7 +79,12 @@ function NextLessonPage() {
       const dt = new Date(selectedDate);
       dt.setHours(h, m, 0, 0);
       await bookLesson({
-        data: { token, lesson_type_id: selected.id, scheduled_at: dt.toISOString() },
+        data: {
+          token,
+          lesson_type_id: selected.id,
+          scheduled_at: dt.toISOString(),
+          mpi_test_location: mpiLocation.trim() || null,
+        },
       });
       setSubmitted(true);
     } catch (err: any) {
@@ -273,6 +282,33 @@ function NextLessonPage() {
             </div>
           )}
         </section>
+
+        {needsMpiLocation && (
+          <section className="bg-white border border-slate-200 rounded-xl p-5">
+            <h2 className="text-sm font-semibold text-slate-900 mb-3">MPI test location</h2>
+            {info.mpiTestLocations.length > 0 ? (
+              <select
+                value={mpiLocation}
+                onChange={(e) => setMpiLocation(e.target.value)}
+                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"
+              >
+                <option value="">Select a location…</option>
+                {info.mpiTestLocations.map((loc) => (
+                  <option key={loc} value={loc}>
+                    {loc}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <input
+                value={mpiLocation}
+                onChange={(e) => setMpiLocation(e.target.value)}
+                placeholder="Which MPI office is your test at?"
+                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"
+              />
+            )}
+          </section>
+        )}
 
         <button
           onClick={handleSubmit}

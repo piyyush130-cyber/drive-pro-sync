@@ -68,12 +68,18 @@ function SettingsPage() {
 
   const [form, setForm] = useState<any>({});
   const [pickupAreasText, setPickupAreasText] = useState("");
+  const [mpiLocationsText, setMpiLocationsText] = useState("");
   useEffect(() => {
     if (settingsQ.data) {
       setForm(settingsQ.data);
       setPickupAreasText((settingsQ.data.pickup_service_areas ?? []).join(", "));
+      setMpiLocationsText((settingsQ.data.mpi_test_locations ?? []).join(", "));
     }
   }, [settingsQ.data]);
+
+  function normalizeCommaList(raw: string): string[] {
+    return Array.from(new Set(raw.split(",").map((s) => s.trim()).filter(Boolean)));
+  }
 
   async function saveSettings() {
     if (!schoolIdQ.data) return toast.error("Could not determine your school — try refreshing.");
@@ -101,6 +107,7 @@ function SettingsPage() {
         auto_assign_instructor: !!form.auto_assign_instructor,
         auto_invitations_enabled: !!form.auto_invitations_enabled,
         pickup_service_areas: normalizeServiceAreaInput(pickupAreasText),
+        mpi_test_locations: normalizeCommaList(mpiLocationsText),
       })
       .eq("school_id", schoolIdQ.data);
     if (error) return toast.error(error.message);
@@ -255,6 +262,18 @@ function SettingsPage() {
           <p className="text-xs text-slate-500 mt-1">
             Comma-separated. New bookings will be blocked if the pickup postal code isn't in one of
             these areas. Leave blank to allow pickup anywhere (default).
+          </p>
+        </Field>
+        <Field label="MPI test locations">
+          <input
+            value={mpiLocationsText}
+            onChange={(e) => setMpiLocationsText(e.target.value)}
+            placeholder="e.g. MPI Portage Ave, MPI Regent Ave"
+            className="glass-input"
+          />
+          <p className="text-xs text-slate-500 mt-1">
+            Comma-separated. Shown as a dropdown when booking a road test or TSR package so the
+            school knows which office to route to. Leave blank to let students type it in freely.
           </p>
         </Field>
         <Field label="Cancellation policy">

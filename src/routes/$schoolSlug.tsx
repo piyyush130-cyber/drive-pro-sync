@@ -44,12 +44,14 @@ type LessonType = {
   duration_minutes: number;
   price_cents: number;
   pickup_available: boolean;
+  category: string;
 };
 type Settings = {
   school_name: string;
   booking_paused?: boolean;
   pickup_service_areas?: string[];
   cancellation_policy?: string | null;
+  mpi_test_locations?: string[];
 };
 
 // Light premium glass palette
@@ -96,7 +98,9 @@ function BookingPage() {
     queryFn: async () => {
       const { data } = await supabase
         .from("school_settings")
-        .select("school_name, booking_paused, pickup_service_areas, cancellation_policy")
+        .select(
+          "school_name, booking_paused, pickup_service_areas, cancellation_policy, mpi_test_locations",
+        )
         .eq("school_id", schoolId as string)
         .maybeSingle();
       return (data as Settings | null) ?? { school_name: schoolQ.data?.name ?? "Driving School" };
@@ -108,7 +112,7 @@ function BookingPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("lesson_types")
-        .select("id,name,description,duration_minutes,price_cents,pickup_available")
+        .select("id,name,description,duration_minutes,price_cents,pickup_available,category")
         .eq("school_id", schoolId as string)
         .eq("active", true)
         .order("sort_order");
@@ -126,6 +130,7 @@ function BookingPage() {
     email: "",
     pickup_address: "",
     postal_code: "",
+    mpi_test_location: "",
     dropoff_same: true,
     dropoff_address: "",
     pickup_notes: "",
@@ -212,6 +217,7 @@ function BookingPage() {
           email: form.email.trim(),
           pickup_address: form.pickup_address.trim(),
           postal_code: form.postal_code.trim(),
+          mpi_test_location: form.mpi_test_location.trim() || null,
           dropoff_address: form.dropoff_same ? form.pickup_address : form.dropoff_address,
           notes:
             [form.pickup_notes && `Pickup: ${form.pickup_notes}`, form.notes]
@@ -405,6 +411,31 @@ function BookingPage() {
                     placeholder="R2C 1A1"
                   />
                 </Field>
+                {(selected?.category === "road_test" || selected?.category === "tsr_retest") && (
+                  <Field label="MPI test location">
+                    {(settingsQ.data?.mpi_test_locations?.length ?? 0) > 0 ? (
+                      <select
+                        value={form.mpi_test_location}
+                        onChange={(e) => setForm({ ...form, mpi_test_location: e.target.value })}
+                        className={inputClass}
+                        style={{ background: C.surfaceSolid, border: `1px solid ${C.border}`, color: C.text }}
+                      >
+                        <option value="">Select a location…</option>
+                        {settingsQ.data!.mpi_test_locations!.map((loc) => (
+                          <option key={loc} value={loc}>
+                            {loc}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <GlassInput
+                        value={form.mpi_test_location}
+                        onChange={(v) => setForm({ ...form, mpi_test_location: v })}
+                        placeholder="Which MPI office is your test at?"
+                      />
+                    )}
+                  </Field>
+                )}
                 <label
                   className="flex items-center gap-2.5 text-sm select-none"
                   style={{ color: C.muted }}
