@@ -49,6 +49,10 @@ async function handleRawRoute(request: Request): Promise<Response | null> {
     const { handleStripeWebhook } = await import("./lib/stripe-webhook.server");
     return handleStripeWebhook(request);
   }
+  if (pathname === "/api/twilio-sms-webhook" && request.method === "POST") {
+    const { handleTwilioSmsWebhook } = await import("./lib/twilio-sms-webhook.server");
+    return handleTwilioSmsWebhook(request);
+  }
   if (pathname === "/api/invitation-sweep" && request.method === "POST") {
     const secret = process.env.CRON_SECRET;
     if (!secret || request.headers.get("x-cron-secret") !== secret) {

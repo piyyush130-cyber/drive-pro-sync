@@ -1,6 +1,7 @@
 // Server-only SMS sending via Twilio.
 // Load inside server handlers: const { sendSms } = await import("@/lib/sms.server");
 import type { Twilio } from "twilio";
+import { normalizePhoneDigits } from "@/lib/booking-validation";
 
 let _client: Twilio | null | undefined;
 
@@ -19,6 +20,20 @@ async function getClient(): Promise<Twilio | null> {
 }
 
 export async function sendSms(to: string, body: string): Promise<void> {
+  const digits = normalizePhoneDigits(to);
+  if (digits) {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: optedOut } = await supabaseAdmin
+      .from("sms_opt_outs")
+      .select("id")
+      .eq("phone_digits", digits)
+      .maybeSingle();
+    if (optedOut) {
+      console.log("[sms] recipient opted out — skipping send to", to);
+      return;
+    }
+  }
+
   const client = await getClient();
   const from = process.env.TWILIO_FROM_NUMBER;
   if (!client || !from) {

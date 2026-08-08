@@ -825,6 +825,24 @@ export type Database = {
         }
         Relationships: []
       }
+      sms_opt_outs: {
+        Row: {
+          id: string
+          opted_out_at: string
+          phone_digits: string
+        }
+        Insert: {
+          id?: string
+          opted_out_at?: string
+          phone_digits: string
+        }
+        Update: {
+          id?: string
+          opted_out_at?: string
+          phone_digits?: string
+        }
+        Relationships: []
+      }
       student_login_links: {
         Row: {
           contact_method: string
