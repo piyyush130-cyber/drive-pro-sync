@@ -1,8 +1,9 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Check, Copy, ExternalLink, Key, ArrowRight, Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthUser, useSchoolId } from "@/lib/auth";
+import { normalizeServiceAreaInput } from "@/lib/postal-code";
 import { PlanPicker } from "@/components/PlanPicker";
 import { toast } from "sonner";
 
@@ -10,6 +11,7 @@ export const Route = createFileRoute("/onboarding")({
   component: OnboardingPage,
 });
 
+const TOTAL_STEPS = 10;
 const PROVINCES = ["BC", "AB", "SK", "MB", "ON", "QC", "NB", "NS", "PE", "NL", "YT", "NT", "NU"];
 const DAYS: { key: string; label: string }[] = [
   { key: "monday", label: "Monday" },
@@ -44,15 +46,20 @@ const DEFAULT_AVAIL = DAYS.reduce<Record<string, { enabled: boolean; start: stri
   {},
 );
 
+function normalizeCommaList(raw: string): string[] {
+  return Array.from(new Set(raw.split(",").map((s) => s.trim()).filter(Boolean)));
+}
+
 function OnboardingPage() {
   const navigate = useNavigate();
   const { user, loading } = useAuthUser();
   const schoolIdQ = useSchoolId(user?.id);
   const [step, setStep] = useState(1);
   const [busy, setBusy] = useState(false);
+  const [loadingExisting, setLoadingExisting] = useState(true);
   const [schoolSlug, setSchoolSlug] = useState("");
 
-  // Step 1
+  // Step 1 — school details
   const [school, setSchool] = useState({
     school_name: "",
     city: "",
@@ -62,26 +69,42 @@ function OnboardingPage() {
     service_area: "",
   });
   const [mpiConfirmed, setMpiConfirmed] = useState(false);
-  // Step 2
+  // Step 2 — booking rules
   const [rules, setRules] = useState({
     cancellation_notice_hours: 24,
-    cancellation_fee_cents: 5000,
     deposit_required: true,
     deposit_cents: 5000,
     require_approval: true,
   });
-  // Step 3
+  // Step 3 — cancellation policy & fees
+  const [policy, setPolicy] = useState({
+    cancellation_policy: "",
+    late_cancel_fee_type: "none",
+    late_cancel_fee_value: 0,
+    no_show_fee_type: "none",
+    no_show_fee_value: 0,
+  });
+  // Step 4 — pickup & MPI test locations
+  const [pickupAreasText, setPickupAreasText] = useState("");
+  const [mpiLocationsText, setMpiLocationsText] = useState("");
+  // Step 5 — lesson packages
+  const [theoryEnabled, setTheoryEnabled] = useState(false);
   const [types, setTypes] = useState(DEFAULT_TYPES);
-  // Step 4
+  // Step 6 — vehicles
+  const [vehicles, setVehicles] = useState<{ name: string; plate: string }[]>([
+    { name: "", plate: "" },
+  ]);
+  // Step 7 — instructor
   const [instructor, setInstructor] = useState({ full_name: "", email: "", phone: "" });
   const [instructorId, setInstructorId] = useState<string | null>(null);
   const [alsoInstructor, setAlsoInstructor] = useState(false);
-  // Step 5
+  // Step 8 — availability
   const [avail, setAvail] = useState(DEFAULT_AVAIL);
-  // Step 6
+  // Step 9 — done
   const [copied, setCopied] = useState(false);
   const bookingUrl =
     typeof window !== "undefined" && schoolSlug ? `${window.location.origin}/${schoolSlug}` : "";
+
   useEffect(() => {
     if (loading) return;
     if (!user) {
@@ -89,24 +112,80 @@ function OnboardingPage() {
       return;
     }
     if (!schoolIdQ.data) return;
-    supabase
-      .from("schools")
-      .select("slug")
-      .eq("id", schoolIdQ.data)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data?.slug) setSchoolSlug(data.slug);
-      });
-    supabase
-      .from("school_settings")
-      .select("onboarding_complete,school_name")
-      .eq("school_id", schoolIdQ.data)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data?.onboarding_complete) navigate({ to: "/dashboard", replace: true });
-        if (data?.school_name && data.school_name !== "My Driving School")
-          setSchool((s) => ({ ...s, school_name: data.school_name }));
-      });
+
+    (async () => {
+      const [{ data: schoolRow }, { data: settingsRow }, { data: existingTypes }, { data: existingVehicles }] =
+        await Promise.all([
+          supabase.from("schools").select("slug").eq("id", schoolIdQ.data).maybeSingle(),
+          supabase
+            .from("school_settings")
+            .select("*")
+            .eq("school_id", schoolIdQ.data)
+            .maybeSingle(),
+          supabase
+            .from("lesson_types")
+            .select("name, duration_minutes, price_cents, active")
+            .eq("school_id", schoolIdQ.data)
+            .eq("active", true)
+            .order("sort_order"),
+          supabase.from("vehicles").select("name, plate").eq("school_id", schoolIdQ.data),
+        ]);
+
+      if (schoolRow?.slug) setSchoolSlug(schoolRow.slug);
+
+      if (settingsRow?.onboarding_complete) {
+        navigate({ to: "/dashboard", replace: true });
+        return;
+      }
+
+      if (settingsRow) {
+        setSchool({
+          school_name:
+            settingsRow.school_name && settingsRow.school_name !== "My Driving School"
+              ? settingsRow.school_name
+              : "",
+          city: settingsRow.city ?? "",
+          province: settingsRow.province ?? "MB",
+          contact_phone: settingsRow.contact_phone ?? "",
+          contact_email: settingsRow.contact_email ?? "",
+          service_area: settingsRow.service_area ?? "",
+        });
+        setMpiConfirmed(!!settingsRow.mpi_permit_confirmed_at);
+        setRules({
+          cancellation_notice_hours: settingsRow.cancellation_notice_hours ?? 24,
+          deposit_required: settingsRow.deposit_required ?? true,
+          deposit_cents: settingsRow.deposit_cents ?? 5000,
+          require_approval: settingsRow.require_approval ?? true,
+        });
+        setPolicy({
+          cancellation_policy: settingsRow.cancellation_policy ?? "",
+          late_cancel_fee_type: settingsRow.late_cancel_fee_type ?? "none",
+          late_cancel_fee_value: settingsRow.late_cancel_fee_value ?? 0,
+          no_show_fee_type: settingsRow.no_show_fee_type ?? "none",
+          no_show_fee_value: settingsRow.no_show_fee_value ?? 0,
+        });
+        setPickupAreasText((settingsRow.pickup_service_areas ?? []).join(", "));
+        setMpiLocationsText((settingsRow.mpi_test_locations ?? []).join(", "));
+        setTheoryEnabled(!!settingsRow.theory_lessons_enabled);
+      }
+
+      if (existingTypes && existingTypes.length > 0) {
+        setTypes(
+          existingTypes.map((t: any) => ({
+            name: t.name,
+            duration_minutes: t.duration_minutes,
+            price_cents: t.price_cents,
+            active: t.active,
+          })),
+        );
+      }
+
+      if (existingVehicles && existingVehicles.length > 0) {
+        setVehicles(existingVehicles.map((v: any) => ({ name: v.name, plate: v.plate ?? "" })));
+      }
+
+      setLoadingExisting(false);
+    })();
   }, [loading, user, navigate, schoolIdQ.data]);
 
   async function saveStep1() {
@@ -147,10 +226,40 @@ function OnboardingPage() {
   async function saveStep3() {
     if (!schoolIdQ.data) return toast.error("Could not determine your school — try refreshing.");
     setBusy(true);
+    const { error } = await supabase
+      .from("school_settings")
+      .update(policy)
+      .eq("school_id", schoolIdQ.data);
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    setStep(4);
+  }
+  async function saveStep4() {
+    if (!schoolIdQ.data) return toast.error("Could not determine your school — try refreshing.");
+    setBusy(true);
+    const { error } = await supabase
+      .from("school_settings")
+      .update({
+        pickup_service_areas: normalizeServiceAreaInput(pickupAreasText),
+        mpi_test_locations: normalizeCommaList(mpiLocationsText),
+      })
+      .eq("school_id", schoolIdQ.data);
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    setStep(5);
+  }
+  async function saveStep5() {
+    if (!schoolIdQ.data) return toast.error("Could not determine your school — try refreshing.");
+    setBusy(true);
     try {
+      await supabase
+        .from("school_settings")
+        .update({ theory_lessons_enabled: theoryEnabled })
+        .eq("school_id", schoolIdQ.data);
+
       // Deactivate any types not in the new list (by name), then upsert the new set.
       const names = types.filter((t) => t.name).map((t) => t.name);
-      const { data: existing } = await supabase.from("lesson_types").select("id,name");
+      const { data: existing } = await supabase.from("lesson_types").select("id,name,category");
       const toDeactivate = (existing ?? []).filter((e) => !names.includes(e.name));
       for (const row of toDeactivate) {
         await supabase.from("lesson_types").update({ active: false }).eq("id", row.id);
@@ -159,29 +268,64 @@ function OnboardingPage() {
         const t = types[i];
         if (!t.name) continue;
         const match = (existing ?? []).find((e) => e.name === t.name);
-        const payload = {
+        const payload: any = {
           name: t.name,
           duration_minutes: t.duration_minutes,
           price_cents: t.price_cents,
           active: t.active,
           sort_order: i,
-          category: t.name === TSR_PACKAGE_NAME ? "tsr_retest" : "lesson",
           school_id: schoolIdQ.data,
         };
         if (match) {
+          // Preserve whatever category this type already has (an admin may
+          // have customized it via Services) rather than clobbering it back
+          // based on name-matching alone — only the TSR default name forces
+          // its category, matching the one case onboarding cares about.
+          if (t.name === TSR_PACKAGE_NAME) payload.category = "tsr_retest";
           await supabase.from("lesson_types").update(payload).eq("id", match.id);
         } else {
+          payload.category = t.name === TSR_PACKAGE_NAME ? "tsr_retest" : "lesson";
           await supabase.from("lesson_types").insert(payload);
         }
       }
-      setStep(4);
+      setStep(6);
     } catch (err: any) {
       toast.error(err?.message || "Could not save services");
     } finally {
       setBusy(false);
     }
   }
-  async function saveStep4() {
+  async function saveStep6() {
+    if (!schoolIdQ.data) return toast.error("Could not determine your school — try refreshing.");
+    setBusy(true);
+    try {
+      const named = vehicles.filter((v) => v.name.trim());
+      if (named.length > 0) {
+        const { data: existing } = await supabase
+          .from("vehicles")
+          .select("id,name")
+          .eq("school_id", schoolIdQ.data);
+        for (const v of named) {
+          const match = (existing ?? []).find((e) => e.name === v.name);
+          if (match) {
+            await supabase.from("vehicles").update({ plate: v.plate || null }).eq("id", match.id);
+          } else {
+            await supabase.from("vehicles").insert({
+              name: v.name,
+              plate: v.plate || null,
+              school_id: schoolIdQ.data,
+            });
+          }
+        }
+      }
+      setStep(7);
+    } catch (err: any) {
+      toast.error(err?.message || "Could not save vehicles");
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function saveStep7() {
     if (!instructor.full_name) {
       toast.error("Instructor name is required");
       return;
@@ -219,11 +363,11 @@ function OnboardingPage() {
     }
     setBusy(false);
     setInstructorId(data.id);
-    setStep(5);
+    setStep(8);
   }
-  async function saveStep5() {
+  async function saveStep8() {
     if (!instructorId) {
-      setStep(6);
+      setStep(9);
       return;
     }
     setBusy(true);
@@ -233,7 +377,7 @@ function OnboardingPage() {
       .eq("id", instructorId);
     setBusy(false);
     if (error) return toast.error(error.message);
-    setStep(6);
+    setStep(9);
   }
   async function finish() {
     setBusy(true);
@@ -244,7 +388,7 @@ function OnboardingPage() {
         .eq("school_id", schoolIdQ.data);
     }
     setBusy(false);
-    setStep(7);
+    setStep(10);
   }
 
   function copyLink() {
@@ -253,7 +397,7 @@ function OnboardingPage() {
     setTimeout(() => setCopied(false), 2000);
   }
 
-  if (loading) return null;
+  if (loading || loadingExisting) return null;
 
   return (
     <div className="glass-bg">
@@ -357,15 +501,6 @@ function OnboardingPage() {
                   </option>
                 </select>
               </div>
-              <Input
-                label="Cancellation fee"
-                prefix="$"
-                type="number"
-                value={String(rules.cancellation_fee_cents / 100)}
-                onChange={(v) =>
-                  setRules({ ...rules, cancellation_fee_cents: Math.round(Number(v) * 100) })
-                }
-              />
               <Toggle
                 label="Require deposit at booking"
                 checked={rules.deposit_required}
@@ -405,9 +540,158 @@ function OnboardingPage() {
 
           {step === 3 && (
             <Step
+              title="Cancellation policy & fees"
+              subtitle="Fees aren't charged automatically — there's no payment gateway. They show up as an amount owed on Payment Tracking for you to collect manually."
+            >
+              <div>
+                <Label>Cancellation policy (shown to students)</Label>
+                <textarea
+                  className="glass-input min-h-[70px]"
+                  value={policy.cancellation_policy}
+                  onChange={(e) => setPolicy({ ...policy, cancellation_policy: e.target.value })}
+                  placeholder="e.g. Cancellations require 24 hours notice. Late cancellations are charged 50% of the lesson fee."
+                />
+              </div>
+              <div>
+                <Label>Late cancellation fee</Label>
+                <select
+                  className="glass-input"
+                  value={policy.late_cancel_fee_type}
+                  onChange={(e) => setPolicy({ ...policy, late_cancel_fee_type: e.target.value })}
+                >
+                  <option value="none" className="bg-[#0D1424]">
+                    No fee
+                  </option>
+                  <option value="flat" className="bg-[#0D1424]">
+                    Flat amount
+                  </option>
+                  <option value="percentage" className="bg-[#0D1424]">
+                    Percentage of lesson price
+                  </option>
+                </select>
+              </div>
+              {policy.late_cancel_fee_type !== "none" && (
+                <Input
+                  label={policy.late_cancel_fee_type === "flat" ? "Fee amount" : "Fee percentage"}
+                  prefix={policy.late_cancel_fee_type === "flat" ? "$" : undefined}
+                  type="number"
+                  value={String(
+                    policy.late_cancel_fee_type === "flat"
+                      ? policy.late_cancel_fee_value / 100
+                      : policy.late_cancel_fee_value,
+                  )}
+                  onChange={(v) =>
+                    setPolicy({
+                      ...policy,
+                      late_cancel_fee_value:
+                        policy.late_cancel_fee_type === "flat"
+                          ? Math.round(Number(v) * 100)
+                          : Number(v),
+                    })
+                  }
+                />
+              )}
+              <div>
+                <Label>No-show fee</Label>
+                <select
+                  className="glass-input"
+                  value={policy.no_show_fee_type}
+                  onChange={(e) => setPolicy({ ...policy, no_show_fee_type: e.target.value })}
+                >
+                  <option value="none" className="bg-[#0D1424]">
+                    No fee
+                  </option>
+                  <option value="flat" className="bg-[#0D1424]">
+                    Flat amount
+                  </option>
+                  <option value="percentage" className="bg-[#0D1424]">
+                    Percentage of lesson price
+                  </option>
+                </select>
+              </div>
+              {policy.no_show_fee_type !== "none" && (
+                <Input
+                  label={policy.no_show_fee_type === "flat" ? "Fee amount" : "Fee percentage"}
+                  prefix={policy.no_show_fee_type === "flat" ? "$" : undefined}
+                  type="number"
+                  value={String(
+                    policy.no_show_fee_type === "flat"
+                      ? policy.no_show_fee_value / 100
+                      : policy.no_show_fee_value,
+                  )}
+                  onChange={(v) =>
+                    setPolicy({
+                      ...policy,
+                      no_show_fee_value:
+                        policy.no_show_fee_type === "flat"
+                          ? Math.round(Number(v) * 100)
+                          : Number(v),
+                    })
+                  }
+                />
+              )}
+              <NextRow onBack={() => setStep(2)} onNext={saveStep3} busy={busy} />
+            </Step>
+          )}
+
+          {step === 4 && (
+            <Step
+              title="Where do you serve?"
+              subtitle="Both are optional — leave blank if they don't apply yet, you can always set these later."
+            >
+              <div>
+                <Label>Pickup service areas (postal code prefixes)</Label>
+                <input
+                  className="glass-input"
+                  value={pickupAreasText}
+                  onChange={(e) => setPickupAreasText(e.target.value)}
+                  placeholder="e.g. R2C, R2G, R2J"
+                />
+                <p className="text-xs text-slate-400 mt-1.5">
+                  Comma-separated. New bookings are blocked if the pickup postal code isn't in one
+                  of these. Leave blank to allow pickup anywhere.
+                </p>
+              </div>
+              <div>
+                <Label>MPI test locations</Label>
+                <input
+                  className="glass-input"
+                  value={mpiLocationsText}
+                  onChange={(e) => setMpiLocationsText(e.target.value)}
+                  placeholder="e.g. MPI Portage Ave, MPI Regent Ave"
+                />
+                <p className="text-xs text-slate-400 mt-1.5">
+                  Comma-separated. Shown as a dropdown when booking a road test or TSR package.
+                  Leave blank to let students type it in freely.
+                </p>
+              </div>
+              <NextRow onBack={() => setStep(3)} onNext={saveStep4} busy={busy} />
+            </Step>
+          )}
+
+          {step === 5 && (
+            <Step
               title="Your lesson packages"
               subtitle="Edit the defaults or keep them. You can always change these later."
             >
+              <label className="flex items-center justify-between cursor-pointer">
+                <span className="text-sm text-slate-300">Offer theory/classroom lessons</span>
+                <button
+                  type="button"
+                  onClick={() => setTheoryEnabled(!theoryEnabled)}
+                  className={`w-11 h-6 rounded-full transition ${theoryEnabled ? "bg-[#3B82F6]" : "bg-slate-700"} relative`}
+                >
+                  <span
+                    className={`absolute top-0.5 size-5 rounded-full bg-white transition ${theoryEnabled ? "left-5" : "left-0.5"}`}
+                  />
+                </button>
+              </label>
+              {theoryEnabled && (
+                <p className="text-xs text-slate-400 -mt-3">
+                  Add a theory lesson type from the Services page after setup — it'll become
+                  bookable once added.
+                </p>
+              )}
               <div className="space-y-2">
                 {types.map((t, i) => (
                   <div key={i} className="grid grid-cols-12 gap-2 items-center">
@@ -465,11 +749,58 @@ function OnboardingPage() {
               >
                 <Plus className="size-4" /> Add another service
               </button>
-              <NextRow onBack={() => setStep(2)} onNext={saveStep3} busy={busy} />
+              <NextRow onBack={() => setStep(4)} onNext={saveStep5} busy={busy} />
             </Step>
           )}
 
-          {step === 4 && (
+          {step === 6 && (
+            <Step
+              title="Your vehicles"
+              subtitle="Optional — track your fleet so the same car never gets double-booked. Skip if you don't need this yet."
+            >
+              <div className="space-y-2">
+                {vehicles.map((v, i) => (
+                  <div key={i} className="grid grid-cols-12 gap-2 items-center">
+                    <input
+                      className="glass-input col-span-7 text-sm"
+                      placeholder="e.g. 2021 Honda Civic"
+                      value={v.name}
+                      onChange={(e) => {
+                        const c = [...vehicles];
+                        c[i] = { ...v, name: e.target.value };
+                        setVehicles(c);
+                      }}
+                    />
+                    <input
+                      className="glass-input col-span-4 text-sm"
+                      placeholder="Plate (optional)"
+                      value={v.plate}
+                      onChange={(e) => {
+                        const c = [...vehicles];
+                        c[i] = { ...v, plate: e.target.value };
+                        setVehicles(c);
+                      }}
+                    />
+                    <button
+                      onClick={() => setVehicles(vehicles.filter((_, x) => x !== i))}
+                      className="col-span-1 text-slate-400 hover:text-red-400"
+                    >
+                      <Trash2 className="size-4 mx-auto" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <button
+                onClick={() => setVehicles([...vehicles, { name: "", plate: "" }])}
+                className="btn-secondary text-sm w-full"
+              >
+                <Plus className="size-4" /> Add another vehicle
+              </button>
+              <NextRow onBack={() => setStep(5)} onNext={saveStep6} busy={busy} />
+            </Step>
+          )}
+
+          {step === 7 && (
             <Step
               title="Add your first instructor"
               subtitle="You can add more anytime from the Instructors page."
@@ -527,11 +858,11 @@ function OnboardingPage() {
                   </p>
                 </div>
               )}
-              <NextRow onBack={() => setStep(3)} onNext={saveStep4} busy={busy} />
+              <NextRow onBack={() => setStep(6)} onNext={saveStep7} busy={busy} />
             </Step>
           )}
 
-          {step === 5 && (
+          {step === 8 && (
             <Step
               title={`When does ${instructor.full_name || "your instructor"} work?`}
               subtitle="Set their regular weekly schedule. They can request changes later."
@@ -589,11 +920,11 @@ function OnboardingPage() {
                   );
                 })}
               </div>
-              <NextRow onBack={() => setStep(4)} onNext={saveStep5} busy={busy} />
+              <NextRow onBack={() => setStep(7)} onNext={saveStep8} busy={busy} />
             </Step>
           )}
 
-          {step === 6 && (
+          {step === 9 && (
             <Step
               title="Your school is live!"
               subtitle="DrivingOps is ready. Here's your public booking link."
@@ -631,7 +962,7 @@ function OnboardingPage() {
             </Step>
           )}
 
-          {step === 7 && (
+          {step === 10 && (
             <Step
               title="Choose your plan"
               subtitle="14-day free trial on any plan. Your card is required now but won't be charged until the trial ends."
@@ -640,21 +971,19 @@ function OnboardingPage() {
             </Step>
           )}
         </div>
-        <Link to="/dashboard" className="text-xs text-slate-500 hover:text-slate-300 mt-6">
-          Skip for now
-        </Link>
       </div>
     </div>
   );
 }
 
 function StepDots({ step }: { step: number }) {
+  const steps = Array.from({ length: TOTAL_STEPS }, (_, i) => i + 1);
   return (
-    <div className="flex items-center gap-2">
-      {[1, 2, 3, 4, 5, 6, 7].map((i, idx) => (
+    <div className="flex items-center gap-1.5 flex-wrap justify-center max-w-[560px]">
+      {steps.map((i, idx) => (
         <div key={i} className="flex items-center">
           <div
-            className={`size-7 rounded-full grid place-items-center text-xs font-semibold border ${
+            className={`size-6 rounded-full grid place-items-center text-[10px] font-semibold border ${
               i < step
                 ? "bg-[#3B82F6] border-[#3B82F6] text-white"
                 : i === step
@@ -662,9 +991,11 @@ function StepDots({ step }: { step: number }) {
                   : "bg-transparent border-slate-700 text-slate-500"
             }`}
           >
-            {i < step ? <Check className="size-3.5" /> : i}
+            {i < step ? <Check className="size-3" /> : i}
           </div>
-          {idx < 6 && <div className={`h-px w-8 ${i < step ? "bg-[#3B82F6]" : "bg-slate-700"}`} />}
+          {idx < steps.length - 1 && (
+            <div className={`h-px w-4 ${i < step ? "bg-[#3B82F6]" : "bg-slate-700"}`} />
+          )}
         </div>
       ))}
     </div>

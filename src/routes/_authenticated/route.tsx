@@ -50,12 +50,14 @@ function AuthLayout() {
     queryFn: async () => {
       const { data } = await supabase
         .from("school_settings")
-        .select("school_name")
+        .select("school_name, onboarding_complete")
         .eq("school_id", schoolIdQ.data as string)
         .maybeSingle();
       return data;
     },
   });
+  const needsOnboarding =
+    isAdmin && !!schoolIdQ.data && !settingsQ.isLoading && settingsQ.data?.onboarding_complete !== true;
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth", replace: true });
@@ -67,6 +69,13 @@ function AuthLayout() {
       navigate({ to: "/instructor", replace: true });
     }
   }, [loading, rolesQ.isLoading, isAdmin, isInstructor, pathname, navigate]);
+
+  // First-run setup isn't optional — an admin who hasn't finished the
+  // onboarding wizard is redirected there on every authenticated page load,
+  // rather than a skippable checklist that's easy to never come back to.
+  useEffect(() => {
+    if (needsOnboarding) navigate({ to: "/onboarding", replace: true });
+  }, [needsOnboarding, navigate]);
 
   if (loading || rolesQ.isLoading || acceptanceQ.isLoading || billingQ.isLoading) {
     return (
@@ -98,6 +107,14 @@ function AuthLayout() {
 
   if (user && (!hasCurrentTerms || !hasCurrentPrivacy)) {
     return <AcceptPoliciesScreen userId={user.id} onAccepted={() => acceptanceQ.refetch()} />;
+  }
+
+  if (needsOnboarding) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-slate-500">
+        Redirecting to setup…
+      </div>
+    );
   }
 
   // free_forever is structurally exempt from every billing check below.
