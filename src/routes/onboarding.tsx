@@ -26,11 +26,13 @@ const TIMES = (() => {
     for (const m of [0, 30]) out.push(`${String(h).padStart(2, "0")}:${m === 0 ? "00" : "30"}`);
   return out;
 })();
+const TSR_PACKAGE_NAME = "TSR / Retest Package";
 const DEFAULT_TYPES = [
   { name: "1 Hour Lesson", duration_minutes: 60, price_cents: 6500, active: true },
   { name: "1.5 Hour Lesson", duration_minutes: 90, price_cents: 9500, active: true },
   { name: "2 Hour Lesson", duration_minutes: 120, price_cents: 12000, active: true },
   { name: "Road Test Package", duration_minutes: 90, price_cents: 18000, active: true },
+  { name: TSR_PACKAGE_NAME, duration_minutes: 60, price_cents: 6500, active: true },
   { name: "Custom Package", duration_minutes: 60, price_cents: 0, active: true },
 ];
 const DEFAULT_AVAIL = DAYS.reduce<Record<string, { enabled: boolean; start: string; end: string }>>(
@@ -59,6 +61,7 @@ function OnboardingPage() {
     contact_email: "",
     service_area: "",
   });
+  const [mpiConfirmed, setMpiConfirmed] = useState(false);
   // Step 2
   const [rules, setRules] = useState({
     cancellation_notice_hours: 24,
@@ -111,11 +114,20 @@ function OnboardingPage() {
       toast.error("School name, city, and province are required");
       return;
     }
+    if (school.province === "MB" && !mpiConfirmed) {
+      toast.error("Please confirm your school holds a valid MPI permit to continue");
+      return;
+    }
     if (!schoolIdQ.data) return toast.error("Could not determine your school — try refreshing.");
     setBusy(true);
     const { error } = await supabase
       .from("school_settings")
-      .update(school)
+      .update({
+        ...school,
+        ...(school.province === "MB"
+          ? { mpi_permit_confirmed_at: new Date().toISOString() }
+          : {}),
+      })
       .eq("school_id", schoolIdQ.data);
     setBusy(false);
     if (error) return toast.error(error.message);
@@ -153,7 +165,7 @@ function OnboardingPage() {
           price_cents: t.price_cents,
           active: t.active,
           sort_order: i,
-          category: "lesson",
+          category: t.name === TSR_PACKAGE_NAME ? "tsr_retest" : "lesson",
           school_id: schoolIdQ.data,
         };
         if (match) {
@@ -303,6 +315,19 @@ function OnboardingPage() {
                 onChange={(v) => setSchool({ ...school, service_area: v })}
                 placeholder="Within 15km of downtown Winnipeg"
               />
+              {school.province === "MB" && (
+                <label className="flex items-start gap-2.5 text-sm text-white/80 bg-white/5 border border-white/10 rounded-lg p-3">
+                  <input
+                    type="checkbox"
+                    checked={mpiConfirmed}
+                    onChange={(e) => setMpiConfirmed(e.target.checked)}
+                    className="mt-0.5 accent-[#C9A84C]"
+                  />
+                  <span>
+                    I confirm my school holds a valid MPI permit to operate in Manitoba.
+                  </span>
+                </label>
+              )}
               <NextRow onNext={saveStep1} busy={busy} />
             </Step>
           )}

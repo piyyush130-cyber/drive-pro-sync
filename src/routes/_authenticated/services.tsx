@@ -91,6 +91,7 @@ function ServicesPage() {
             <option value="lesson">Lesson</option>
             <option value="package">Package</option>
             <option value="road_test">Road test</option>
+            <option value="tsr_retest">TSR / retest (MB)</option>
             <option value="custom">Custom</option>
           </select>
           <Input name="description" placeholder="Short description" className="sm:col-span-2 lg:col-span-3" />
@@ -172,6 +173,7 @@ function ServicesPage() {
                       <option value="lesson">Lesson</option>
                       <option value="package">Package</option>
                       <option value="road_test">Road test</option>
+                      <option value="tsr_retest">TSR / retest (MB)</option>
                       <option value="custom">Custom</option>
                     </select>
                   </Field>

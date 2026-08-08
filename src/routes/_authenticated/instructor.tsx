@@ -93,7 +93,9 @@ function InstructorPage() {
       const tomorrow = new Date(start.getTime() + 86400000);
       let q = supabase
         .from("bookings")
-        .select("*, students(full_name, phone, email), lesson_types(name), vehicles(name)")
+        .select(
+          "*, students(full_name, phone, email), lesson_types(name, category), vehicles(name)",
+        )
         .eq("instructor_id", meQ.data!.id)
         .is("deleted_at", null)
         .order("scheduled_at");
@@ -329,6 +331,13 @@ function InstructorPage() {
                         Vehicle: {b.vehicles.name}
                       </div>
                     )}
+                    {b.lesson_types?.category === "tsr_retest" && (
+                      <TsrProgressPanel
+                        studentId={b.student_id}
+                        instructorId={meQ.data.id}
+                        schoolId={meQ.data.school_id}
+                      />
+                    )}
                     {b.notes && (
                       <div className="mt-2 text-xs text-slate-500 italic">"{b.notes}"</div>
                     )}
@@ -448,6 +457,98 @@ const READINESS_LABEL: Record<string, string> = {
   almost_ready: "Almost ready",
   ready: "Ready to test",
 };
+
+const TSR_HOURS_REQUIRED = 5;
+
+// MPI Training Support Requirement (Manitoba): 5 hours of documented
+// instruction after 3 road-test fails, tracked as the sum of completed
+// bookings under the "tsr_retest" category — not a single mega-booking, so
+// a student can reach the total across several sessions. Verification
+// issuance stays a repeatable log (not a one-time flag) since a student
+// could need this more than once over their driving history.
+function TsrProgressPanel({
+  studentId,
+  instructorId,
+  schoolId,
+}: {
+  studentId: string;
+  instructorId: string;
+  schoolId: string;
+}) {
+  const qc = useQueryClient();
+  const [issuing, setIssuing] = useState(false);
+
+  const progressQ = useQuery({
+    queryKey: ["tsr-progress", studentId],
+    queryFn: async () => {
+      const [{ data: completed }, { data: verifications }] = await Promise.all([
+        supabase
+          .from("bookings")
+          .select("duration_minutes, lesson_types!inner(category)")
+          .eq("student_id", studentId)
+          .eq("status", "completed")
+          .eq("lesson_types.category", "tsr_retest"),
+        supabase
+          .from("tsr_verifications")
+          .select("id, issued_at, hours_completed_at_issue")
+          .eq("student_id", studentId)
+          .order("issued_at", { ascending: false }),
+      ]);
+      const totalMinutes = (completed ?? []).reduce(
+        (sum: number, b: any) => sum + (b.duration_minutes ?? 0),
+        0,
+      );
+      return { hours: totalMinutes / 60, verifications: verifications ?? [] };
+    },
+  });
+
+  async function issue() {
+    if (!progressQ.data) return;
+    setIssuing(true);
+    try {
+      const { error } = await supabase.from("tsr_verifications").insert({
+        student_id: studentId,
+        school_id: schoolId,
+        issued_by_instructor_id: instructorId,
+        hours_completed_at_issue: progressQ.data.hours,
+      });
+      if (error) throw error;
+      toast.success("Verification form recorded");
+      qc.invalidateQueries({ queryKey: ["tsr-progress", studentId] });
+    } catch (err: any) {
+      toast.error(err?.message || "Could not record verification");
+    } finally {
+      setIssuing(false);
+    }
+  }
+
+  if (progressQ.isLoading || !progressQ.data) return null;
+  const { hours, verifications } = progressQ.data;
+  const complete = hours >= TSR_HOURS_REQUIRED;
+
+  return (
+    <div className="mt-2 text-xs rounded-md border border-amber-200 bg-amber-50 px-2.5 py-2 space-y-1.5">
+      <div className="font-medium text-amber-800">
+        TSR progress: {hours.toFixed(1)} / {TSR_HOURS_REQUIRED} hours
+      </div>
+      {complete && (
+        <button
+          onClick={issue}
+          disabled={issuing}
+          className="text-xs font-semibold text-amber-800 underline disabled:opacity-50"
+        >
+          {issuing ? "Recording…" : "Mark verification form issued"}
+        </button>
+      )}
+      {verifications.map((v: any) => (
+        <div key={v.id} className="text-amber-700">
+          Verification issued {fmtDate(v.issued_at)} ({Number(v.hours_completed_at_issue).toFixed(1)}{" "}
+          hrs completed)
+        </div>
+      ))}
+    </div>
+  );
+}
 
 // Notes from every instructor who has ever taught this student, not just
 // the currently-viewing one — so a student reassigned to a new instructor

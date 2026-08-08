@@ -707,6 +707,7 @@ export type Database = {
           deposit_cents: number
           deposit_required: boolean
           logo_url: string | null
+          mpi_permit_confirmed_at: string | null
           onboarding_complete: boolean
           province: string | null
           require_approval: boolean
@@ -730,6 +731,7 @@ export type Database = {
           deposit_cents?: number
           deposit_required?: boolean
           logo_url?: string | null
+          mpi_permit_confirmed_at?: string | null
           onboarding_complete?: boolean
           province?: string | null
           require_approval?: boolean
@@ -753,6 +755,7 @@ export type Database = {
           deposit_cents?: number
           deposit_required?: boolean
           logo_url?: string | null
+          mpi_permit_confirmed_at?: string | null
           onboarding_complete?: boolean
           province?: string | null
           require_approval?: boolean
@@ -991,6 +994,55 @@ export type Database = {
             columns: ["school_id"]
             isOneToOne: false
             referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tsr_verifications: {
+        Row: {
+          hours_completed_at_issue: number
+          id: string
+          issued_at: string
+          issued_by_instructor_id: string | null
+          school_id: string
+          student_id: string
+        }
+        Insert: {
+          hours_completed_at_issue: number
+          id?: string
+          issued_at?: string
+          issued_by_instructor_id?: string | null
+          school_id: string
+          student_id: string
+        }
+        Update: {
+          hours_completed_at_issue?: number
+          id?: string
+          issued_at?: string
+          issued_by_instructor_id?: string | null
+          school_id?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tsr_verifications_issued_by_instructor_id_fkey"
+            columns: ["issued_by_instructor_id"]
+            isOneToOne: false
+            referencedRelation: "instructors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tsr_verifications_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tsr_verifications_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
             referencedColumns: ["id"]
           },
         ]

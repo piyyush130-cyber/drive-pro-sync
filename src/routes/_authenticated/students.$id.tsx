@@ -67,7 +67,9 @@ function StudentDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("students")
-        .select("*, bookings(*, instructors(full_name), lesson_types(name)), student_progress(*)")
+        .select(
+          "*, bookings(*, instructors(full_name), lesson_types(name, category)), student_progress(*), tsr_verifications(id, issued_at, hours_completed_at_issue)",
+        )
         .eq("id", id)
         .single();
       if (error) throw error;
@@ -180,6 +182,15 @@ function StudentDetail() {
   const completed = bookings.filter((b: any) => b.status === "completed").length;
   const currentReadiness = READINESS_OPTIONS.find((o) => o.value === readiness)!;
 
+  const tsrBookings = bookings.filter((b: any) => b.lesson_types?.category === "tsr_retest");
+  const tsrHours =
+    tsrBookings
+      .filter((b: any) => b.status === "completed")
+      .reduce((sum: number, b: any) => sum + (b.duration_minutes ?? 0), 0) / 60;
+  const tsrVerifications = [...(s.tsr_verifications ?? [])].sort(
+    (a: any, b: any) => +new Date(b.issued_at) - +new Date(a.issued_at),
+  );
+
   return (
     <div className="p-6 lg:p-10 max-w-5xl">
       <Link to="/students" className="text-xs text-slate-500">
@@ -199,6 +210,29 @@ function StudentDetail() {
           {countNoShows(bookings)} no-shows on record — new bookings from this student always land
           as pending and require manual confirmation, regardless of your approval settings.
         </div>
+      )}
+
+      {(tsrBookings.length > 0 || tsrVerifications.length > 0) && (
+        <section className="bg-white border border-amber-200 rounded-xl p-5 mb-6">
+          <h2 className="font-medium text-slate-900 mb-1">TSR / Retest package (MB)</h2>
+          <p className="text-xs text-slate-500 mb-3">
+            MPI Training Support Requirement — 5 hours of documented instruction. Instructors mark
+            verification form issuance from their booking view.
+          </p>
+          <div className="text-sm text-slate-700 mb-2">
+            {tsrHours.toFixed(1)} / 5 hours completed
+          </div>
+          {tsrVerifications.length > 0 && (
+            <div className="text-xs text-slate-500 space-y-1">
+              {tsrVerifications.map((v: any) => (
+                <div key={v.id}>
+                  Verification issued {fmtDateTime(v.issued_at)} (
+                  {Number(v.hours_completed_at_issue).toFixed(1)} hrs completed)
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
       )}
 
       <section className="bg-white border border-slate-200 rounded-xl p-5 mb-6">

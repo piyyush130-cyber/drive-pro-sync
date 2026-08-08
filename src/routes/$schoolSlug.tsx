@@ -580,6 +580,7 @@ function ServicePicker({
     "1.5 Hour Driving Lesson": "Steady practice and confidence.",
     "2 Hour Driving Lesson": "Deeper practice and preparation.",
     "Road Test Package": "Warm-up, test support, vehicle use.",
+    "TSR / Retest Package": "MPI-required instruction hours after a road test fail.",
     "Custom / Not Sure": "Let the school help you decide.",
   };
   if (!types.length) {
