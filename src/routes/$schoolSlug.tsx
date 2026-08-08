@@ -1082,6 +1082,17 @@ function SummaryCard({
         <p className="text-[11px] text-center mt-3" style={{ color: C.muted }}>
           Your spot is held for 10 minutes after submitting.
         </p>
+        <p className="text-[11px] text-center mt-2" style={{ color: C.mutedSoft }}>
+          By requesting this lesson, you agree to our{" "}
+          <a href="/terms" target="_blank" rel="noreferrer" style={{ color: C.muted, textDecoration: "underline" }}>
+            Terms
+          </a>{" "}
+          and{" "}
+          <a href="/privacy" target="_blank" rel="noreferrer" style={{ color: C.muted, textDecoration: "underline" }}>
+            Privacy Policy
+          </a>
+          , including receiving text messages about your booking. Reply STOP to opt out anytime.
+        </p>
       </div>
     </section>
   );

@@ -317,6 +317,17 @@ function NextLessonPage() {
         >
           {submitting ? "Booking…" : "Book this lesson"}
         </button>
+        <p className="text-[11px] text-center text-slate-400">
+          By booking, you agree to our{" "}
+          <a href="/terms" target="_blank" rel="noreferrer" className="underline">
+            Terms
+          </a>{" "}
+          and{" "}
+          <a href="/privacy" target="_blank" rel="noreferrer" className="underline">
+            Privacy Policy
+          </a>
+          , including receiving text messages about your booking. Reply STOP to opt out anytime.
+        </p>
       </main>
     </div>
   );

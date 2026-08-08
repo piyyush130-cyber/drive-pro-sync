@@ -221,6 +221,17 @@ function LoginScreen({ schoolSlug }: { schoolSlug: string }) {
           <p className="mt-4 text-xs text-center" style={{ color: C.mutedSoft }}>
             No password needed — we'll text or email you a one-time link.
           </p>
+          <p className="mt-2 text-[11px] text-center" style={{ color: C.mutedSoft }}>
+            By continuing, you agree to our{" "}
+            <a href="/terms" target="_blank" rel="noreferrer" style={{ textDecoration: "underline" }}>
+              Terms
+            </a>{" "}
+            and{" "}
+            <a href="/privacy" target="_blank" rel="noreferrer" style={{ textDecoration: "underline" }}>
+              Privacy Policy
+            </a>
+            , including receiving texts about your bookings. Reply STOP to opt out anytime.
+          </p>
         </form>
       )}
     </div>
