@@ -106,6 +106,7 @@ function SettingsPage() {
         require_approval: !!form.require_approval,
         auto_assign_instructor: !!form.auto_assign_instructor,
         auto_invitations_enabled: !!form.auto_invitations_enabled,
+        theory_lessons_enabled: !!form.theory_lessons_enabled,
         pickup_service_areas: normalizeServiceAreaInput(pickupAreasText),
         mpi_test_locations: normalizeCommaList(mpiLocationsText),
       })
@@ -435,6 +436,19 @@ function SettingsPage() {
           When on, students with remaining lessons and no upcoming booking get a text after their
           last completed lesson, with one follow-up reminder if they don't book. When off, send
           invitations manually from a student's profile.
+        </p>
+        <label className="flex items-center gap-2 text-sm text-slate-700">
+          <input
+            type="checkbox"
+            checked={!!form.theory_lessons_enabled}
+            onChange={(e) => setForm({ ...form, theory_lessons_enabled: e.target.checked })}
+            className="accent-[#3B82F6]"
+          />
+          Offer theory/classroom lessons
+        </label>
+        <p className="text-xs text-slate-500 -mt-2">
+          When off, theory lessons are hidden everywhere — booking pages, the portal, and Services.
+          Turning it on lets you add a theory lesson type on the Services page below.
         </p>
         <button onClick={saveSettings} className="btn-primary text-sm">
           Save settings

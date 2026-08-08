@@ -729,6 +729,7 @@ export type Database = {
           school_id: string
           school_name: string
           service_area: string | null
+          theory_lessons_enabled: boolean
           updated_at: string
         }
         Insert: {
@@ -759,6 +760,7 @@ export type Database = {
           school_id: string
           school_name?: string
           service_area?: string | null
+          theory_lessons_enabled?: boolean
           updated_at?: string
         }
         Update: {
@@ -789,6 +791,7 @@ export type Database = {
           school_id?: string
           school_name?: string
           service_area?: string | null
+          theory_lessons_enabled?: boolean
           updated_at?: string
         }
         Relationships: [

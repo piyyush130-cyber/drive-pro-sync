@@ -28,6 +28,20 @@ function ServicesPage() {
     },
   });
 
+  const settingsQ = useQuery({
+    queryKey: ["services-settings", schoolIdQ.data],
+    enabled: !!schoolIdQ.data,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("school_settings")
+        .select("theory_lessons_enabled")
+        .eq("school_id", schoolIdQ.data as string)
+        .maybeSingle();
+      return data;
+    },
+  });
+  const theoryEnabled = !!settingsQ.data?.theory_lessons_enabled;
+
   async function add(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!schoolIdQ.data) return toast.error("Could not determine your school — try refreshing.");
@@ -93,6 +107,7 @@ function ServicesPage() {
             <option value="package">Package</option>
             <option value="road_test">Road test</option>
             <option value="tsr_retest">TSR / retest (MB)</option>
+            {theoryEnabled && <option value="theory">Theory / classroom</option>}
             <option value="custom">Custom</option>
           </select>
           <Input name="description" placeholder="Short description" className="sm:col-span-2 lg:col-span-3" />
@@ -179,6 +194,9 @@ function ServicesPage() {
                       <option value="package">Package</option>
                       <option value="road_test">Road test</option>
                       <option value="tsr_retest">TSR / retest (MB)</option>
+                      {(theoryEnabled || s.category === "theory") && (
+                        <option value="theory">Theory / classroom</option>
+                      )}
                       <option value="custom">Custom</option>
                     </select>
                   </Field>

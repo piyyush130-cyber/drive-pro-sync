@@ -52,6 +52,7 @@ type Settings = {
   pickup_service_areas?: string[];
   cancellation_policy?: string | null;
   mpi_test_locations?: string[];
+  theory_lessons_enabled?: boolean;
 };
 
 // Light premium glass palette
@@ -99,7 +100,7 @@ function BookingPage() {
       const { data } = await supabase
         .from("school_settings")
         .select(
-          "school_name, booking_paused, pickup_service_areas, cancellation_policy, mpi_test_locations",
+          "school_name, booking_paused, pickup_service_areas, cancellation_policy, mpi_test_locations, theory_lessons_enabled",
         )
         .eq("school_id", schoolId as string)
         .maybeSingle();
@@ -297,7 +298,9 @@ function BookingPage() {
           <div className="space-y-6">
             <Panel eyebrow="Select service" title="Choose your lesson" icon={Sparkles}>
               <ServicePicker
-                types={typesQ.data ?? []}
+                types={(typesQ.data ?? []).filter(
+                  (t) => t.category !== "theory" || settingsQ.data?.theory_lessons_enabled,
+                )}
                 selected={selected}
                 onSelect={(t) => {
                   setSelected(t);
