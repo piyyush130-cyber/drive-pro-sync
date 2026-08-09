@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
+import { Copy, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthUser } from "@/lib/auth";
 import {
@@ -71,6 +72,14 @@ function OwnerPage() {
   const deleteSchool = useServerFn(ownerDeleteSchool);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [dormantOnly, setDormantOnly] = useState(false);
+  const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
+
+  function copyPortalLink(slug: string) {
+    const url = `${window.location.origin}/portal/${slug}`;
+    navigator.clipboard.writeText(url);
+    setCopiedSlug(slug);
+    setTimeout(() => setCopiedSlug((s) => (s === slug ? null : s)), 2000);
+  }
 
   function refresh() {
     qc.invalidateQueries({ queryKey: ["owner-schools"] });
@@ -265,6 +274,20 @@ function OwnerPage() {
                       </td>
                       <td className="px-5 py-3">
                         <div className="flex items-center justify-end gap-2 flex-wrap">
+                          <button
+                            onClick={() => copyPortalLink(s.slug)}
+                            className="text-xs border border-slate-200 px-2.5 py-1.5 rounded-md hover:bg-slate-50"
+                          >
+                            {copiedSlug === s.slug ? (
+                              <>
+                                <Check className="size-3.5 inline mr-1" /> Copied!
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="size-3.5 inline mr-1" /> Portal link
+                              </>
+                            )}
+                          </button>
                           <button
                             disabled={isBusy}
                             onClick={() => handleExtendTrial(s.id)}
