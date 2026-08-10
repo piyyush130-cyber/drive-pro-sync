@@ -63,9 +63,23 @@ export async function pickInstructor(
     .gte("scheduled_at", dayStart.toISOString())
     .lte("scheduled_at", dayEnd.toISOString());
 
+  // A slot with an active (unclaimed, unexpired) waitlist offer is held for
+  // that student — auto-assignment must not hand it to a brand-new booking
+  // out from under them. No real booking row exists for it yet, so it's
+  // invisible to the query above unless merged in here explicitly.
+  const { data: activeOffers } = await supabaseAdmin
+    .from("waitlist_offers")
+    .select("instructor_id, scheduled_at, duration_minutes")
+    .eq("school_id", schoolId)
+    .eq("status", "pending")
+    .not("instructor_id", "is", null)
+    .gt("expires_at", new Date().toISOString())
+    .gte("scheduled_at", dayStart.toISOString())
+    .lte("scheduled_at", dayEnd.toISOString());
+
   return pickBestInstructor({
     instructors: instructors ?? [],
-    dayBookings: dayBookings ?? [],
+    dayBookings: [...(dayBookings ?? []), ...(activeOffers ?? [])],
     scheduledAt,
     durationMinutes,
   });
