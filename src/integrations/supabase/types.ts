@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      booking_payments: {
+        Row: {
+          amount_cents: number
+          booking_id: string
+          created_at: string
+          id: string
+          method: Database["public"]["Enums"]["payment_method"]
+          paid_at: string
+          school_id: string
+        }
+        Insert: {
+          amount_cents: number
+          booking_id: string
+          created_at?: string
+          id?: string
+          method: Database["public"]["Enums"]["payment_method"]
+          paid_at?: string
+          school_id: string
+        }
+        Update: {
+          amount_cents?: number
+          booking_id?: string
+          created_at?: string
+          id?: string
+          method?: Database["public"]["Enums"]["payment_method"]
+          paid_at?: string
+          school_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_payments_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_payments_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bookings: {
         Row: {
           admin_notes: string | null

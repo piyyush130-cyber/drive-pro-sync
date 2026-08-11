@@ -10,6 +10,7 @@ import { notifyBookingUpdated } from "@/lib/notifications.functions";
 import { resolveCancellationRequest } from "@/lib/cancellation-requests.functions";
 import { hasVehicleConflict } from "@/lib/booking-logic";
 import { computeCancellationFeeCents } from "@/lib/cancellation-fee";
+import { recordBookingPayment, getTotalPaid } from "@/lib/booking-payments";
 import { isBookingConflictError, BOOKING_CONFLICT_MESSAGE } from "@/lib/booking-conflict-error";
 import { toast } from "sonner";
 
@@ -112,6 +113,24 @@ function BookingsPage() {
     qc.invalidateQueries({ queryKey: ["pending-bookings"] });
     toast.success("Updated");
     void notifyUpdate({ data: { bookingId: id, patch } });
+  }
+
+  async function markFullyPaid(b: any) {
+    try {
+      const alreadyPaid = await getTotalPaid(b.id);
+      const remaining = Math.max(0, b.price_cents - alreadyPaid);
+      if (remaining === 0) return;
+      await recordBookingPayment(
+        { id: b.id, school_id: b.school_id, price_cents: b.price_cents },
+        remaining,
+        "other",
+      );
+      qc.invalidateQueries({ queryKey: ["bookings"] });
+      qc.invalidateQueries({ queryKey: ["dashboard-stats"] });
+      toast.success("Marked paid");
+    } catch (err: any) {
+      toast.error(err?.message || "Could not record payment");
+    }
   }
 
   async function assignVehicle(b: any, vehicleId: string) {
@@ -311,9 +330,7 @@ function BookingsPage() {
               )}
               {b.payment_status !== "paid" && (
                 <button
-                  onClick={() =>
-                    update(b.id, { payment_status: "paid", paid_at: new Date().toISOString() })
-                  }
+                  onClick={() => markFullyPaid(b)}
                   className="text-xs border border-slate-200 px-3 py-1.5 rounded-md font-semibold hover:bg-slate-50"
                 >
                   Mark paid
