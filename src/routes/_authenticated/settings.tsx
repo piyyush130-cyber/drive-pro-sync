@@ -132,6 +132,7 @@ function SettingsPage() {
         auto_invitations_enabled: !!form.auto_invitations_enabled,
         theory_lessons_enabled: !!form.theory_lessons_enabled,
         vehicle_rental_enabled: !!form.vehicle_rental_enabled,
+        online_payment_url: form.online_payment_url?.trim() || null,
         pickup_service_areas: normalizeServiceAreaInput(pickupAreasText),
         mpi_test_locations: normalizeCommaList(mpiLocationsText),
       })
@@ -436,6 +437,22 @@ function SettingsPage() {
           show up as an amount owed on the Payments page for you to collect manually, same as any
           other lesson charge.
         </p>
+        <Field label="Online payment link (optional)">
+          <input
+            type="url"
+            value={form.online_payment_url ?? ""}
+            onChange={(e) => setForm({ ...form, online_payment_url: e.target.value })}
+            placeholder="https://buy.stripe.com/... or a payment page on your website"
+            className="glass-input"
+          />
+          <p className="text-xs text-slate-500 mt-1">
+            A link to your own existing payment page — we don't process payments or integrate with
+            it in any way. When set, a "Pay online" button appears on booking confirmations and in
+            the student portal that just opens this link in a new tab. You still mark payments as
+            received yourself on the Payments page, exactly as today. Leave blank to hide the
+            button entirely.
+          </p>
+        </Field>
         <label className="flex items-center gap-2 text-sm text-slate-700">
           <input
             type="checkbox"

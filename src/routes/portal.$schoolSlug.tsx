@@ -448,14 +448,27 @@ function UpcomingTab({
               {statusLabel(b.status)}
             </span>
           </div>
-          <button
-            onClick={() => handleCancel(b.id, b.scheduled_at)}
-            disabled={cancelingId === b.id}
-            className="mt-3 text-xs font-semibold inline-flex items-center gap-1 disabled:opacity-50"
-            style={{ color: C.danger }}
-          >
-            <X className="size-3.5" /> {cancelingId === b.id ? "Cancelling…" : "Cancel lesson"}
-          </button>
+          <div className="mt-3 flex items-center gap-4 flex-wrap">
+            {home.onlinePaymentUrl && b.payment_status !== "paid" && (
+              <a
+                href={home.onlinePaymentUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="text-xs font-semibold inline-flex items-center gap-1"
+                style={{ color: C.primary }}
+              >
+                Pay online
+              </a>
+            )}
+            <button
+              onClick={() => handleCancel(b.id, b.scheduled_at)}
+              disabled={cancelingId === b.id}
+              className="text-xs font-semibold inline-flex items-center gap-1 disabled:opacity-50"
+              style={{ color: C.danger }}
+            >
+              <X className="size-3.5" /> {cancelingId === b.id ? "Cancelling…" : "Cancel lesson"}
+            </button>
+          </div>
         </div>
       ))}
     </div>

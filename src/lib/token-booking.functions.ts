@@ -40,7 +40,7 @@ export const getInvitationForToken = createServerFn({ method: "POST" })
       supabaseAdmin
         .from("school_settings")
         .select(
-          "school_name, booking_paused, mpi_test_locations, theory_lessons_enabled, vehicle_rental_enabled",
+          "school_name, booking_paused, mpi_test_locations, theory_lessons_enabled, vehicle_rental_enabled, online_payment_url",
         )
         .eq("school_id", invitation.school_id)
         .maybeSingle(),
@@ -64,6 +64,7 @@ export const getInvitationForToken = createServerFn({ method: "POST" })
       }),
       bookingPaused: !!settings?.booking_paused,
       mpiTestLocations: settings?.mpi_test_locations ?? [],
+      onlinePaymentUrl: settings?.online_payment_url ?? null,
     };
   });
 

@@ -771,6 +771,7 @@ export type Database = {
           no_show_fee_type: string
           no_show_fee_value: number
           onboarding_complete: boolean
+          online_payment_url: string | null
           pickup_service_areas: string[]
           province: string | null
           require_approval: boolean
@@ -803,6 +804,7 @@ export type Database = {
           no_show_fee_type?: string
           no_show_fee_value?: number
           onboarding_complete?: boolean
+          online_payment_url?: string | null
           pickup_service_areas?: string[]
           province?: string | null
           require_approval?: boolean
@@ -835,6 +837,7 @@ export type Database = {
           no_show_fee_type?: string
           no_show_fee_value?: number
           onboarding_complete?: boolean
+          online_payment_url?: string | null
           pickup_service_areas?: string[]
           province?: string | null
           require_approval?: boolean

@@ -43,6 +43,7 @@ function NextLessonPage() {
     lessonTypes: LessonType[];
     bookingPaused: boolean;
     mpiTestLocations: string[];
+    onlinePaymentUrl: string | null;
   } | null>(null);
 
   useEffect(() => {
@@ -125,6 +126,16 @@ function NextLessonPage() {
           <p className="mt-2 text-sm text-slate-500">
             {info.schoolName} will be in touch to confirm your lesson.
           </p>
+          {info.onlinePaymentUrl && (
+            <a
+              href={info.onlinePaymentUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-5 inline-flex items-center justify-center rounded-xl px-5 py-3 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700"
+            >
+              Pay online
+            </a>
+          )}
         </div>
       </div>
     );

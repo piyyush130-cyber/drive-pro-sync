@@ -18,13 +18,13 @@ export const getPortalHome = createServerFn({ method: "POST" })
       supabaseAdmin.from("students").select("full_name").eq("id", studentId).maybeSingle(),
       supabaseAdmin
         .from("school_settings")
-        .select("school_name, cancellation_notice_hours")
+        .select("school_name, cancellation_notice_hours, online_payment_url")
         .eq("school_id", schoolId)
         .maybeSingle(),
       supabaseAdmin
         .from("bookings")
         .select(
-          "id, scheduled_at, duration_minutes, pickup_address, status, lesson_types(name, price_cents), instructors(full_name)",
+          "id, scheduled_at, duration_minutes, pickup_address, status, payment_status, lesson_types(name, price_cents), instructors(full_name)",
         )
         .eq("student_id", studentId)
         .is("deleted_at", null)
@@ -40,6 +40,7 @@ export const getPortalHome = createServerFn({ method: "POST" })
       selfCancelHours: settings?.cancellation_notice_hours ?? 0,
       remaining,
       upcoming: upcoming ?? [],
+      onlinePaymentUrl: settings?.online_payment_url ?? null,
     };
   });
 

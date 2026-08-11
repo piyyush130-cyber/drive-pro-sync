@@ -54,6 +54,7 @@ type Settings = {
   mpi_test_locations?: string[];
   theory_lessons_enabled?: boolean;
   vehicle_rental_enabled?: boolean;
+  online_payment_url?: string | null;
 };
 
 // Light premium glass palette
@@ -101,7 +102,7 @@ function BookingPage() {
       const { data } = await supabase
         .from("school_settings")
         .select(
-          "school_name, booking_paused, pickup_service_areas, cancellation_policy, mpi_test_locations, theory_lessons_enabled, vehicle_rental_enabled",
+          "school_name, booking_paused, pickup_service_areas, cancellation_policy, mpi_test_locations, theory_lessons_enabled, vehicle_rental_enabled, online_payment_url",
         )
         .eq("school_id", schoolId as string)
         .maybeSingle();
@@ -250,6 +251,7 @@ function BookingPage() {
         time={TIME_SLOTS.find((s) => s.time === selectedTime)?.label ?? selectedTime}
         pickup={form.pickup_address}
         name={form.full_name}
+        onlinePaymentUrl={settingsQ.data?.online_payment_url ?? null}
       />
     );
   }
@@ -1251,6 +1253,7 @@ function ConfirmationScreen({
   time,
   pickup,
   name,
+  onlinePaymentUrl,
 }: {
   school: string;
   lesson: LessonType;
@@ -1258,6 +1261,7 @@ function ConfirmationScreen({
   time: string;
   pickup: string;
   name: string;
+  onlinePaymentUrl?: string | null;
 }) {
   return (
     <div
@@ -1312,6 +1316,19 @@ function ConfirmationScreen({
           </div>
         </div>
 
+        {onlinePaymentUrl && (
+          <div className="text-center mt-6">
+            <a
+              href={onlinePaymentUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center justify-center rounded-xl px-5 py-3 text-sm font-semibold text-white"
+              style={{ background: `linear-gradient(90deg, ${C.primary}, ${C.primaryDark})` }}
+            >
+              Pay online
+            </a>
+          </div>
+        )}
         <div className="text-center mt-6">
           <Link
             to="/"
