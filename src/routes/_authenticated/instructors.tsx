@@ -119,6 +119,11 @@ function InstructorsPage() {
     qc.invalidateQueries({ queryKey: ["instructors-all"] });
   }
 
+  async function toggleMpiPermitted(id: string, current: boolean) {
+    await supabase.from("instructors").update({ mpi_permitted: !current }).eq("id", id);
+    qc.invalidateQueries({ queryKey: ["instructors-all"] });
+  }
+
   async function deleteInstructor(id: string, name: string) {
     const { count } = await supabase
       .from("bookings")
@@ -314,6 +319,15 @@ function InstructorsPage() {
                     {i.phone ?? "—"} · {i.email ?? "—"}
                   </div>
                   <div className="text-xs text-slate-500 mt-2 font-mono">{summary}</div>
+                  <label className="flex items-center gap-1.5 text-xs text-slate-400 mt-2 cursor-pointer w-fit">
+                    <input
+                      type="checkbox"
+                      checked={!!i.mpi_permitted}
+                      onChange={() => toggleMpiPermitted(i.id, !!i.mpi_permitted)}
+                      className="accent-[#3B82F6]"
+                    />
+                    MPI-permitted (can issue TSR verifications)
+                  </label>
                 </div>
                 <div className="text-right text-xs text-slate-500">
                   {(i.bookings ?? []).length} lessons

@@ -387,6 +387,7 @@ export type Database = {
           full_name: string
           id: string
           invite_code_used: string | null
+          mpi_permitted: boolean
           notes: string | null
           phone: string | null
           profile_id: string | null
@@ -405,6 +406,7 @@ export type Database = {
           full_name: string
           id?: string
           invite_code_used?: string | null
+          mpi_permitted?: boolean
           notes?: string | null
           phone?: string | null
           profile_id?: string | null
@@ -423,6 +425,7 @@ export type Database = {
           full_name?: string
           id?: string
           invite_code_used?: string | null
+          mpi_permitted?: boolean
           notes?: string | null
           phone?: string | null
           profile_id?: string | null

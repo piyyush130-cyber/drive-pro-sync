@@ -350,6 +350,7 @@ function InstructorPage() {
                         studentId={b.student_id}
                         instructorId={meQ.data.id}
                         schoolId={meQ.data.school_id}
+                        mpiPermitted={!!meQ.data.mpi_permitted}
                       />
                     )}
                     {b.notes && (
@@ -484,10 +485,12 @@ function TsrProgressPanel({
   studentId,
   instructorId,
   schoolId,
+  mpiPermitted,
 }: {
   studentId: string;
   instructorId: string;
   schoolId: string;
+  mpiPermitted: boolean;
 }) {
   const qc = useQueryClient();
   const [issuing, setIssuing] = useState(false);
@@ -545,7 +548,7 @@ function TsrProgressPanel({
       <div className="font-medium text-amber-800">
         TSR progress: {hours.toFixed(1)} / {TSR_HOURS_REQUIRED} hours
       </div>
-      {complete && (
+      {complete && mpiPermitted && (
         <button
           onClick={issue}
           disabled={issuing}
@@ -553,6 +556,12 @@ function TsrProgressPanel({
         >
           {issuing ? "Recording…" : "Mark verification form issued"}
         </button>
+      )}
+      {complete && !mpiPermitted && (
+        <div className="text-amber-700">
+          Hours complete, but you're not flagged as MPI-permitted — ask your school admin to
+          confirm your permit status, or have a permitted instructor issue this.
+        </div>
       )}
       {verifications.map((v: any) => (
         <div key={v.id} className="text-amber-700">
