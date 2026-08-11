@@ -118,7 +118,11 @@ function ServicesPage() {
               </optgroup>
             )}
           </select>
-          <Input name="description" placeholder="Short description" className="sm:col-span-2 lg:col-span-3" />
+          <textarea
+            name="description"
+            placeholder="Description — shown to students once they select this service. Mention what's covered (e.g. parallel parking, highway driving)."
+            className="input-premium sm:col-span-2 lg:col-span-3 min-h-[70px]"
+          />
           <label className="flex items-center gap-2 text-sm text-slate-700 sm:col-span-2 lg:col-span-3">
             <input type="checkbox" name="pickup_available" defaultChecked className="accent-blue-600" />
             Offer pickup for this service
@@ -144,14 +148,14 @@ function ServicesPage() {
                     </span>
                   )}
                 </div>
-                <input
+                <textarea
                   defaultValue={s.description ?? ""}
-                  placeholder="Description"
+                  placeholder="Description — shown to students once they select this service."
                   onBlur={(e) =>
                     e.target.value !== (s.description ?? "") &&
                     update(s.id, { description: e.target.value || null })
                   }
-                  className="text-sm text-slate-500 bg-transparent outline-none w-full mt-1"
+                  className="text-sm text-slate-500 bg-transparent outline-none w-full mt-1 resize-y min-h-[40px]"
                 />
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mt-4">
                   <Field label="Duration (min)">

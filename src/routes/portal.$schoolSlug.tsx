@@ -639,6 +639,11 @@ function BookTab({
             );
           })}
         </div>
+        {selected?.description && (
+          <p className="mt-3 text-xs whitespace-pre-wrap" style={{ color: C.muted }}>
+            {selected.description}
+          </p>
+        )}
       </div>
 
       <div

@@ -1028,6 +1028,11 @@ function SummaryCard({
         <div className="mt-4 text-3xl font-bold tracking-tight" style={{ color: C.text }}>
           {lesson ? (lesson.price_cents > 0 ? money(lesson.price_cents) : "Custom Quote") : "—"}
         </div>
+        {lesson?.description && (
+          <div className="mt-3 text-sm whitespace-pre-wrap" style={{ color: C.muted }}>
+            {lesson.description}
+          </div>
+        )}
       </div>
 
       <div className="p-6 grid grid-cols-2 gap-x-5 gap-y-4 text-sm">

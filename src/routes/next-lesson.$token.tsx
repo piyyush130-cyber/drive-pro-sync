@@ -201,6 +201,11 @@ function NextLessonPage() {
               );
             })}
           </div>
+          {selected?.description && (
+            <p className="mt-3 text-xs text-slate-500 whitespace-pre-wrap">
+              {selected.description}
+            </p>
+          )}
         </section>
 
         <section className="bg-white border border-slate-200 rounded-xl p-5">
