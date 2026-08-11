@@ -10,7 +10,7 @@ import { notifyBookingUpdated } from "@/lib/notifications.functions";
 import { resolveCancellationRequest } from "@/lib/cancellation-requests.functions";
 import { hasVehicleConflict } from "@/lib/booking-logic";
 import { computeCancellationFeeCents } from "@/lib/cancellation-fee";
-import { recordBookingPayment, getTotalPaid } from "@/lib/booking-payments";
+import { recordBookingPayment, getTotalPaid, type PaymentMethod } from "@/lib/booking-payments";
 import { isBookingConflictError, BOOKING_CONFLICT_MESSAGE } from "@/lib/booking-conflict-error";
 import { toast } from "sonner";
 
@@ -115,7 +115,7 @@ function BookingsPage() {
     void notifyUpdate({ data: { bookingId: id, patch } });
   }
 
-  async function markFullyPaid(b: any) {
+  async function markFullyPaid(b: any, method: PaymentMethod) {
     try {
       const alreadyPaid = await getTotalPaid(b.id);
       const remaining = Math.max(0, b.price_cents - alreadyPaid);
@@ -123,7 +123,7 @@ function BookingsPage() {
       await recordBookingPayment(
         { id: b.id, school_id: b.school_id, price_cents: b.price_cents },
         remaining,
-        "other",
+        method,
       );
       qc.invalidateQueries({ queryKey: ["bookings"] });
       qc.invalidateQueries({ queryKey: ["dashboard-stats"] });
@@ -329,12 +329,17 @@ function BookingsPage() {
                 </button>
               )}
               {b.payment_status !== "paid" && (
-                <button
-                  onClick={() => markFullyPaid(b)}
-                  className="text-xs border border-slate-200 px-3 py-1.5 rounded-md font-semibold hover:bg-slate-50"
-                >
-                  Mark paid
-                </button>
+                <div className="inline-flex gap-1">
+                  {(["cash", "etransfer", "card", "cheque"] as const).map((m) => (
+                    <button
+                      key={m}
+                      onClick={() => markFullyPaid(b, m)}
+                      className="text-xs border border-slate-200 px-2.5 py-1.5 rounded-md font-semibold hover:bg-slate-50"
+                    >
+                      {m}
+                    </button>
+                  ))}
+                </div>
               )}
               <button
                 onClick={() => deleteBooking(b.id)}

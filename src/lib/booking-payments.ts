@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export type PaymentMethod = "cash" | "etransfer" | "card" | "other";
+export type PaymentMethod = "cash" | "etransfer" | "card" | "cheque" | "other";
 
 // Records one payment against a booking and recomputes the booking's
 // payment_status/payment_method/paid_at from the full ledger — those

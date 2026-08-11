@@ -1371,7 +1371,7 @@ export type Database = {
         | "deactivated"
         | "rejected"
       invitation_status: "sent" | "reminded" | "booked" | "expired"
-      payment_method: "cash" | "etransfer" | "card" | "other"
+      payment_method: "cash" | "etransfer" | "card" | "other" | "cheque"
       payment_status: "unpaid" | "deposit_paid" | "paid" | "refunded"
       plan_key: "starter" | "professional" | "enterprise"
       policy_type: "terms_of_service" | "privacy_policy"
@@ -1531,7 +1531,7 @@ export const Constants = {
         "rejected",
       ],
       invitation_status: ["sent", "reminded", "booked", "expired"],
-      payment_method: ["cash", "etransfer", "card", "other"],
+      payment_method: ["cash", "etransfer", "card", "other", "cheque"],
       payment_status: ["unpaid", "deposit_paid", "paid", "refunded"],
       plan_key: ["starter", "professional", "enterprise"],
       policy_type: ["terms_of_service", "privacy_policy"],

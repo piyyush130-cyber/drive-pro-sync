@@ -171,7 +171,7 @@ function PaymentsPage() {
                   <td className="px-5 py-3 text-right">
                     {b.payment_status !== "paid" ? (
                       <div className="inline-flex gap-1">
-                        {(["cash", "etransfer", "card"] as const).map((m) => (
+                        {(["cash", "etransfer", "card", "cheque"] as const).map((m) => (
                           <button
                             key={m}
                             onClick={() => handleRecordPayment(b, m)}
