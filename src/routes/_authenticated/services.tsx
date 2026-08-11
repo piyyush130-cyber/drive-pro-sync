@@ -34,13 +34,14 @@ function ServicesPage() {
     queryFn: async () => {
       const { data } = await supabase
         .from("school_settings")
-        .select("theory_lessons_enabled")
+        .select("theory_lessons_enabled, vehicle_rental_enabled")
         .eq("school_id", schoolIdQ.data as string)
         .maybeSingle();
       return data;
     },
   });
   const theoryEnabled = !!settingsQ.data?.theory_lessons_enabled;
+  const vehicleRentalEnabled = !!settingsQ.data?.vehicle_rental_enabled;
 
   async function add(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -103,12 +104,19 @@ function ServicesPage() {
           <Input name="buffer" type="number" placeholder="Buffer (min)" defaultValue={15} />
           <Input name="sort_order" type="number" placeholder="Display order" defaultValue={0} />
           <select name="category" className="input-premium">
-            <option value="lesson">Lesson</option>
-            <option value="package">Package</option>
-            <option value="road_test">Road test</option>
-            <option value="tsr_retest">TSR / retest (MB)</option>
-            {theoryEnabled && <option value="theory">Theory / classroom</option>}
-            <option value="custom">Custom</option>
+            <optgroup label="Normal packages">
+              <option value="lesson">Lesson</option>
+              <option value="package">Package</option>
+              <option value="tsr_retest">TSR / retest (MB)</option>
+              {theoryEnabled && <option value="theory">Theory / classroom</option>}
+              <option value="custom">Custom</option>
+            </optgroup>
+            {vehicleRentalEnabled && (
+              <optgroup label="Vehicle use">
+                <option value="road_test">Road Test package (lesson + vehicle)</option>
+                <option value="car_rental">Car Rental Only (vehicle, no lesson)</option>
+              </optgroup>
+            )}
           </select>
           <Input name="description" placeholder="Short description" className="sm:col-span-2 lg:col-span-3" />
           <label className="flex items-center gap-2 text-sm text-slate-700 sm:col-span-2 lg:col-span-3">
@@ -190,14 +198,23 @@ function ServicesPage() {
                       onChange={(e) => update(s.id, { category: e.target.value })}
                       className="input-premium"
                     >
-                      <option value="lesson">Lesson</option>
-                      <option value="package">Package</option>
-                      <option value="road_test">Road test</option>
-                      <option value="tsr_retest">TSR / retest (MB)</option>
-                      {(theoryEnabled || s.category === "theory") && (
-                        <option value="theory">Theory / classroom</option>
+                      <optgroup label="Normal packages">
+                        <option value="lesson">Lesson</option>
+                        <option value="package">Package</option>
+                        <option value="tsr_retest">TSR / retest (MB)</option>
+                        {(theoryEnabled || s.category === "theory") && (
+                          <option value="theory">Theory / classroom</option>
+                        )}
+                        <option value="custom">Custom</option>
+                      </optgroup>
+                      {(vehicleRentalEnabled ||
+                        s.category === "road_test" ||
+                        s.category === "car_rental") && (
+                        <optgroup label="Vehicle use">
+                          <option value="road_test">Road Test package (lesson + vehicle)</option>
+                          <option value="car_rental">Car Rental Only (vehicle, no lesson)</option>
+                        </optgroup>
                       )}
-                      <option value="custom">Custom</option>
                     </select>
                   </Field>
                 </div>

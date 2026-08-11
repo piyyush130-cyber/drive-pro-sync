@@ -89,6 +89,7 @@ function OnboardingPage() {
   const [mpiLocationsText, setMpiLocationsText] = useState("");
   // Step 5 — lesson packages
   const [theoryEnabled, setTheoryEnabled] = useState(false);
+  const [vehicleRentalEnabled, setVehicleRentalEnabled] = useState(true);
   const [types, setTypes] = useState(DEFAULT_TYPES);
   // Step 6 — vehicles
   const [vehicles, setVehicles] = useState<{ name: string; plate: string }[]>([
@@ -167,6 +168,7 @@ function OnboardingPage() {
         setPickupAreasText((settingsRow.pickup_service_areas ?? []).join(", "));
         setMpiLocationsText((settingsRow.mpi_test_locations ?? []).join(", "));
         setTheoryEnabled(!!settingsRow.theory_lessons_enabled);
+        setVehicleRentalEnabled(settingsRow.vehicle_rental_enabled ?? true);
       }
 
       if (existingTypes && existingTypes.length > 0) {
@@ -254,7 +256,10 @@ function OnboardingPage() {
     try {
       await supabase
         .from("school_settings")
-        .update({ theory_lessons_enabled: theoryEnabled })
+        .update({
+          theory_lessons_enabled: theoryEnabled,
+          vehicle_rental_enabled: vehicleRentalEnabled,
+        })
         .eq("school_id", schoolIdQ.data);
 
       // Deactivate any types not in the new list (by name), then upsert the new set.
@@ -692,6 +697,22 @@ function OnboardingPage() {
                   bookable once added.
                 </p>
               )}
+              <label className="flex items-center justify-between cursor-pointer">
+                <span className="text-sm text-slate-300">Offer vehicle rental/use</span>
+                <button
+                  type="button"
+                  onClick={() => setVehicleRentalEnabled(!vehicleRentalEnabled)}
+                  className={`w-11 h-6 rounded-full transition ${vehicleRentalEnabled ? "bg-[#3B82F6]" : "bg-slate-700"} relative`}
+                >
+                  <span
+                    className={`absolute top-0.5 size-5 rounded-full bg-white transition ${vehicleRentalEnabled ? "left-5" : "left-0.5"}`}
+                  />
+                </button>
+              </label>
+              <p className="text-xs text-slate-400 -mt-3">
+                Covers Road Test packages (lesson + your vehicle) and Car Rental Only (vehicle, no
+                lesson). Off hides both everywhere.
+              </p>
               <div className="space-y-2">
                 {types.map((t, i) => (
                   <div key={i} className="grid grid-cols-12 gap-2 items-center">

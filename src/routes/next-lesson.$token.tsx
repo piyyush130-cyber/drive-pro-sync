@@ -58,7 +58,10 @@ function NextLessonPage() {
   const [mpiLocation, setMpiLocation] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const needsMpiLocation = selected?.category === "road_test" || selected?.category === "tsr_retest";
+  const needsMpiLocation =
+    selected?.category === "road_test" ||
+    selected?.category === "tsr_retest" ||
+    selected?.category === "car_rental";
 
   const today = startOfDay(new Date());
   const [month, setMonth] = useState(startOfMonth(today));

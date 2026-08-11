@@ -75,16 +75,19 @@ export const getPortalBookingOptions = createServerFn({ method: "POST" })
         .order("sort_order"),
       supabaseAdmin
         .from("school_settings")
-        .select("booking_paused, mpi_test_locations, theory_lessons_enabled")
+        .select("booking_paused, mpi_test_locations, theory_lessons_enabled, vehicle_rental_enabled")
         .eq("school_id", schoolId)
         .maybeSingle(),
       remainingLessons(supabaseAdmin, studentId),
     ]);
 
     return {
-      lessonTypes: (lessonTypes ?? []).filter(
-        (t: any) => t.category !== "theory" || settings?.theory_lessons_enabled,
-      ),
+      lessonTypes: (lessonTypes ?? []).filter((t: any) => {
+        if (t.category === "theory") return !!settings?.theory_lessons_enabled;
+        if (t.category === "road_test" || t.category === "car_rental")
+          return !!settings?.vehicle_rental_enabled;
+        return true;
+      }),
       remaining,
       bookingPaused: !!settings?.booking_paused,
       mpiTestLocations: settings?.mpi_test_locations ?? [],

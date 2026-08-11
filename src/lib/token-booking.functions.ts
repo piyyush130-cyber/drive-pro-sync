@@ -39,7 +39,9 @@ export const getInvitationForToken = createServerFn({ method: "POST" })
     const [{ data: settings }, { data: lessonTypes }] = await Promise.all([
       supabaseAdmin
         .from("school_settings")
-        .select("school_name, booking_paused, mpi_test_locations, theory_lessons_enabled")
+        .select(
+          "school_name, booking_paused, mpi_test_locations, theory_lessons_enabled, vehicle_rental_enabled",
+        )
         .eq("school_id", invitation.school_id)
         .maybeSingle(),
       supabaseAdmin
@@ -54,9 +56,12 @@ export const getInvitationForToken = createServerFn({ method: "POST" })
       firstName: student.full_name?.split(" ")[0] || "there",
       remaining,
       schoolName: settings?.school_name ?? "your driving school",
-      lessonTypes: (lessonTypes ?? []).filter(
-        (t: any) => t.category !== "theory" || settings?.theory_lessons_enabled,
-      ),
+      lessonTypes: (lessonTypes ?? []).filter((t: any) => {
+        if (t.category === "theory") return !!settings?.theory_lessons_enabled;
+        if (t.category === "road_test" || t.category === "car_rental")
+          return !!settings?.vehicle_rental_enabled;
+        return true;
+      }),
       bookingPaused: !!settings?.booking_paused,
       mpiTestLocations: settings?.mpi_test_locations ?? [],
     };

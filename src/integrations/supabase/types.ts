@@ -779,6 +779,7 @@ export type Database = {
           service_area: string | null
           theory_lessons_enabled: boolean
           updated_at: string
+          vehicle_rental_enabled: boolean
         }
         Insert: {
           auto_assign_instructor?: boolean
@@ -810,6 +811,7 @@ export type Database = {
           service_area?: string | null
           theory_lessons_enabled?: boolean
           updated_at?: string
+          vehicle_rental_enabled?: boolean
         }
         Update: {
           auto_assign_instructor?: boolean
@@ -841,6 +843,7 @@ export type Database = {
           service_area?: string | null
           theory_lessons_enabled?: boolean
           updated_at?: string
+          vehicle_rental_enabled?: boolean
         }
         Relationships: [
           {

@@ -131,6 +131,7 @@ function SettingsPage() {
         auto_assign_instructor: !!form.auto_assign_instructor,
         auto_invitations_enabled: !!form.auto_invitations_enabled,
         theory_lessons_enabled: !!form.theory_lessons_enabled,
+        vehicle_rental_enabled: !!form.vehicle_rental_enabled,
         pickup_service_areas: normalizeServiceAreaInput(pickupAreasText),
         mpi_test_locations: normalizeCommaList(mpiLocationsText),
       })
@@ -504,6 +505,20 @@ function SettingsPage() {
         <p className="text-xs text-slate-500 -mt-2">
           When off, theory lessons are hidden everywhere — booking pages, the portal, and Services.
           Turning it on lets you add a theory lesson type on the Services page below.
+        </p>
+        <label className="flex items-center gap-2 text-sm text-slate-700">
+          <input
+            type="checkbox"
+            checked={!!form.vehicle_rental_enabled}
+            onChange={(e) => setForm({ ...form, vehicle_rental_enabled: e.target.checked })}
+            className="accent-[#3B82F6]"
+          />
+          Offer vehicle rental/use
+        </label>
+        <p className="text-xs text-slate-500 -mt-2">
+          Covers Road Test packages (lesson + your vehicle for the test) and Car Rental Only
+          (vehicle use with no lesson, for students using independent instruction). When off, both
+          are hidden everywhere — booking pages, the portal, and Services.
         </p>
         <button onClick={saveSettings} className="btn-primary text-sm">
           Save settings
