@@ -104,18 +104,24 @@ function ServicesPage() {
           <Input name="buffer" type="number" placeholder="Buffer (min)" defaultValue={15} />
           <Input name="sort_order" type="number" placeholder="Display order" defaultValue={0} />
           <select name="category" className="input-premium">
-            <optgroup label="Normal packages">
-              <option value="lesson">Lesson</option>
-              <option value="package">Package</option>
-              <option value="tsr_retest">TSR / retest (MB)</option>
+            <optgroup label="Hourly Lesson">
+              <option value="lesson">Hourly Lesson</option>
+            </optgroup>
+            <optgroup label="Package Lesson">
+              <option value="package">Package Lesson</option>
+              <option value="tsr_retest">TSR / Retest Package</option>
               {theoryEnabled && <option value="theory">Theory / classroom</option>}
               <option value="custom">Custom</option>
             </optgroup>
             {vehicleRentalEnabled && (
-              <optgroup label="Vehicle use">
-                <option value="road_test">Road Test package (lesson + vehicle)</option>
-                <option value="car_rental">Car Rental Only (vehicle, no lesson)</option>
-              </optgroup>
+              <>
+                <optgroup label="Road Test">
+                  <option value="road_test">Road Test (lesson + vehicle)</option>
+                </optgroup>
+                <optgroup label="Rent">
+                  <option value="car_rental">Rent (vehicle only, no lesson)</option>
+                </optgroup>
+              </>
             )}
           </select>
           <textarea
@@ -202,21 +208,25 @@ function ServicesPage() {
                       onChange={(e) => update(s.id, { category: e.target.value })}
                       className="input-premium"
                     >
-                      <optgroup label="Normal packages">
-                        <option value="lesson">Lesson</option>
-                        <option value="package">Package</option>
-                        <option value="tsr_retest">TSR / retest (MB)</option>
+                      <optgroup label="Hourly Lesson">
+                        <option value="lesson">Hourly Lesson</option>
+                      </optgroup>
+                      <optgroup label="Package Lesson">
+                        <option value="package">Package Lesson</option>
+                        <option value="tsr_retest">TSR / Retest Package</option>
                         {(theoryEnabled || s.category === "theory") && (
                           <option value="theory">Theory / classroom</option>
                         )}
                         <option value="custom">Custom</option>
                       </optgroup>
-                      {(vehicleRentalEnabled ||
-                        s.category === "road_test" ||
-                        s.category === "car_rental") && (
-                        <optgroup label="Vehicle use">
-                          <option value="road_test">Road Test package (lesson + vehicle)</option>
-                          <option value="car_rental">Car Rental Only (vehicle, no lesson)</option>
+                      {(vehicleRentalEnabled || s.category === "road_test") && (
+                        <optgroup label="Road Test">
+                          <option value="road_test">Road Test (lesson + vehicle)</option>
+                        </optgroup>
+                      )}
+                      {(vehicleRentalEnabled || s.category === "car_rental") && (
+                        <optgroup label="Rent">
+                          <option value="car_rental">Rent (vehicle only, no lesson)</option>
                         </optgroup>
                       )}
                     </select>

@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuthUser, useSchoolId } from "@/lib/auth";
 import { fmtDateTime, money, statusLabel, statusTone } from "@/lib/format";
 import { computeRemaining } from "@/lib/student-balance";
 import { StatusPill } from "@/components/StatCard";
@@ -62,6 +63,8 @@ const STATUS_BTN: Record<SkillStatus, { label: string; on: string; off: string }
 function StudentDetail() {
   const { id } = Route.useParams();
   const qc = useQueryClient();
+  const { user } = useAuthUser();
+  const schoolIdQ = useSchoolId(user?.id);
   const studentQ = useQuery({
     queryKey: ["student", id],
     queryFn: async () => {
@@ -73,6 +76,18 @@ function StudentDetail() {
         .eq("id", id)
         .single();
       if (error) throw error;
+      return data;
+    },
+  });
+  const schoolSettingsQ = useQuery({
+    queryKey: ["students-page-settings", schoolIdQ.data],
+    enabled: !!schoolIdQ.data,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("school_settings")
+        .select("flexible_session_length_enabled")
+        .eq("school_id", schoolIdQ.data as string)
+        .maybeSingle();
       return data;
     },
   });
@@ -146,6 +161,22 @@ function StudentDetail() {
     toast.success(`Added ${n} lesson${n === 1 ? "" : "s"}`);
   }
 
+  const [addHoursAmount, setAddHoursAmount] = useState("");
+
+  async function addPackageHours() {
+    const n = Number(addHoursAmount);
+    if (!Number.isFinite(n) || n <= 0) return toast.error("Enter a positive number of hours");
+    const purchased = (studentQ.data?.package_hours_purchased ?? 0) + n;
+    const { error } = await supabase
+      .from("students")
+      .update({ package_hours_purchased: purchased })
+      .eq("id", id);
+    if (error) return toast.error(error.message);
+    setAddHoursAmount("");
+    qc.invalidateQueries({ queryKey: ["student", id] });
+    toast.success(`Added ${n} hour${n === 1 ? "" : "s"}`);
+  }
+
   async function saveIncidentNotes() {
     const { error } = await supabase
       .from("students")
@@ -189,6 +220,15 @@ function StudentDetail() {
       .reduce((sum: number, b: any) => sum + (b.duration_minutes ?? 0), 0) / 60;
   const tsrVerifications = [...(s.tsr_verifications ?? [])].sort(
     (a: any, b: any) => +new Date(b.issued_at) - +new Date(a.issued_at),
+  );
+
+  const packageHoursCompleted =
+    bookings
+      .filter((b: any) => b.status === "completed" && b.lesson_types?.category === "package")
+      .reduce((sum: number, b: any) => sum + (b.duration_minutes ?? 0), 0) / 60;
+  const packageHoursRemaining = Math.max(
+    0,
+    (s.package_hours_purchased ?? 0) - packageHoursCompleted,
   );
 
   return (
@@ -270,6 +310,53 @@ function StudentDetail() {
           </button>
         </div>
       </section>
+
+      {schoolSettingsQ.data?.flexible_session_length_enabled && (
+        <section className="bg-white border border-slate-200 rounded-xl p-5 mb-6">
+          <h2 className="font-medium text-slate-900 mb-1">Package hours</h2>
+          <p className="text-xs text-slate-500 mb-3">
+            Flexible session length is on for your school — this student can split these hours
+            across sessions of any length when booking a Package Lesson.
+          </p>
+          <div className="grid grid-cols-3 gap-4 mb-4">
+            <div>
+              <div className="text-2xl font-semibold text-slate-900">
+                {(s.package_hours_purchased ?? 0).toFixed(1)}
+              </div>
+              <div className="text-xs text-slate-500 uppercase tracking-wider mt-0.5">Purchased</div>
+            </div>
+            <div>
+              <div className="text-2xl font-semibold text-slate-900">
+                {packageHoursCompleted.toFixed(1)}
+              </div>
+              <div className="text-xs text-slate-500 uppercase tracking-wider mt-0.5">Completed</div>
+            </div>
+            <div>
+              <div className="text-2xl font-semibold text-blue-600">
+                {packageHoursRemaining.toFixed(1)}
+              </div>
+              <div className="text-xs text-slate-500 uppercase tracking-wider mt-0.5">Remaining</div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              min={0.5}
+              step={0.5}
+              value={addHoursAmount}
+              onChange={(e) => setAddHoursAmount(e.target.value)}
+              placeholder="Hours"
+              className="w-28 text-sm border border-slate-200 rounded-md px-3 py-2 outline-none focus:border-blue-500"
+            />
+            <button
+              onClick={addPackageHours}
+              className="btn-primary text-sm font-medium px-4 py-2 rounded-md"
+            >
+              Add hours
+            </button>
+          </div>
+        </section>
+      )}
 
       <section className="bg-white border border-slate-200 rounded-xl p-5 mb-6">
         <div className="flex items-center justify-between flex-wrap gap-3">

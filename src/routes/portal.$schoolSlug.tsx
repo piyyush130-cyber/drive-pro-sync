@@ -552,11 +552,15 @@ function BookTab({
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [mpiLocation, setMpiLocation] = useState("");
   const [femaleInstructorOnly, setFemaleInstructorOnly] = useState(false);
+  const [sessionHours, setSessionHours] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const needsMpiLocation =
     selected?.category === "road_test" ||
     selected?.category === "tsr_retest" ||
     selected?.category === "car_rental";
+  const needsSessionHours = !!(
+    selected?.category === "package" && optionsQ.data?.flexibleSessionLengthEnabled
+  );
 
   const today = startOfDay(new Date());
   const [month, setMonth] = useState(startOfMonth(today));
@@ -571,6 +575,11 @@ function BookTab({
       toast.error("Please choose a lesson, date, and time.");
       return;
     }
+    const hoursNum = Number(sessionHours);
+    if (needsSessionHours && (!sessionHours || !Number.isFinite(hoursNum) || hoursNum <= 0)) {
+      toast.error("Please choose a session length.");
+      return;
+    }
     setSubmitting(true);
     try {
       const [h, m] = selectedTime.split(":").map(Number);
@@ -583,6 +592,7 @@ function BookTab({
           scheduled_at: dt.toISOString(),
           mpi_test_location: mpiLocation.trim() || null,
           female_instructor_only: femaleInstructorOnly,
+          session_hours: needsSessionHours ? hoursNum : undefined,
         },
       });
       toast.success("Lesson booked");
@@ -607,7 +617,10 @@ function BookTab({
     );
   }
 
-  if (optionsQ.data.remaining <= 0) {
+  const hasFlexibleHoursLeft =
+    optionsQ.data.flexibleSessionLengthEnabled && optionsQ.data.remainingPackageHours > 0;
+
+  if (optionsQ.data.remaining <= 0 && !hasFlexibleHoursLeft) {
     return (
       <div
         className="rounded-2xl p-8 text-center text-sm"
@@ -644,7 +657,10 @@ function BookTab({
                   className="text-xs inline-flex items-center gap-1"
                   style={{ color: C.muted }}
                 >
-                  <Clock className="size-3" /> {lt.duration_minutes} min
+                  <Clock className="size-3" />{" "}
+                  {lt.category === "package" && optionsQ.data.flexibleSessionLengthEnabled
+                    ? "Flexible length"
+                    : `${lt.duration_minutes} min`}
                 </div>
                 <div className="text-sm font-semibold mt-1">{lt.name}</div>
                 <div className="text-sm font-medium mt-1" style={{ color: C.primary }}>
@@ -658,6 +674,24 @@ function BookTab({
           <p className="mt-3 text-xs whitespace-pre-wrap" style={{ color: C.muted }}>
             {selected.description}
           </p>
+        )}
+        {needsSessionHours && (
+          <div className="mt-4 pt-4" style={{ borderTop: `1px solid ${C.border}` }}>
+            <label className="block text-xs font-semibold mb-2" style={{ color: C.muted }}>
+              Session length (hours) — {optionsQ.data.remainingPackageHours} remaining
+            </label>
+            <input
+              type="number"
+              min={0.5}
+              step={0.5}
+              max={optionsQ.data.remainingPackageHours}
+              value={sessionHours}
+              onChange={(e) => setSessionHours(e.target.value)}
+              placeholder="e.g. 1.5"
+              className="w-full border rounded-lg px-3 py-2 text-sm"
+              style={{ borderColor: C.border }}
+            />
+          </div>
         )}
       </div>
 

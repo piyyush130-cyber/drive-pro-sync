@@ -132,6 +132,7 @@ function SettingsPage() {
         auto_invitations_enabled: !!form.auto_invitations_enabled,
         theory_lessons_enabled: !!form.theory_lessons_enabled,
         vehicle_rental_enabled: !!form.vehicle_rental_enabled,
+        flexible_session_length_enabled: !!form.flexible_session_length_enabled,
         online_payment_url: form.online_payment_url?.trim() || null,
         pickup_service_areas: normalizeServiceAreaInput(pickupAreasText),
         mpi_test_locations: normalizeCommaList(mpiLocationsText),
@@ -536,6 +537,23 @@ function SettingsPage() {
           Covers Road Test packages (lesson + your vehicle for the test) and Car Rental Only
           (vehicle use with no lesson, for students using independent instruction). When off, both
           are hidden everywhere — booking pages, the portal, and Services.
+        </p>
+        <label className="flex items-center gap-2 text-sm text-slate-700">
+          <input
+            type="checkbox"
+            checked={!!form.flexible_session_length_enabled}
+            onChange={(e) =>
+              setForm({ ...form, flexible_session_length_enabled: e.target.checked })
+            }
+            className="accent-[#3B82F6]"
+          />
+          Allow students to choose their own session length breakdown for packages
+        </label>
+        <p className="text-xs text-slate-500 -mt-2">
+          When on, students booking a Package Lesson can split their remaining hours however they
+          want (e.g. 10 hours as 10×1hr sessions, or 2×5hr sessions) instead of a fixed session
+          length. Track hours purchased on each student's profile page. When off, packages work
+          exactly as they do today.
         </p>
         <button onClick={saveSettings} className="btn-primary text-sm">
           Save settings

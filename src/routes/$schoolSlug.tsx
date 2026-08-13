@@ -16,6 +16,7 @@ import {
   Sparkles,
   LogIn,
   Lock,
+  MessageSquarePlus,
 } from "lucide-react";
 import {
   addMonths,
@@ -28,6 +29,7 @@ import {
 } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { submitPublicBooking, getHasFemaleInstructor } from "@/lib/public-booking.functions";
+import { submitCustomPackageRequest } from "@/lib/custom-package-requests.functions";
 import { money } from "@/lib/format";
 import { type BookingFormErrors, formatPhone, validateBookingForm } from "@/lib/booking-validation";
 import { TIME_SLOTS, unavailableForDate, buildMonthGrid } from "@/lib/booking-calendar";
@@ -153,6 +155,19 @@ function BookingPage() {
   const [submitting, setSubmitting] = useState(false);
   const [formRenderedAt] = useState(() => Date.now());
 
+  const [customPackageOpen, setCustomPackageOpen] = useState(false);
+  const [customPackageForm, setCustomPackageForm] = useState({
+    full_name: "",
+    email: "",
+    phone: "",
+    message: "",
+    website: "",
+  });
+  const [customPackageSubmitting, setCustomPackageSubmitting] = useState(false);
+  const [customPackageSubmitted, setCustomPackageSubmitted] = useState(false);
+  const [customPackageFormRenderedAt] = useState(() => Date.now());
+  const submitCustomPackage = useServerFn(submitCustomPackageRequest);
+
   const submit = useServerFn(submitPublicBooking);
   const school = settingsQ.data?.school_name ?? "Standard Driving School";
 
@@ -251,6 +266,37 @@ function BookingPage() {
     }
   }
 
+  async function handleCustomPackageSubmit() {
+    if (!schoolId) return;
+    if (!customPackageForm.full_name.trim() || !customPackageForm.message.trim()) {
+      toast.error("Please fill in your name and what you're looking for.");
+      return;
+    }
+    if (!customPackageForm.email.trim() && !customPackageForm.phone.trim()) {
+      toast.error("Please provide an email or phone number so the school can reach you.");
+      return;
+    }
+    setCustomPackageSubmitting(true);
+    try {
+      await submitCustomPackage({
+        data: {
+          full_name: customPackageForm.full_name.trim(),
+          email: customPackageForm.email.trim(),
+          phone: customPackageForm.phone.trim(),
+          message: customPackageForm.message.trim(),
+          school_id: schoolId as string,
+          website: customPackageForm.website,
+          formRenderedAt: customPackageFormRenderedAt,
+        },
+      });
+      setCustomPackageSubmitted(true);
+    } catch (err: any) {
+      toast.error(err.message || "Could not submit your request");
+    } finally {
+      setCustomPackageSubmitting(false);
+    }
+  }
+
   if (submitted && selected && selectedDate && selectedTime) {
     return (
       <ConfirmationScreen
@@ -325,6 +371,103 @@ function BookingPage() {
               />
               {errors.service && <InlineError msg={errors.service} />}
             </Panel>
+
+            {!customPackageOpen ? (
+              <button
+                type="button"
+                onClick={() => setCustomPackageOpen(true)}
+                className="flex items-center gap-2 text-[13px] font-medium px-1"
+                style={{ color: C.primary }}
+              >
+                <MessageSquarePlus className="size-4" />
+                Don't see what you need? Request a custom package
+              </button>
+            ) : (
+              <Panel eyebrow="Custom request" title="Request a custom package" icon={MessageSquarePlus}>
+                {customPackageSubmitted ? (
+                  <p className="text-sm" style={{ color: C.text }}>
+                    Thanks — {school} has received your request and will be in touch.
+                  </p>
+                ) : (
+                  <>
+                    <div
+                      aria-hidden="true"
+                      style={{ position: "absolute", left: "-9999px", width: 1, height: 1, overflow: "hidden" }}
+                    >
+                      <label htmlFor="cp-website">Website</label>
+                      <input
+                        id="cp-website"
+                        name="website"
+                        type="text"
+                        tabIndex={-1}
+                        autoComplete="off"
+                        value={customPackageForm.website}
+                        onChange={(e) =>
+                          setCustomPackageForm({ ...customPackageForm, website: e.target.value })
+                        }
+                      />
+                    </div>
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <Field label="Full name" required>
+                        <GlassInput
+                          value={customPackageForm.full_name}
+                          onChange={(v) => setCustomPackageForm({ ...customPackageForm, full_name: v })}
+                          placeholder="Sarah Jenkins"
+                        />
+                      </Field>
+                      <Field label="Phone">
+                        <GlassInput
+                          type="tel"
+                          value={customPackageForm.phone}
+                          onChange={(v) =>
+                            setCustomPackageForm({ ...customPackageForm, phone: formatPhone(v) })
+                          }
+                          placeholder="(555) 000-0000"
+                        />
+                      </Field>
+                    </div>
+                    <Field label="Email">
+                      <GlassInput
+                        type="email"
+                        value={customPackageForm.email}
+                        onChange={(v) => setCustomPackageForm({ ...customPackageForm, email: v })}
+                        placeholder="you@example.com"
+                      />
+                    </Field>
+                    <Field label="What are you looking for?" required>
+                      <textarea
+                        value={customPackageForm.message}
+                        onChange={(e) =>
+                          setCustomPackageForm({ ...customPackageForm, message: e.target.value })
+                        }
+                        placeholder="e.g. A 15-lesson package spread over the summer, focused on highway driving"
+                        rows={3}
+                        className={inputClass}
+                        style={{ background: C.surfaceSolid, border: `1px solid ${C.border}`, color: C.text }}
+                      />
+                    </Field>
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={handleCustomPackageSubmit}
+                        disabled={customPackageSubmitting}
+                        className="btn-primary"
+                      >
+                        {customPackageSubmitting ? "Sending…" : "Send request"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setCustomPackageOpen(false)}
+                        className="text-[13px]"
+                        style={{ color: C.muted }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </>
+                )}
+              </Panel>
+            )}
 
             <Panel eyebrow="Student" title="Your details" icon={User}>
               {/* Honeypot — invisible to real users, tempting to bots that auto-fill every field */}

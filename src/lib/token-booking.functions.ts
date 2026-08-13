@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { pickInstructor } from "@/lib/public-booking.functions";
-import { remainingLessons } from "@/lib/student-balance";
+import { remainingLessons, remainingPackageHours } from "@/lib/student-balance";
 import { NO_SHOW_ESCALATION_THRESHOLD } from "@/lib/no-show";
 import { isBookingConflictError, BOOKING_CONFLICT_MESSAGE } from "@/lib/booking-conflict-error";
 
@@ -40,7 +40,7 @@ export const getInvitationForToken = createServerFn({ method: "POST" })
       supabaseAdmin
         .from("school_settings")
         .select(
-          "school_name, booking_paused, mpi_test_locations, theory_lessons_enabled, vehicle_rental_enabled, online_payment_url",
+          "school_name, booking_paused, mpi_test_locations, theory_lessons_enabled, vehicle_rental_enabled, online_payment_url, flexible_session_length_enabled",
         )
         .eq("school_id", invitation.school_id)
         .maybeSingle(),
@@ -58,9 +58,16 @@ export const getInvitationForToken = createServerFn({ method: "POST" })
         .eq("is_female", true),
     ]);
 
+    const flexibleSessionLengthEnabled = !!settings?.flexible_session_length_enabled;
+    const remainingPackageHrs = flexibleSessionLengthEnabled
+      ? await remainingPackageHours(supabaseAdmin, student.id)
+      : 0;
+
     return {
       firstName: student.full_name?.split(" ")[0] || "there",
       remaining,
+      flexibleSessionLengthEnabled,
+      remainingPackageHours: remainingPackageHrs,
       schoolName: settings?.school_name ?? "your driving school",
       lessonTypes: (lessonTypes ?? []).filter((t: any) => {
         if (t.category === "theory") return !!settings?.theory_lessons_enabled;
@@ -81,6 +88,7 @@ const BookSchema = z.object({
   scheduled_at: z.string().datetime(),
   mpi_test_location: z.string().trim().max(200).optional().nullable(),
   female_instructor_only: z.boolean().optional(),
+  session_hours: z.number().positive().max(24).optional(),
 });
 
 export const submitTokenBooking = createServerFn({ method: "POST" })
@@ -106,12 +114,9 @@ export const submitTokenBooking = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!student) throw new Error("This link is no longer valid.");
 
-    const remaining = await remainingLessons(supabaseAdmin, student.id);
-    if (remaining <= 0) throw new Error("You have no remaining lessons in your package.");
-
     const { data: settings } = await supabaseAdmin
       .from("school_settings")
-      .select("require_approval, auto_assign_instructor, booking_paused")
+      .select("require_approval, auto_assign_instructor, booking_paused, flexible_session_length_enabled")
       .eq("school_id", invitation.school_id)
       .maybeSingle();
     if (settings?.booking_paused) {
@@ -120,12 +125,33 @@ export const submitTokenBooking = createServerFn({ method: "POST" })
 
     const { data: lt, error: ltErr } = await supabaseAdmin
       .from("lesson_types")
-      .select("id, duration_minutes, price_cents, active, school_id")
+      .select("id, duration_minutes, price_cents, active, school_id, category")
       .eq("id", data.lesson_type_id)
       .eq("school_id", invitation.school_id)
       .maybeSingle();
     if (ltErr) throw new Error("Could not load lesson type");
     if (!lt || !lt.active) throw new Error("Invalid lesson type");
+
+    const useFlexibleHours = !!settings?.flexible_session_length_enabled && lt.category === "package";
+    let bookingDurationMinutes = lt.duration_minutes;
+    let bookingPriceCents = lt.price_cents;
+
+    if (useFlexibleHours) {
+      const remainingHours = await remainingPackageHours(supabaseAdmin, student.id);
+      if (remainingHours <= 0) {
+        throw new Error("You have no remaining hours in your package.");
+      }
+      if (!data.session_hours || data.session_hours > remainingHours) {
+        throw new Error(`Choose a session length up to your ${remainingHours} remaining hours.`);
+      }
+      bookingDurationMinutes = Math.round(data.session_hours * 60);
+      bookingPriceCents = lt.duration_minutes
+        ? Math.round((lt.price_cents * bookingDurationMinutes) / lt.duration_minutes)
+        : lt.price_cents;
+    } else {
+      const remaining = await remainingLessons(supabaseAdmin, student.id);
+      if (remaining <= 0) throw new Error("You have no remaining lessons in your package.");
+    }
 
     // No-show escalation: a student with a history of no-shows never
     // auto-confirms, regardless of the school's approval settings — there's
@@ -149,7 +175,7 @@ export const submitTokenBooking = createServerFn({ method: "POST" })
           supabaseAdmin,
           invitation.school_id,
           data.scheduled_at,
-          lt.duration_minutes,
+          bookingDurationMinutes,
           !!data.female_instructor_only,
         )
       : null;
@@ -161,11 +187,11 @@ export const submitTokenBooking = createServerFn({ method: "POST" })
         instructor_id: instructorId,
         lesson_type_id: lt.id,
         scheduled_at: data.scheduled_at,
-        duration_minutes: lt.duration_minutes,
+        duration_minutes: bookingDurationMinutes,
         pickup_address: student.pickup_address,
         dropoff_address: student.pickup_address,
         female_instructor_requested: !!data.female_instructor_only,
-        price_cents: lt.price_cents,
+        price_cents: bookingPriceCents,
         status: initialStatus,
         school_id: invitation.school_id,
         mpi_test_location: data.mpi_test_location || null,

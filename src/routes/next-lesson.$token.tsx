@@ -39,6 +39,8 @@ function NextLessonPage() {
   const [info, setInfo] = useState<{
     firstName: string;
     remaining: number;
+    flexibleSessionLengthEnabled: boolean;
+    remainingPackageHours: number;
     schoolName: string;
     lessonTypes: LessonType[];
     bookingPaused: boolean;
@@ -59,12 +61,14 @@ function NextLessonPage() {
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [mpiLocation, setMpiLocation] = useState("");
   const [femaleInstructorOnly, setFemaleInstructorOnly] = useState(false);
+  const [sessionHours, setSessionHours] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const needsMpiLocation =
     selected?.category === "road_test" ||
     selected?.category === "tsr_retest" ||
     selected?.category === "car_rental";
+  const needsSessionHours = !!(selected?.category === "package" && info?.flexibleSessionLengthEnabled);
 
   const today = startOfDay(new Date());
   const [month, setMonth] = useState(startOfMonth(today));
@@ -79,6 +83,11 @@ function NextLessonPage() {
       toast.error("Please choose a lesson, date, and time.");
       return;
     }
+    const hoursNum = Number(sessionHours);
+    if (needsSessionHours && (!sessionHours || !Number.isFinite(hoursNum) || hoursNum <= 0)) {
+      toast.error("Please choose a session length.");
+      return;
+    }
     setSubmitting(true);
     try {
       const [h, m] = selectedTime.split(":").map(Number);
@@ -91,6 +100,7 @@ function NextLessonPage() {
           scheduled_at: dt.toISOString(),
           mpi_test_location: mpiLocation.trim() || null,
           female_instructor_only: femaleInstructorOnly,
+          session_hours: needsSessionHours ? hoursNum : undefined,
         },
       });
       setSubmitted(true);
@@ -157,7 +167,9 @@ function NextLessonPage() {
     );
   }
 
-  if (info.remaining <= 0) {
+  const hasFlexibleHoursLeft = info.flexibleSessionLengthEnabled && info.remainingPackageHours > 0;
+
+  if (info.remaining <= 0 && !hasFlexibleHoursLeft) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4 bg-slate-50">
         <div className="text-center max-w-sm">
@@ -205,7 +217,10 @@ function NextLessonPage() {
                   }`}
                 >
                   <div className="text-xs text-slate-500 inline-flex items-center gap-1">
-                    <Clock className="size-3" /> {lt.duration_minutes} min
+                    <Clock className="size-3" />{" "}
+                    {lt.category === "package" && info.flexibleSessionLengthEnabled
+                      ? "Flexible length"
+                      : `${lt.duration_minutes} min`}
                   </div>
                   <div className="text-sm font-semibold text-slate-900 mt-1">{lt.name}</div>
                   <div className="text-sm text-indigo-600 font-medium mt-1">
@@ -219,6 +234,23 @@ function NextLessonPage() {
             <p className="mt-3 text-xs text-slate-500 whitespace-pre-wrap">
               {selected.description}
             </p>
+          )}
+          {needsSessionHours && (
+            <div className="mt-4 pt-4 border-t border-slate-200">
+              <label className="block text-xs font-semibold text-slate-500 mb-2">
+                Session length (hours) — {info.remainingPackageHours} remaining
+              </label>
+              <input
+                type="number"
+                min={0.5}
+                step={0.5}
+                max={info.remainingPackageHours}
+                value={sessionHours}
+                onChange={(e) => setSessionHours(e.target.value)}
+                placeholder="e.g. 1.5"
+                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"
+              />
+            </div>
           )}
         </section>
 

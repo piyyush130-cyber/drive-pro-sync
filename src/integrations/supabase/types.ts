@@ -221,6 +221,44 @@ export type Database = {
           },
         ]
       }
+      custom_package_requests: {
+        Row: {
+          created_at: string
+          email: string | null
+          full_name: string
+          id: string
+          message: string
+          phone: string | null
+          school_id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          full_name: string
+          id?: string
+          message: string
+          phone?: string | null
+          school_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          full_name?: string
+          id?: string
+          message?: string
+          phone?: string | null
+          school_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_package_requests_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       instructor_availability: {
         Row: {
           break_end: string | null
@@ -769,6 +807,7 @@ export type Database = {
           default_duration_minutes: number
           deposit_cents: number
           deposit_required: boolean
+          flexible_session_length_enabled: boolean
           late_cancel_fee_type: string
           late_cancel_fee_value: number
           logo_url: string | null
@@ -802,6 +841,7 @@ export type Database = {
           default_duration_minutes?: number
           deposit_cents?: number
           deposit_required?: boolean
+          flexible_session_length_enabled?: boolean
           late_cancel_fee_type?: string
           late_cancel_fee_value?: number
           logo_url?: string | null
@@ -835,6 +875,7 @@ export type Database = {
           default_duration_minutes?: number
           deposit_cents?: number
           deposit_required?: boolean
+          flexible_session_length_enabled?: boolean
           late_cancel_fee_type?: string
           late_cancel_fee_value?: number
           logo_url?: string | null
@@ -1057,6 +1098,7 @@ export type Database = {
           incident_notes: string | null
           lessons_purchased: number
           notes: string | null
+          package_hours_purchased: number | null
           phone: string | null
           pickup_address: string | null
           profile_id: string | null
@@ -1073,6 +1115,7 @@ export type Database = {
           incident_notes?: string | null
           lessons_purchased?: number
           notes?: string | null
+          package_hours_purchased?: number | null
           phone?: string | null
           pickup_address?: string | null
           profile_id?: string | null
@@ -1089,6 +1132,7 @@ export type Database = {
           incident_notes?: string | null
           lessons_purchased?: number
           notes?: string | null
+          package_hours_purchased?: number | null
           phone?: string | null
           pickup_address?: string | null
           profile_id?: string | null
