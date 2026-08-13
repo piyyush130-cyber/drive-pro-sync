@@ -124,6 +124,11 @@ function InstructorsPage() {
     qc.invalidateQueries({ queryKey: ["instructors-all"] });
   }
 
+  async function toggleIsFemale(id: string, current: boolean) {
+    await supabase.from("instructors").update({ is_female: !current }).eq("id", id);
+    qc.invalidateQueries({ queryKey: ["instructors-all"] });
+  }
+
   async function deleteInstructor(id: string, name: string) {
     const { count } = await supabase
       .from("bookings")
@@ -327,6 +332,15 @@ function InstructorsPage() {
                       className="accent-[#3B82F6]"
                     />
                     MPI-permitted (can issue TSR verifications)
+                  </label>
+                  <label className="flex items-center gap-1.5 text-xs text-slate-400 mt-1 cursor-pointer w-fit">
+                    <input
+                      type="checkbox"
+                      checked={!!i.is_female}
+                      onChange={() => toggleIsFemale(i.id, !!i.is_female)}
+                      className="accent-[#3B82F6]"
+                    />
+                    Female instructor (shown to students as a booking preference)
                   </label>
                 </div>
                 <div className="text-right text-xs text-slate-500">

@@ -66,6 +66,7 @@ export type Database = {
           deleted_at: string | null
           dropoff_address: string | null
           duration_minutes: number
+          female_instructor_requested: boolean
           id: string
           instructor_id: string | null
           lesson_notes: string | null
@@ -91,6 +92,7 @@ export type Database = {
           deleted_at?: string | null
           dropoff_address?: string | null
           duration_minutes?: number
+          female_instructor_requested?: boolean
           id?: string
           instructor_id?: string | null
           lesson_notes?: string | null
@@ -116,6 +118,7 @@ export type Database = {
           deleted_at?: string | null
           dropoff_address?: string | null
           duration_minutes?: number
+          female_instructor_requested?: boolean
           id?: string
           instructor_id?: string | null
           lesson_notes?: string | null
@@ -387,6 +390,7 @@ export type Database = {
           full_name: string
           id: string
           invite_code_used: string | null
+          is_female: boolean
           mpi_permitted: boolean
           notes: string | null
           phone: string | null
@@ -406,6 +410,7 @@ export type Database = {
           full_name: string
           id?: string
           invite_code_used?: string | null
+          is_female?: boolean
           mpi_permitted?: boolean
           notes?: string | null
           phone?: string | null
@@ -425,6 +430,7 @@ export type Database = {
           full_name?: string
           id?: string
           invite_code_used?: string | null
+          is_female?: boolean
           mpi_permitted?: boolean
           notes?: string | null
           phone?: string | null

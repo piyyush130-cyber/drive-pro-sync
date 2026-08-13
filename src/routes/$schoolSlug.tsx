@@ -27,7 +27,7 @@ import {
   startOfMonth,
 } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
-import { submitPublicBooking } from "@/lib/public-booking.functions";
+import { submitPublicBooking, getHasFemaleInstructor } from "@/lib/public-booking.functions";
 import { money } from "@/lib/format";
 import { type BookingFormErrors, formatPhone, validateBookingForm } from "@/lib/booking-validation";
 import { TIME_SLOTS, unavailableForDate, buildMonthGrid } from "@/lib/booking-calendar";
@@ -124,6 +124,13 @@ function BookingPage() {
     },
   });
 
+  const getFemaleInstructorAvailability = useServerFn(getHasFemaleInstructor);
+  const femaleInstructorQ = useQuery({
+    queryKey: ["public-has-female-instructor", schoolId],
+    enabled: !!schoolId,
+    queryFn: () => getFemaleInstructorAvailability({ data: { schoolId: schoolId as string } }),
+  });
+
   const [selected, setSelected] = useState<LessonType | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
@@ -138,6 +145,7 @@ function BookingPage() {
     dropoff_address: "",
     pickup_notes: "",
     notes: "",
+    female_instructor_only: false,
     website: "", // honeypot — real users never see or fill this field
   });
   const [errors, setErrors] = useState<Errors>({});
@@ -221,6 +229,7 @@ function BookingPage() {
           pickup_address: form.pickup_address.trim(),
           postal_code: form.postal_code.trim(),
           mpi_test_location: form.mpi_test_location.trim() || null,
+          female_instructor_only: form.female_instructor_only,
           dropoff_address: form.dropoff_same ? form.pickup_address : form.dropoff_address,
           notes:
             [form.pickup_notes && `Pickup: ${form.pickup_notes}`, form.notes]
@@ -483,6 +492,26 @@ function BookingPage() {
                   This lesson requires in-person pickup at our location — no drive-to-you service
                   for this one.
                 </p>
+              </Panel>
+            )}
+
+            {femaleInstructorQ.data?.hasFemaleInstructor && (
+              <Panel eyebrow="Instructor" title="Any preference?" icon={User}>
+                <label
+                  className="flex items-center gap-2.5 text-sm select-none"
+                  style={{ color: C.muted }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={form.female_instructor_only}
+                    onChange={(e) =>
+                      setForm({ ...form, female_instructor_only: e.target.checked })
+                    }
+                    className="size-4"
+                    style={{ accentColor: C.primary }}
+                  />
+                  Female instructor only
+                </label>
               </Panel>
             )}
 

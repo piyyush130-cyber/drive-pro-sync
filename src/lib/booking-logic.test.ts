@@ -107,6 +107,61 @@ describe("pickBestInstructor", () => {
     });
     expect(result).toBe("free");
   });
+
+  it("with femaleOnly, skips a non-female instructor even if otherwise available", () => {
+    const result = pickBestInstructor({
+      instructors: [
+        {
+          id: "a",
+          weekly_availability: { monday: { enabled: true, start: "09:00", end: "17:00" } },
+          is_female: false,
+        },
+      ],
+      dayBookings: [],
+      scheduledAt: MONDAY_9AM,
+      durationMinutes: 60,
+      femaleOnly: true,
+    });
+    expect(result).toBeNull();
+  });
+
+  it("with femaleOnly, picks a matching instructor and ignores a non-matching one", () => {
+    const result = pickBestInstructor({
+      instructors: [
+        {
+          id: "male",
+          weekly_availability: { monday: { enabled: true, start: "09:00", end: "17:00" } },
+          is_female: false,
+        },
+        {
+          id: "female",
+          weekly_availability: { monday: { enabled: true, start: "09:00", end: "17:00" } },
+          is_female: true,
+        },
+      ],
+      dayBookings: [],
+      scheduledAt: MONDAY_9AM,
+      durationMinutes: 60,
+      femaleOnly: true,
+    });
+    expect(result).toBe("female");
+  });
+
+  it("without femaleOnly, is_female has no effect on selection", () => {
+    const result = pickBestInstructor({
+      instructors: [
+        {
+          id: "a",
+          weekly_availability: { monday: { enabled: true, start: "09:00", end: "17:00" } },
+          is_female: false,
+        },
+      ],
+      dayBookings: [],
+      scheduledAt: MONDAY_9AM,
+      durationMinutes: 60,
+    });
+    expect(result).toBe("a");
+  });
 });
 
 describe("hasVehicleConflict", () => {

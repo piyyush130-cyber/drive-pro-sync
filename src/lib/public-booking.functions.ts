@@ -19,6 +19,7 @@ const BookingSchema = z.object({
   pickup_address: z.string().trim().max(300).optional().default(""),
   postal_code: z.string().trim().max(10).optional().default(""),
   mpi_test_location: z.string().trim().max(200).optional().nullable(),
+  female_instructor_only: z.boolean().optional(),
   dropoff_address: z.string().max(300).optional().nullable(),
   notes: z.string().max(2000).optional().nullable(),
   lesson_type_id: z.string().uuid(),
@@ -38,10 +39,11 @@ export async function pickInstructor(
   schoolId: string,
   scheduledAt: string,
   durationMinutes: number,
+  femaleOnly = false,
 ): Promise<string | null> {
   const { data: instructors } = await supabaseAdmin
     .from("instructors")
-    .select("id, weekly_availability")
+    .select("id, weekly_availability, is_female")
     .eq("school_id", schoolId)
     .eq("active", true)
     .eq("status", "active");
@@ -82,8 +84,27 @@ export async function pickInstructor(
     dayBookings: [...(dayBookings ?? []), ...(activeOffers ?? [])],
     scheduledAt,
     durationMinutes,
+    femaleOnly,
   });
 }
+
+const SchoolIdSchema = z.object({ schoolId: z.string().uuid() });
+
+// instructors has no anon-read RLS policy at all (correctly — it's staff
+// data), so the public booking page can't check this directly. This
+// returns nothing beyond a boolean, safe for anon.
+export const getHasFemaleInstructor = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => SchoolIdSchema.parse(d))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { count } = await supabaseAdmin
+      .from("instructors")
+      .select("id", { count: "exact", head: true })
+      .eq("school_id", data.schoolId)
+      .eq("active", true)
+      .eq("is_female", true);
+    return { hasFemaleInstructor: (count ?? 0) > 0 };
+  });
 
 export const submitPublicBooking = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => BookingSchema.parse(data))
@@ -162,7 +183,13 @@ export const submitPublicBooking = createServerFn({ method: "POST" })
     if (sErr || !student) throw new Error("Could not create student");
 
     const instructorId = settings?.auto_assign_instructor
-      ? await pickInstructor(supabaseAdmin, data.school_id, data.scheduled_at, lt.duration_minutes)
+      ? await pickInstructor(
+          supabaseAdmin,
+          data.school_id,
+          data.scheduled_at,
+          lt.duration_minutes,
+          !!data.female_instructor_only,
+        )
       : null;
 
     const { data: booking, error: bErr } = await supabaseAdmin
@@ -180,6 +207,7 @@ export const submitPublicBooking = createServerFn({ method: "POST" })
         status: initialStatus,
         school_id: data.school_id,
         mpi_test_location: data.mpi_test_location || null,
+        female_instructor_requested: !!data.female_instructor_only,
       })
       .select("id")
       .single();

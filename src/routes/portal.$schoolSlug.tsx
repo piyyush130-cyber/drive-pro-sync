@@ -551,6 +551,7 @@ function BookTab({
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [mpiLocation, setMpiLocation] = useState("");
+  const [femaleInstructorOnly, setFemaleInstructorOnly] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const needsMpiLocation =
     selected?.category === "road_test" ||
@@ -581,6 +582,7 @@ function BookTab({
           lesson_type_id: selected.id,
           scheduled_at: dt.toISOString(),
           mpi_test_location: mpiLocation.trim() || null,
+          female_instructor_only: femaleInstructorOnly,
         },
       });
       toast.success("Lesson booked");
@@ -779,6 +781,24 @@ function BookTab({
               style={{ borderColor: C.border }}
             />
           )}
+        </div>
+      )}
+
+      {optionsQ.data.hasFemaleInstructor && (
+        <div
+          className="rounded-2xl p-5"
+          style={{ background: C.surfaceSolid, border: `1px solid ${C.border}` }}
+        >
+          <label className="flex items-center gap-2.5 text-sm select-none" style={{ color: C.muted }}>
+            <input
+              type="checkbox"
+              checked={femaleInstructorOnly}
+              onChange={(e) => setFemaleInstructorOnly(e.target.checked)}
+              className="size-4"
+              style={{ accentColor: C.primary }}
+            />
+            Female instructor only
+          </label>
         </div>
       )}
 

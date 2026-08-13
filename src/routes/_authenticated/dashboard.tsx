@@ -550,6 +550,22 @@ function Dashboard() {
               <div className="text-xs text-slate-500">{b.lesson_types?.name}</div>
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <StatusPill tone={statusTone.pending}>Awaiting review</StatusPill>
+                {b.female_instructor_requested && (
+                  <span
+                    className={`text-xs font-semibold px-2 py-1 rounded-full ${
+                      b.instructor_id
+                        ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
+                        : "bg-purple-600 text-white"
+                    }`}
+                    title={
+                      b.instructor_id
+                        ? "Student requested a female instructor"
+                        : "Student requested a female instructor — not yet assigned, needs a matching instructor"
+                    }
+                  >
+                    Female instructor requested{!b.instructor_id && " · unassigned"}
+                  </span>
+                )}
                 <select
                   value={b.instructor_id ?? ""}
                   disabled={updatingId === b.id || instructorsQ.isLoading}

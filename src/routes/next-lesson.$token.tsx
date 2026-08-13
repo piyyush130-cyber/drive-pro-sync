@@ -44,6 +44,7 @@ function NextLessonPage() {
     bookingPaused: boolean;
     mpiTestLocations: string[];
     onlinePaymentUrl: string | null;
+    hasFemaleInstructor: boolean;
   } | null>(null);
 
   useEffect(() => {
@@ -57,6 +58,7 @@ function NextLessonPage() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [mpiLocation, setMpiLocation] = useState("");
+  const [femaleInstructorOnly, setFemaleInstructorOnly] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const needsMpiLocation =
@@ -88,6 +90,7 @@ function NextLessonPage() {
           lesson_type_id: selected.id,
           scheduled_at: dt.toISOString(),
           mpi_test_location: mpiLocation.trim() || null,
+          female_instructor_only: femaleInstructorOnly,
         },
       });
       setSubmitted(true);
@@ -326,6 +329,20 @@ function NextLessonPage() {
                 className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"
               />
             )}
+          </section>
+        )}
+
+        {info.hasFemaleInstructor && (
+          <section className="bg-white border border-slate-200 rounded-xl p-5">
+            <label className="flex items-center gap-2.5 text-sm text-slate-700 select-none">
+              <input
+                type="checkbox"
+                checked={femaleInstructorOnly}
+                onChange={(e) => setFemaleInstructorOnly(e.target.checked)}
+                className="size-4 accent-indigo-600"
+              />
+              Female instructor only
+            </label>
           </section>
         )}
 

@@ -67,20 +67,27 @@ export const getPortalBookingOptions = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { studentId, schoolId } = await requireStudentSession(supabaseAdmin, data.sessionToken);
 
-    const [{ data: lessonTypes }, { data: settings }, remaining] = await Promise.all([
-      supabaseAdmin
-        .from("lesson_types")
-        .select("id, name, description, duration_minutes, price_cents, category")
-        .eq("school_id", schoolId)
-        .eq("active", true)
-        .order("sort_order"),
-      supabaseAdmin
-        .from("school_settings")
-        .select("booking_paused, mpi_test_locations, theory_lessons_enabled, vehicle_rental_enabled")
-        .eq("school_id", schoolId)
-        .maybeSingle(),
-      remainingLessons(supabaseAdmin, studentId),
-    ]);
+    const [{ data: lessonTypes }, { data: settings }, remaining, { count: femaleCount }] =
+      await Promise.all([
+        supabaseAdmin
+          .from("lesson_types")
+          .select("id, name, description, duration_minutes, price_cents, category")
+          .eq("school_id", schoolId)
+          .eq("active", true)
+          .order("sort_order"),
+        supabaseAdmin
+          .from("school_settings")
+          .select("booking_paused, mpi_test_locations, theory_lessons_enabled, vehicle_rental_enabled")
+          .eq("school_id", schoolId)
+          .maybeSingle(),
+        remainingLessons(supabaseAdmin, studentId),
+        supabaseAdmin
+          .from("instructors")
+          .select("id", { count: "exact", head: true })
+          .eq("school_id", schoolId)
+          .eq("active", true)
+          .eq("is_female", true),
+      ]);
 
     return {
       lessonTypes: (lessonTypes ?? []).filter((t: any) => {
@@ -92,6 +99,7 @@ export const getPortalBookingOptions = createServerFn({ method: "POST" })
       remaining,
       bookingPaused: !!settings?.booking_paused,
       mpiTestLocations: settings?.mpi_test_locations ?? [],
+      hasFemaleInstructor: (femaleCount ?? 0) > 0,
     };
   });
 
@@ -100,6 +108,7 @@ const SubmitBookingSchema = z.object({
   lesson_type_id: z.string().uuid(),
   scheduled_at: z.string().datetime(),
   mpi_test_location: z.string().trim().max(200).optional().nullable(),
+  female_instructor_only: z.boolean().optional(),
 });
 
 export const submitPortalBooking = createServerFn({ method: "POST" })
@@ -158,7 +167,13 @@ export const submitPortalBooking = createServerFn({ method: "POST" })
         : "pending";
 
     const instructorId = settings?.auto_assign_instructor
-      ? await pickInstructor(supabaseAdmin, schoolId, data.scheduled_at, lt.duration_minutes)
+      ? await pickInstructor(
+          supabaseAdmin,
+          schoolId,
+          data.scheduled_at,
+          lt.duration_minutes,
+          !!data.female_instructor_only,
+        )
       : null;
 
     const { data: booking, error: bErr } = await supabaseAdmin
@@ -175,6 +190,7 @@ export const submitPortalBooking = createServerFn({ method: "POST" })
         status: initialStatus,
         school_id: schoolId,
         mpi_test_location: data.mpi_test_location || null,
+        female_instructor_requested: !!data.female_instructor_only,
       })
       .select("id")
       .single();

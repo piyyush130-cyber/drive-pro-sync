@@ -36,7 +36,7 @@ export const getInvitationForToken = createServerFn({ method: "POST" })
 
     const remaining = await remainingLessons(supabaseAdmin, student.id);
 
-    const [{ data: settings }, { data: lessonTypes }] = await Promise.all([
+    const [{ data: settings }, { data: lessonTypes }, { count: femaleCount }] = await Promise.all([
       supabaseAdmin
         .from("school_settings")
         .select(
@@ -50,6 +50,12 @@ export const getInvitationForToken = createServerFn({ method: "POST" })
         .eq("school_id", invitation.school_id)
         .eq("active", true)
         .order("sort_order"),
+      supabaseAdmin
+        .from("instructors")
+        .select("id", { count: "exact", head: true })
+        .eq("school_id", invitation.school_id)
+        .eq("active", true)
+        .eq("is_female", true),
     ]);
 
     return {
@@ -65,6 +71,7 @@ export const getInvitationForToken = createServerFn({ method: "POST" })
       bookingPaused: !!settings?.booking_paused,
       mpiTestLocations: settings?.mpi_test_locations ?? [],
       onlinePaymentUrl: settings?.online_payment_url ?? null,
+      hasFemaleInstructor: (femaleCount ?? 0) > 0,
     };
   });
 
@@ -73,6 +80,7 @@ const BookSchema = z.object({
   lesson_type_id: z.string().uuid(),
   scheduled_at: z.string().datetime(),
   mpi_test_location: z.string().trim().max(200).optional().nullable(),
+  female_instructor_only: z.boolean().optional(),
 });
 
 export const submitTokenBooking = createServerFn({ method: "POST" })
@@ -142,6 +150,7 @@ export const submitTokenBooking = createServerFn({ method: "POST" })
           invitation.school_id,
           data.scheduled_at,
           lt.duration_minutes,
+          !!data.female_instructor_only,
         )
       : null;
 
@@ -155,6 +164,7 @@ export const submitTokenBooking = createServerFn({ method: "POST" })
         duration_minutes: lt.duration_minutes,
         pickup_address: student.pickup_address,
         dropoff_address: student.pickup_address,
+        female_instructor_requested: !!data.female_instructor_only,
         price_cents: lt.price_cents,
         status: initialStatus,
         school_id: invitation.school_id,

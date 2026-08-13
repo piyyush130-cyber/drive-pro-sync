@@ -27,7 +27,11 @@ export type WeeklyAvailability = Partial<
   Record<(typeof DAY_KEYS)[number], { enabled?: boolean; start?: string; end?: string }>
 >;
 
-export type InstructorCandidate = { id: string; weekly_availability: WeeklyAvailability | null };
+export type InstructorCandidate = {
+  id: string;
+  weekly_availability: WeeklyAvailability | null;
+  is_female?: boolean;
+};
 export type DayBooking = { instructor_id: string; scheduled_at: string; duration_minutes: number };
 
 function timeToMinutes(t: string): number {
@@ -43,8 +47,9 @@ export function pickBestInstructor(input: {
   dayBookings: DayBooking[];
   scheduledAt: string;
   durationMinutes: number;
+  femaleOnly?: boolean;
 }): string | null {
-  const { instructors, dayBookings, scheduledAt, durationMinutes } = input;
+  const { instructors, dayBookings, scheduledAt, durationMinutes, femaleOnly } = input;
   const start = new Date(scheduledAt);
   const end = new Date(start.getTime() + durationMinutes * 60000);
   const dayKey = DAY_KEYS[start.getUTCDay()];
@@ -52,6 +57,7 @@ export function pickBestInstructor(input: {
 
   let best: { id: string; load: number } | null = null;
   for (const inst of instructors) {
+    if (femaleOnly && !inst.is_female) continue;
     const avail = inst.weekly_availability ?? {};
     const day = avail[dayKey];
     if (!day?.enabled || !day.start || !day.end) continue;
