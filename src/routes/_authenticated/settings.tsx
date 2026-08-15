@@ -133,6 +133,7 @@ function SettingsPage() {
         theory_lessons_enabled: !!form.theory_lessons_enabled,
         vehicle_rental_enabled: !!form.vehicle_rental_enabled,
         flexible_session_length_enabled: !!form.flexible_session_length_enabled,
+        skill_level_filter_enabled: !!form.skill_level_filter_enabled,
         online_payment_url: form.online_payment_url?.trim() || null,
         pickup_service_areas: normalizeServiceAreaInput(pickupAreasText),
         mpi_test_locations: normalizeCommaList(mpiLocationsText),
@@ -555,10 +556,26 @@ function SettingsPage() {
           length. Track hours purchased on each student's profile page. When off, packages work
           exactly as they do today.
         </p>
+        <label className="flex items-center gap-2 text-sm text-slate-700">
+          <input
+            type="checkbox"
+            checked={!!form.skill_level_filter_enabled}
+            onChange={(e) => setForm({ ...form, skill_level_filter_enabled: e.target.checked })}
+            className="accent-[#3B82F6]"
+          />
+          Show skill-level filter to students?
+        </label>
+        <p className="text-xs text-slate-500 -mt-2">
+          When on, tag each package with the student level(s) it applies to on the Services page,
+          and students see "New driver" / "Some experience" / "Retesting" filter buttons on your
+          booking page. When off, the booking page looks exactly as it does today.
+        </p>
         <button onClick={saveSettings} className="btn-primary text-sm">
           Save settings
         </button>
       </section>
+
+      <AppointmentOnlySection schoolId={schoolIdQ.data} />
 
       <section className="glass-card p-6">
         <h2 className="font-semibold text-slate-900 mb-4">Lesson types & prices</h2>
@@ -569,6 +586,126 @@ function SettingsPage() {
         </div>
       </section>
     </div>
+  );
+}
+
+function AppointmentOnlySection({ schoolId }: { schoolId: string | undefined }) {
+  const qc = useQueryClient();
+  const [date, setDate] = useState("");
+  const [instructorId, setInstructorId] = useState("");
+
+  const instructorsQ = useQuery({
+    queryKey: ["settings-instructors", schoolId],
+    enabled: !!schoolId,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("instructors")
+        .select("id, full_name")
+        .eq("school_id", schoolId as string)
+        .eq("active", true)
+        .order("full_name");
+      return data ?? [];
+    },
+  });
+
+  const overridesQ = useQuery({
+    queryKey: ["schedule-overrides", schoolId],
+    enabled: !!schoolId,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("schedule_overrides")
+        .select("id, date, instructor_id, instructors(full_name)")
+        .eq("school_id", schoolId as string)
+        .gte("date", new Date().toISOString().slice(0, 10))
+        .order("date");
+      return data ?? [];
+    },
+  });
+
+  async function addOverride() {
+    if (!schoolId) return toast.error("Could not determine your school — try refreshing.");
+    if (!date) return toast.error("Pick a date");
+    const { error } = await supabase.from("schedule_overrides").insert({
+      school_id: schoolId,
+      instructor_id: instructorId || null,
+      date,
+    });
+    if (error) return toast.error(error.message);
+    setDate("");
+    setInstructorId("");
+    qc.invalidateQueries({ queryKey: ["schedule-overrides", schoolId] });
+    toast.success("Marked as appointment-only");
+  }
+
+  async function removeOverride(id: string) {
+    const { error } = await supabase.from("schedule_overrides").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    qc.invalidateQueries({ queryKey: ["schedule-overrides", schoolId] });
+  }
+
+  return (
+    <section className="glass-card p-6">
+      <h2 className="font-semibold text-slate-900 mb-1">Appointment-only days</h2>
+      <p className="text-xs text-slate-500 mb-4">
+        Mark a date (or a specific instructor on a date) as appointment-only. Students see a
+        "Request a time" prompt on your booking page for that date instead of the normal time
+        slots — you follow up and confirm manually, same as any other booking. Schools that never
+        use this see no change to their booking page.
+      </p>
+      <div className="flex flex-wrap items-end gap-2 mb-4">
+        <div>
+          <label className="block text-[10px] uppercase tracking-wider text-slate-500 mb-1">
+            Date
+          </label>
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="glass-input text-sm"
+          />
+        </div>
+        <div>
+          <label className="block text-[10px] uppercase tracking-wider text-slate-500 mb-1">
+            Instructor (optional)
+          </label>
+          <select
+            value={instructorId}
+            onChange={(e) => setInstructorId(e.target.value)}
+            className="glass-input text-sm"
+          >
+            <option value="">Whole school</option>
+            {(instructorsQ.data ?? []).map((i: any) => (
+              <option key={i.id} value={i.id}>
+                {i.full_name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <button onClick={addOverride} className="btn-primary text-sm">
+          Mark as appointment-only
+        </button>
+      </div>
+      {overridesQ.data && overridesQ.data.length > 0 && (
+        <div className="space-y-1.5">
+          {overridesQ.data.map((o: any) => (
+            <div
+              key={o.id}
+              className="flex items-center justify-between text-sm text-slate-700 bg-slate-50 rounded-lg px-3 py-2"
+            >
+              <span>
+                {o.date} — {o.instructors?.full_name ?? "Whole school"}
+              </span>
+              <button
+                onClick={() => removeOverride(o.id)}
+                className="text-xs text-rose-600 hover:underline"
+              >
+                Remove
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
 

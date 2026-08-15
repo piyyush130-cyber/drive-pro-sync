@@ -10,6 +10,12 @@ export const Route = createFileRoute("/_authenticated/services")({
   component: ServicesPage,
 });
 
+const SKILL_LEVELS: { value: string; label: string }[] = [
+  { value: "new_driver", label: "New driver" },
+  { value: "some_experience", label: "Some experience" },
+  { value: "retesting", label: "Retesting" },
+];
+
 function ServicesPage() {
   const qc = useQueryClient();
   const [adding, setAdding] = useState(false);
@@ -34,7 +40,7 @@ function ServicesPage() {
     queryFn: async () => {
       const { data } = await supabase
         .from("school_settings")
-        .select("theory_lessons_enabled, vehicle_rental_enabled")
+        .select("theory_lessons_enabled, vehicle_rental_enabled, skill_level_filter_enabled")
         .eq("school_id", schoolIdQ.data as string)
         .maybeSingle();
       return data;
@@ -42,6 +48,7 @@ function ServicesPage() {
   });
   const theoryEnabled = !!settingsQ.data?.theory_lessons_enabled;
   const vehicleRentalEnabled = !!settingsQ.data?.vehicle_rental_enabled;
+  const skillLevelFilterEnabled = !!settingsQ.data?.skill_level_filter_enabled;
 
   async function add(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -56,6 +63,7 @@ function ServicesPage() {
       buffer_minutes: Number(fd.get("buffer") || 0),
       sort_order: Number(fd.get("sort_order") || 0),
       pickup_available: fd.get("pickup_available") === "on",
+      skill_levels: fd.getAll("skill_levels").map(String),
       active: true,
       school_id: schoolIdQ.data,
     });
@@ -133,6 +141,24 @@ function ServicesPage() {
             <input type="checkbox" name="pickup_available" defaultChecked className="accent-blue-600" />
             Offer pickup for this service
           </label>
+          {skillLevelFilterEnabled && (
+            <div className="sm:col-span-2 lg:col-span-3">
+              <label className="block text-[10px] uppercase tracking-wider text-slate-500 mb-1.5">
+                Student level(s)
+              </label>
+              <div className="flex flex-wrap gap-3">
+                {SKILL_LEVELS.map((lvl) => (
+                  <label
+                    key={lvl.value}
+                    className="flex items-center gap-1.5 text-sm text-slate-700"
+                  >
+                    <input type="checkbox" name="skill_levels" value={lvl.value} className="accent-blue-600" />
+                    {lvl.label}
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
           <button className="btn-primary sm:col-span-2 lg:col-span-3">Save service</button>
         </form>
       )}
@@ -241,6 +267,38 @@ function ServicesPage() {
                   />
                   Offer pickup for this service
                 </label>
+                {skillLevelFilterEnabled && (
+                  <div className="mt-3">
+                    <label className="block text-[10px] uppercase tracking-wider text-slate-500 mb-1.5">
+                      Student level(s)
+                    </label>
+                    <div className="flex flex-wrap gap-3">
+                      {SKILL_LEVELS.map((lvl) => {
+                        const checked = (s.skill_levels ?? []).includes(lvl.value);
+                        return (
+                          <label
+                            key={lvl.value}
+                            className="flex items-center gap-1.5 text-sm text-slate-700"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={(e) => {
+                                const cur: string[] = s.skill_levels ?? [];
+                                const next = e.target.checked
+                                  ? [...cur, lvl.value]
+                                  : cur.filter((v) => v !== lvl.value);
+                                update(s.id, { skill_levels: next });
+                              }}
+                              className="accent-blue-600"
+                            />
+                            {lvl.label}
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="flex flex-col gap-2">
                 <button

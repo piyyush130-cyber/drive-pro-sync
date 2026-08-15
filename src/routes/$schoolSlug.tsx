@@ -28,8 +28,14 @@ import {
   startOfMonth,
 } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
-import { submitPublicBooking, getHasFemaleInstructor } from "@/lib/public-booking.functions";
+import {
+  submitPublicBooking,
+  getHasFemaleInstructor,
+  getAppointmentOnlyDates,
+} from "@/lib/public-booking.functions";
 import { submitCustomPackageRequest } from "@/lib/custom-package-requests.functions";
+import { submitAppointmentRequest } from "@/lib/appointment-requests.functions";
+import { toDateKey } from "@/lib/schedule-overrides";
 import { money } from "@/lib/format";
 import { type BookingFormErrors, formatPhone, validateBookingForm } from "@/lib/booking-validation";
 import { TIME_SLOTS, unavailableForDate, buildMonthGrid } from "@/lib/booking-calendar";
@@ -47,6 +53,7 @@ type LessonType = {
   price_cents: number;
   pickup_available: boolean;
   category: string;
+  skill_levels?: string[];
 };
 type Settings = {
   school_name: string;
@@ -57,7 +64,23 @@ type Settings = {
   theory_lessons_enabled?: boolean;
   vehicle_rental_enabled?: boolean;
   online_payment_url?: string | null;
+  skill_level_filter_enabled?: boolean;
 };
+
+const SKILL_LEVEL_FILTERS: { value: string; label: string }[] = [
+  { value: "new_driver", label: "I'm new to driving" },
+  { value: "some_experience", label: "I have some experience" },
+  { value: "retesting", label: "I'm retesting" },
+];
+
+// Untagged lesson types always pass — fail open so an admin who hasn't
+// tagged everything yet (or tagged nothing) never makes packages
+// disappear from the booking page.
+function matchesSkillFilter(t: LessonType, filter: string | null): boolean {
+  if (!filter) return true;
+  if (!t.skill_levels || t.skill_levels.length === 0) return true;
+  return t.skill_levels.includes(filter);
+}
 
 // Light premium glass palette
 const C = {
@@ -104,7 +127,7 @@ function BookingPage() {
       const { data } = await supabase
         .from("school_settings")
         .select(
-          "school_name, booking_paused, pickup_service_areas, cancellation_policy, mpi_test_locations, theory_lessons_enabled, vehicle_rental_enabled, online_payment_url",
+          "school_name, booking_paused, pickup_service_areas, cancellation_policy, mpi_test_locations, theory_lessons_enabled, vehicle_rental_enabled, online_payment_url, skill_level_filter_enabled",
         )
         .eq("school_id", schoolId as string)
         .maybeSingle();
@@ -117,7 +140,9 @@ function BookingPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("lesson_types")
-        .select("id,name,description,duration_minutes,price_cents,pickup_available,category")
+        .select(
+          "id,name,description,duration_minutes,price_cents,pickup_available,category,skill_levels",
+        )
         .eq("school_id", schoolId as string)
         .eq("active", true)
         .order("sort_order");
@@ -133,7 +158,19 @@ function BookingPage() {
     queryFn: () => getFemaleInstructorAvailability({ data: { schoolId: schoolId as string } }),
   });
 
+  const getAppointmentOnly = useServerFn(getAppointmentOnlyDates);
+  const appointmentOnlyQ = useQuery({
+    queryKey: ["public-appointment-only-dates", schoolId],
+    enabled: !!schoolId,
+    queryFn: () => getAppointmentOnly({ data: { schoolId: schoolId as string } }),
+  });
+  const appointmentOnlyDates = useMemo(
+    () => new Set(appointmentOnlyQ.data?.appointmentOnlyDates ?? []),
+    [appointmentOnlyQ.data],
+  );
+
   const [selected, setSelected] = useState<LessonType | null>(null);
+  const [skillFilter, setSkillFilter] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [form, setForm] = useState({
@@ -167,6 +204,18 @@ function BookingPage() {
   const [customPackageSubmitted, setCustomPackageSubmitted] = useState(false);
   const [customPackageFormRenderedAt] = useState(() => Date.now());
   const submitCustomPackage = useServerFn(submitCustomPackageRequest);
+
+  const [appointmentForm, setAppointmentForm] = useState({
+    full_name: "",
+    email: "",
+    phone: "",
+    message: "",
+    website: "",
+  });
+  const [appointmentSubmitting, setAppointmentSubmitting] = useState(false);
+  const [appointmentSubmitted, setAppointmentSubmitted] = useState(false);
+  const [appointmentFormRenderedAt] = useState(() => Date.now());
+  const submitAppointment = useServerFn(submitAppointmentRequest);
 
   const submit = useServerFn(submitPublicBooking);
   const school = settingsQ.data?.school_name ?? "Standard Driving School";
@@ -297,6 +346,38 @@ function BookingPage() {
     }
   }
 
+  async function handleAppointmentRequestSubmit() {
+    if (!schoolId) return;
+    if (!appointmentForm.full_name.trim()) {
+      toast.error("Please enter your name.");
+      return;
+    }
+    if (!appointmentForm.email.trim() && !appointmentForm.phone.trim()) {
+      toast.error("Please provide an email or phone number so the school can reach you.");
+      return;
+    }
+    setAppointmentSubmitting(true);
+    try {
+      await submitAppointment({
+        data: {
+          full_name: appointmentForm.full_name.trim(),
+          email: appointmentForm.email.trim(),
+          phone: appointmentForm.phone.trim(),
+          message: appointmentForm.message.trim(),
+          preferred_date: selectedDate ? toDateKey(selectedDate) : undefined,
+          school_id: schoolId as string,
+          website: appointmentForm.website,
+          formRenderedAt: appointmentFormRenderedAt,
+        },
+      });
+      setAppointmentSubmitted(true);
+    } catch (err: any) {
+      toast.error(err.message || "Could not submit your request");
+    } finally {
+      setAppointmentSubmitting(false);
+    }
+  }
+
   if (submitted && selected && selectedDate && selectedTime) {
     return (
       <ConfirmationScreen
@@ -355,13 +436,35 @@ function BookingPage() {
           {/* LEFT */}
           <div className="space-y-6">
             <Panel eyebrow="Select service" title="Choose your lesson" icon={Sparkles}>
+              {settingsQ.data?.skill_level_filter_enabled && (
+                <div className="flex flex-wrap gap-2 mb-1">
+                  {SKILL_LEVEL_FILTERS.map((f) => {
+                    const active = skillFilter === f.value;
+                    return (
+                      <button
+                        key={f.value}
+                        type="button"
+                        onClick={() => setSkillFilter(active ? null : f.value)}
+                        className="rounded-full px-3.5 py-2 text-xs font-semibold border transition"
+                        style={
+                          active
+                            ? { background: C.primary, color: "#fff", borderColor: C.primary }
+                            : { borderColor: C.border, color: C.muted }
+                        }
+                      >
+                        {f.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
               <ServicePicker
                 types={(typesQ.data ?? []).filter((t) => {
                   if (t.category === "theory") return !!settingsQ.data?.theory_lessons_enabled;
                   if (t.category === "road_test" || t.category === "car_rental")
                     return !!settingsQ.data?.vehicle_rental_enabled;
                   return true;
-                })}
+                }).filter((t) => matchesSkillFilter(t, skillFilter))}
                 selected={selected}
                 onSelect={(t) => {
                   setSelected(t);
@@ -673,6 +776,7 @@ function BookingPage() {
               <Scheduler
                 date={selectedDate}
                 time={selectedTime}
+                appointmentOnlyDates={appointmentOnlyDates}
                 onDate={(d) => {
                   setSelectedDate(d);
                   setSelectedTime(null);
@@ -686,6 +790,88 @@ function BookingPage() {
               {errors.date && <InlineError msg={errors.date} />}
               {errors.time && <InlineError msg={errors.time} />}
             </Panel>
+
+            {selectedDate && appointmentOnlyDates.has(toDateKey(selectedDate)) && (
+              <Panel eyebrow="By appointment" title="Request a time" icon={MessageSquarePlus}>
+                {appointmentSubmitted ? (
+                  <p className="text-sm" style={{ color: C.text }}>
+                    Thanks — {school} has received your request for{" "}
+                    {format(selectedDate, "EEE, MMM d")} and will be in touch.
+                  </p>
+                ) : (
+                  <>
+                    <p className="text-xs" style={{ color: C.muted }}>
+                      {format(selectedDate, "EEE, MMM d")} is by appointment only. Tell us how to
+                      reach you and what you're looking for, and {school} will confirm a time.
+                    </p>
+                    <div
+                      aria-hidden="true"
+                      style={{ position: "absolute", left: "-9999px", width: 1, height: 1, overflow: "hidden" }}
+                    >
+                      <label htmlFor="ap-website">Website</label>
+                      <input
+                        id="ap-website"
+                        name="website"
+                        type="text"
+                        tabIndex={-1}
+                        autoComplete="off"
+                        value={appointmentForm.website}
+                        onChange={(e) =>
+                          setAppointmentForm({ ...appointmentForm, website: e.target.value })
+                        }
+                      />
+                    </div>
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <Field label="Full name" required>
+                        <GlassInput
+                          value={appointmentForm.full_name}
+                          onChange={(v) => setAppointmentForm({ ...appointmentForm, full_name: v })}
+                          placeholder="Sarah Jenkins"
+                        />
+                      </Field>
+                      <Field label="Phone">
+                        <GlassInput
+                          type="tel"
+                          value={appointmentForm.phone}
+                          onChange={(v) =>
+                            setAppointmentForm({ ...appointmentForm, phone: formatPhone(v) })
+                          }
+                          placeholder="(555) 000-0000"
+                        />
+                      </Field>
+                    </div>
+                    <Field label="Email">
+                      <GlassInput
+                        type="email"
+                        value={appointmentForm.email}
+                        onChange={(v) => setAppointmentForm({ ...appointmentForm, email: v })}
+                        placeholder="you@example.com"
+                      />
+                    </Field>
+                    <Field label="What are you looking for?">
+                      <textarea
+                        value={appointmentForm.message}
+                        onChange={(e) =>
+                          setAppointmentForm({ ...appointmentForm, message: e.target.value })
+                        }
+                        placeholder="e.g. Road test prep, mornings work best"
+                        rows={3}
+                        className={inputClass}
+                        style={{ background: C.surfaceSolid, border: `1px solid ${C.border}`, color: C.text }}
+                      />
+                    </Field>
+                    <button
+                      type="button"
+                      onClick={handleAppointmentRequestSubmit}
+                      disabled={appointmentSubmitting}
+                      className="btn-primary"
+                    >
+                      {appointmentSubmitting ? "Sending…" : "Send request"}
+                    </button>
+                  </>
+                )}
+              </Panel>
+            )}
 
             {settingsQ.data?.cancellation_policy && (
               <div
@@ -982,16 +1168,19 @@ function Scheduler({
   time,
   onDate,
   onTime,
+  appointmentOnlyDates = new Set(),
 }: {
   date: Date | null;
   time: string | null;
   onDate: (d: Date) => void;
   onTime: (t: string) => void;
+  appointmentOnlyDates?: Set<string>;
 }) {
   const today = startOfDay(new Date());
   const [month, setMonth] = useState(startOfMonth(date ?? today));
   const days = useMemo(() => buildMonthGrid(month), [month]);
   const blocked = useMemo(() => (date ? unavailableForDate(date) : new Set<string>()), [date]);
+  const isAppointmentOnly = !!(date && appointmentOnlyDates.has(toDateKey(date)));
 
   return (
     <div className="space-y-6">
@@ -1043,6 +1232,7 @@ function Scheduler({
             const isPast = isBefore(d, today);
             const isToday = isSameDay(d, today);
             const isSel = date && isSameDay(d, date);
+            const isApptOnly = inMonth && !isPast && appointmentOnlyDates.has(toDateKey(d));
             const disabled = !inMonth || isPast;
             const base: React.CSSProperties = {};
             if (isSel) {
@@ -1064,8 +1254,15 @@ function Scheduler({
                   disabled ? "opacity-25 cursor-not-allowed" : ""
                 }`}
                 style={base}
+                title={isApptOnly ? "By appointment only" : undefined}
               >
                 {d.getDate()}
+                {isApptOnly && (
+                  <span
+                    className="absolute bottom-1 left-1/2 -translate-x-1/2 size-1 rounded-full"
+                    style={{ background: isSel ? "#FFFFFF" : C.primary }}
+                  />
+                )}
               </button>
             );
           })}
@@ -1079,7 +1276,7 @@ function Scheduler({
             className="text-[10px] font-semibold uppercase tracking-[0.18em]"
             style={{ color: C.primary }}
           >
-            Available times
+            {isAppointmentOnly ? "By appointment" : "Available times"}
           </div>
           <div className="text-xs" style={{ color: C.muted }}>
             {date ? format(date, "EEE, MMM d") : "Pick a date"}
@@ -1095,6 +1292,17 @@ function Scheduler({
             }}
           >
             Choose a date to see open times.
+          </div>
+        ) : isAppointmentOnly ? (
+          <div
+            className="text-sm py-8 text-center rounded-xl"
+            style={{
+              color: C.muted,
+              background: C.surfaceTint,
+              border: `1px dashed ${C.border}`,
+            }}
+          >
+            This date is by appointment only — request a time below.
           </div>
         ) : (
           <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">

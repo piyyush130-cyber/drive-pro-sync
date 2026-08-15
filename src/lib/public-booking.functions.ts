@@ -8,6 +8,7 @@ import {
 } from "@/lib/booking-logic";
 import { isValidPostalCode, isPickupAreaServiced } from "@/lib/postal-code";
 import { isBookingConflictError, BOOKING_CONFLICT_MESSAGE } from "@/lib/booking-conflict-error";
+import { computeAppointmentOnlyDates, toDateKey } from "@/lib/schedule-overrides";
 
 const BookingSchema = z.object({
   full_name: z.string().trim().min(1).max(120),
@@ -41,15 +42,30 @@ export async function pickInstructor(
   durationMinutes: number,
   femaleOnly = false,
 ): Promise<string | null> {
-  const { data: instructors } = await supabaseAdmin
+  const { data: allInstructors } = await supabaseAdmin
     .from("instructors")
     .select("id, weekly_availability, is_female")
     .eq("school_id", schoolId)
     .eq("active", true)
     .eq("status", "active");
-  if (!instructors || instructors.length === 0) return null;
+  if (!allInstructors || allInstructors.length === 0) return null;
 
   const start = new Date(scheduledAt);
+  const dateKey = toDateKey(start);
+  const { data: dayOverrides } = await supabaseAdmin
+    .from("schedule_overrides")
+    .select("instructor_id")
+    .eq("school_id", schoolId)
+    .eq("date", dateKey);
+  // A school-wide override for this date means nobody should be
+  // auto-assigned — submitPublicBooking/submitPortalBooking/
+  // submitTokenBooking also reject the submission outright for this case,
+  // but this is a second line of defense against a manually-crafted request.
+  if ((dayOverrides ?? []).some((o: any) => !o.instructor_id)) return null;
+  const blockedInstructorIds = new Set((dayOverrides ?? []).map((o: any) => o.instructor_id));
+  const instructors = allInstructors.filter((i: any) => !blockedInstructorIds.has(i.id));
+  if (instructors.length === 0) return null;
+
   const dayStart = new Date(start);
   dayStart.setUTCHours(0, 0, 0, 0);
   const dayEnd = new Date(start);
@@ -106,6 +122,55 @@ export const getHasFemaleInstructor = createServerFn({ method: "POST" })
     return { hasFemaleInstructor: (count ?? 0) > 0 };
   });
 
+// schedule_overrides is publicly readable (see so_public_read policy), but
+// instructors isn't — this combines both server-side and returns just the
+// resulting set of blocked date strings, same reasoning as
+// getHasFemaleInstructor above.
+export const getAppointmentOnlyDates = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => SchoolIdSchema.parse(d))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const todayKey = toDateKey(new Date());
+    const [{ data: overrides }, { data: instructors }] = await Promise.all([
+      supabaseAdmin
+        .from("schedule_overrides")
+        .select("date, instructor_id")
+        .eq("school_id", data.schoolId)
+        .gte("date", todayKey),
+      supabaseAdmin
+        .from("instructors")
+        .select("id")
+        .eq("school_id", data.schoolId)
+        .eq("active", true)
+        .eq("status", "active"),
+    ]);
+    const dates = computeAppointmentOnlyDates(
+      overrides ?? [],
+      (instructors ?? []).map((i: any) => i.id),
+    );
+    return { appointmentOnlyDates: Array.from(dates) };
+  });
+
+export async function assertNotAppointmentOnly(
+  supabaseAdmin: any,
+  schoolId: string,
+  scheduledAt: string,
+) {
+  const dateKey = toDateKey(new Date(scheduledAt));
+  const { data } = await supabaseAdmin
+    .from("schedule_overrides")
+    .select("id")
+    .eq("school_id", schoolId)
+    .eq("date", dateKey)
+    .is("instructor_id", null)
+    .maybeSingle();
+  if (data) {
+    throw new Error(
+      "This date is by appointment only. Please use the 'Request a time' option instead.",
+    );
+  }
+}
+
 export const submitPublicBooking = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => BookingSchema.parse(data))
   .handler(async ({ data }) => {
@@ -129,6 +194,8 @@ export const submitPublicBooking = createServerFn({ method: "POST" })
       .maybeSingle();
     if (ltErr) throw new Error("Could not load lesson type");
     if (!lt || !lt.active) throw new Error("Invalid lesson type");
+
+    await assertNotAppointmentOnly(supabaseAdmin, data.school_id, data.scheduled_at);
 
     // Rate limit: cap repeat submissions from the same email in a short
     // window so a script can't flood the booking queue.

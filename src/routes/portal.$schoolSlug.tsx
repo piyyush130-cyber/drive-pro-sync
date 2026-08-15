@@ -23,10 +23,12 @@ import {
   getPortalBookingOptions,
   submitPortalBooking,
   submitPortalCancellation,
+  submitPortalAppointmentRequest,
 } from "@/lib/student-portal-data.functions";
 import { TIME_SLOTS, unavailableForDate, buildMonthGrid } from "@/lib/booking-calendar";
 import { money, fmtDate, fmtTime, statusLabel, statusTone } from "@/lib/format";
 import { toast } from "sonner";
+import { toDateKey } from "@/lib/schedule-overrides";
 import { addMonths, format, isBefore, isSameDay, isSameMonth, startOfDay, startOfMonth } from "date-fns";
 
 export const Route = createFileRoute("/portal/$schoolSlug")({
@@ -530,7 +532,20 @@ type LessonType = {
   duration_minutes: number;
   price_cents: number;
   category: string;
+  skill_levels?: string[];
 };
+
+const SKILL_LEVEL_FILTERS: { value: string; label: string }[] = [
+  { value: "new_driver", label: "I'm new to driving" },
+  { value: "some_experience", label: "I have some experience" },
+  { value: "retesting", label: "I'm retesting" },
+];
+
+function matchesSkillFilter(t: LessonType, filter: string | null): boolean {
+  if (!filter) return true;
+  if (!t.skill_levels || t.skill_levels.length === 0) return true;
+  return t.skill_levels.includes(filter);
+}
 
 function BookTab({
   sessionToken,
@@ -541,6 +556,7 @@ function BookTab({
 }) {
   const getOptions = useServerFn(getPortalBookingOptions);
   const bookLesson = useServerFn(submitPortalBooking);
+  const submitAppointment = useServerFn(submitPortalAppointmentRequest);
 
   const optionsQ = useQuery({
     queryKey: ["portal-book-options", sessionToken],
@@ -553,7 +569,12 @@ function BookTab({
   const [mpiLocation, setMpiLocation] = useState("");
   const [femaleInstructorOnly, setFemaleInstructorOnly] = useState(false);
   const [sessionHours, setSessionHours] = useState("");
+  const [skillFilter, setSkillFilter] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [appointmentMessage, setAppointmentMessage] = useState("");
+  const [appointmentSubmitting, setAppointmentSubmitting] = useState(false);
+  const [appointmentSubmitted, setAppointmentSubmitted] = useState(false);
+  const [appointmentFormRenderedAt] = useState(() => Date.now());
   const needsMpiLocation =
     selected?.category === "road_test" ||
     selected?.category === "tsr_retest" ||
@@ -569,6 +590,30 @@ function BookTab({
     () => (selectedDate ? unavailableForDate(selectedDate) : new Set<string>()),
     [selectedDate],
   );
+  const appointmentOnlyDates = useMemo(
+    () => new Set(optionsQ.data?.appointmentOnlyDates ?? []),
+    [optionsQ.data],
+  );
+  const isAppointmentOnly = !!(selectedDate && appointmentOnlyDates.has(toDateKey(selectedDate)));
+
+  async function handleAppointmentRequestSubmit() {
+    setAppointmentSubmitting(true);
+    try {
+      await submitAppointment({
+        data: {
+          sessionToken,
+          preferred_date: selectedDate ? toDateKey(selectedDate) : undefined,
+          message: appointmentMessage.trim(),
+          formRenderedAt: appointmentFormRenderedAt,
+        },
+      });
+      setAppointmentSubmitted(true);
+    } catch (err: any) {
+      toast.error(err?.message || "Could not submit your request");
+    } finally {
+      setAppointmentSubmitting(false);
+    }
+  }
 
   async function handleSubmit() {
     if (!selected || !selectedDate || !selectedTime) {
@@ -638,8 +683,32 @@ function BookTab({
         style={{ background: C.surfaceSolid, border: `1px solid ${C.border}` }}
       >
         <h2 className="text-sm font-semibold mb-3">Choose your lesson</h2>
+        {optionsQ.data.skillLevelFilterEnabled && (
+          <div className="flex flex-wrap gap-2 mb-3">
+            {SKILL_LEVEL_FILTERS.map((f) => {
+              const active = skillFilter === f.value;
+              return (
+                <button
+                  key={f.value}
+                  type="button"
+                  onClick={() => setSkillFilter(active ? null : f.value)}
+                  className="rounded-full px-3.5 py-2 text-xs font-semibold border transition"
+                  style={
+                    active
+                      ? { background: C.primary, color: "#fff", borderColor: C.primary }
+                      : { borderColor: C.border, color: C.muted }
+                  }
+                >
+                  {f.label}
+                </button>
+              );
+            })}
+          </div>
+        )}
         <div className="grid sm:grid-cols-2 gap-2">
-          {optionsQ.data.lessonTypes.map((lt: LessonType) => {
+          {optionsQ.data.lessonTypes
+            .filter((t: LessonType) => matchesSkillFilter(t, skillFilter))
+            .map((lt: LessonType) => {
             const active = selected?.id === lt.id;
             return (
               <button
@@ -738,6 +807,7 @@ function BookTab({
             const inMonth = isSameMonth(d, month);
             const isPast = isBefore(d, today);
             const isSel = selectedDate && isSameDay(d, selectedDate);
+            const isApptOnly = inMonth && !isPast && appointmentOnlyDates.has(toDateKey(d));
             const disabled = !inMonth || isPast;
             return (
               <button
@@ -747,42 +817,84 @@ function BookTab({
                 onClick={() => {
                   setSelectedDate(d);
                   setSelectedTime(null);
+                  setAppointmentSubmitted(false);
                 }}
-                className={`h-9 rounded-full text-sm font-medium transition ${
+                className={`relative h-9 rounded-full text-sm font-medium transition ${
                   disabled ? "opacity-25 cursor-not-allowed" : ""
                 }`}
                 style={isSel ? { background: C.primary, color: "#fff" } : { color: C.text }}
+                title={isApptOnly ? "By appointment only" : undefined}
               >
                 {d.getDate()}
+                {isApptOnly && (
+                  <span
+                    className="absolute bottom-1 left-1/2 -translate-x-1/2 size-1 rounded-full"
+                    style={{ background: isSel ? "#fff" : C.primary }}
+                  />
+                )}
               </button>
             );
           })}
         </div>
-        {selectedDate && (
-          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-            {TIME_SLOTS.map((s) => {
-              const unavailable = blocked.has(s.time);
-              const active = selectedTime === s.time;
-              return (
+        {selectedDate && isAppointmentOnly ? (
+          <div className="space-y-3">
+            {appointmentSubmitted ? (
+              <p className="text-sm" style={{ color: C.text }}>
+                Thanks — your request for {format(selectedDate, "EEE, MMM d")} has been sent.
+              </p>
+            ) : (
+              <>
+                <p className="text-xs" style={{ color: C.muted }}>
+                  {format(selectedDate, "EEE, MMM d")} is by appointment only. Add a note if you'd
+                  like, and the school will confirm a time.
+                </p>
+                <textarea
+                  value={appointmentMessage}
+                  onChange={(e) => setAppointmentMessage(e.target.value)}
+                  placeholder="What are you looking for? (optional)"
+                  rows={3}
+                  className="w-full border rounded-lg px-3 py-2 text-sm"
+                  style={{ borderColor: C.border }}
+                />
                 <button
-                  key={s.time}
                   type="button"
-                  disabled={unavailable}
-                  onClick={() => setSelectedTime(s.time)}
-                  className={`rounded-full px-3 py-2 text-xs font-semibold border transition ${
-                    unavailable ? "opacity-40 line-through" : ""
-                  }`}
-                  style={
-                    active
-                      ? { background: C.primary, color: "#fff", borderColor: C.primary }
-                      : { borderColor: C.border }
-                  }
+                  onClick={handleAppointmentRequestSubmit}
+                  disabled={appointmentSubmitting}
+                  className="rounded-xl px-4 py-2.5 text-sm font-semibold text-white"
+                  style={{ background: C.primary }}
                 >
-                  {s.label}
+                  {appointmentSubmitting ? "Sending…" : "Request this date"}
                 </button>
-              );
-            })}
+              </>
+            )}
           </div>
+        ) : (
+          selectedDate && (
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+              {TIME_SLOTS.map((s) => {
+                const unavailable = blocked.has(s.time);
+                const active = selectedTime === s.time;
+                return (
+                  <button
+                    key={s.time}
+                    type="button"
+                    disabled={unavailable}
+                    onClick={() => setSelectedTime(s.time)}
+                    className={`rounded-full px-3 py-2 text-xs font-semibold border transition ${
+                      unavailable ? "opacity-40 line-through" : ""
+                    }`}
+                    style={
+                      active
+                        ? { background: C.primary, color: "#fff", borderColor: C.primary }
+                        : { borderColor: C.border }
+                    }
+                  >
+                    {s.label}
+                  </button>
+                );
+              })}
+            </div>
+          )
         )}
       </div>
 

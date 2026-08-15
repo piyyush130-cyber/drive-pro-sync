@@ -11,10 +11,15 @@ import {
   startOfDay,
   startOfMonth,
 } from "date-fns";
-import { getInvitationForToken, submitTokenBooking } from "@/lib/token-booking.functions";
+import {
+  getInvitationForToken,
+  submitTokenBooking,
+  submitTokenAppointmentRequest,
+} from "@/lib/token-booking.functions";
 import { TIME_SLOTS, unavailableForDate, buildMonthGrid } from "@/lib/booking-calendar";
 import { money } from "@/lib/format";
 import { toast } from "sonner";
+import { toDateKey } from "@/lib/schedule-overrides";
 
 export const Route = createFileRoute("/next-lesson/$token")({
   component: NextLessonPage,
@@ -27,12 +32,26 @@ type LessonType = {
   duration_minutes: number;
   price_cents: number;
   category: string;
+  skill_levels?: string[];
 };
+
+const SKILL_LEVEL_FILTERS: { value: string; label: string }[] = [
+  { value: "new_driver", label: "I'm new to driving" },
+  { value: "some_experience", label: "I have some experience" },
+  { value: "retesting", label: "I'm retesting" },
+];
+
+function matchesSkillFilter(t: LessonType, filter: string | null): boolean {
+  if (!filter) return true;
+  if (!t.skill_levels || t.skill_levels.length === 0) return true;
+  return t.skill_levels.includes(filter);
+}
 
 function NextLessonPage() {
   const { token } = Route.useParams();
   const getInvitation = useServerFn(getInvitationForToken);
   const bookLesson = useServerFn(submitTokenBooking);
+  const submitAppointment = useServerFn(submitTokenAppointmentRequest);
 
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -41,6 +60,8 @@ function NextLessonPage() {
     remaining: number;
     flexibleSessionLengthEnabled: boolean;
     remainingPackageHours: number;
+    skillLevelFilterEnabled: boolean;
+    appointmentOnlyDates: string[];
     schoolName: string;
     lessonTypes: LessonType[];
     bookingPaused: boolean;
@@ -62,8 +83,13 @@ function NextLessonPage() {
   const [mpiLocation, setMpiLocation] = useState("");
   const [femaleInstructorOnly, setFemaleInstructorOnly] = useState(false);
   const [sessionHours, setSessionHours] = useState("");
+  const [skillFilter, setSkillFilter] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [appointmentMessage, setAppointmentMessage] = useState("");
+  const [appointmentSubmitting, setAppointmentSubmitting] = useState(false);
+  const [appointmentSubmitted, setAppointmentSubmitted] = useState(false);
+  const [appointmentFormRenderedAt] = useState(() => Date.now());
   const needsMpiLocation =
     selected?.category === "road_test" ||
     selected?.category === "tsr_retest" ||
@@ -77,6 +103,30 @@ function NextLessonPage() {
     () => (selectedDate ? unavailableForDate(selectedDate) : new Set<string>()),
     [selectedDate],
   );
+  const appointmentOnlyDates = useMemo(
+    () => new Set(info?.appointmentOnlyDates ?? []),
+    [info],
+  );
+  const isAppointmentOnly = !!(selectedDate && appointmentOnlyDates.has(toDateKey(selectedDate)));
+
+  async function handleAppointmentRequestSubmit() {
+    setAppointmentSubmitting(true);
+    try {
+      await submitAppointment({
+        data: {
+          token,
+          preferred_date: selectedDate ? toDateKey(selectedDate) : undefined,
+          message: appointmentMessage.trim(),
+          formRenderedAt: appointmentFormRenderedAt,
+        },
+      });
+      setAppointmentSubmitted(true);
+    } catch (err: any) {
+      toast.error(err?.message || "Could not submit your request");
+    } finally {
+      setAppointmentSubmitting(false);
+    }
+  }
 
   async function handleSubmit() {
     if (!selected || !selectedDate || !selectedTime) {
@@ -202,8 +252,31 @@ function NextLessonPage() {
       <main className="max-w-2xl mx-auto px-4 py-6 space-y-6">
         <section className="bg-white border border-slate-200 rounded-xl p-5">
           <h2 className="text-sm font-semibold text-slate-900 mb-3">Choose your lesson</h2>
+          {info.skillLevelFilterEnabled && (
+            <div className="flex flex-wrap gap-2 mb-3">
+              {SKILL_LEVEL_FILTERS.map((f) => {
+                const active = skillFilter === f.value;
+                return (
+                  <button
+                    key={f.value}
+                    type="button"
+                    onClick={() => setSkillFilter(active ? null : f.value)}
+                    className={`rounded-full px-3.5 py-2 text-xs font-semibold border transition ${
+                      active
+                        ? "bg-indigo-600 text-white border-indigo-600"
+                        : "border-slate-200 text-slate-500"
+                    }`}
+                  >
+                    {f.label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
           <div className="grid sm:grid-cols-2 gap-2">
-            {info.lessonTypes.map((lt) => {
+            {info.lessonTypes
+              .filter((t) => matchesSkillFilter(t, skillFilter))
+              .map((lt) => {
               const active = selected?.id === lt.id;
               return (
                 <button
@@ -291,6 +364,7 @@ function NextLessonPage() {
               const inMonth = isSameMonth(d, month);
               const isPast = isBefore(d, today);
               const isSel = selectedDate && isSameDay(d, selectedDate);
+              const isApptOnly = inMonth && !isPast && appointmentOnlyDates.has(toDateKey(d));
               const disabled = !inMonth || isPast;
               return (
                 <button
@@ -300,40 +374,81 @@ function NextLessonPage() {
                   onClick={() => {
                     setSelectedDate(d);
                     setSelectedTime(null);
+                    setAppointmentSubmitted(false);
                   }}
-                  className={`h-9 rounded-full text-sm font-medium transition ${
+                  className={`relative h-9 rounded-full text-sm font-medium transition ${
                     disabled ? "opacity-25 cursor-not-allowed" : ""
                   } ${isSel ? "bg-indigo-600 text-white" : "text-slate-700 hover:bg-slate-100"}`}
+                  title={isApptOnly ? "By appointment only" : undefined}
                 >
                   {d.getDate()}
+                  {isApptOnly && (
+                    <span
+                      className={`absolute bottom-1 left-1/2 -translate-x-1/2 size-1 rounded-full ${
+                        isSel ? "bg-white" : "bg-indigo-600"
+                      }`}
+                    />
+                  )}
                 </button>
               );
             })}
           </div>
-          {selectedDate && (
-            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-              {TIME_SLOTS.map((s) => {
-                const unavailable = blocked.has(s.time);
-                const active = selectedTime === s.time;
-                return (
+          {selectedDate && isAppointmentOnly ? (
+            <div className="space-y-3">
+              {appointmentSubmitted ? (
+                <p className="text-sm text-slate-700">
+                  Thanks — your request for {format(selectedDate, "EEE, MMM d")} has been sent.
+                </p>
+              ) : (
+                <>
+                  <p className="text-xs text-slate-500">
+                    {format(selectedDate, "EEE, MMM d")} is by appointment only. Add a note if
+                    you'd like, and the school will confirm a time.
+                  </p>
+                  <textarea
+                    value={appointmentMessage}
+                    onChange={(e) => setAppointmentMessage(e.target.value)}
+                    placeholder="What are you looking for? (optional)"
+                    rows={3}
+                    className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"
+                  />
                   <button
-                    key={s.time}
                     type="button"
-                    disabled={unavailable}
-                    onClick={() => setSelectedTime(s.time)}
-                    className={`rounded-full px-3 py-2 text-xs font-semibold border transition ${
-                      active
-                        ? "bg-indigo-600 text-white border-indigo-600"
-                        : unavailable
-                          ? "opacity-40 line-through border-slate-200"
-                          : "border-slate-200 hover:border-slate-300"
-                    }`}
+                    onClick={handleAppointmentRequestSubmit}
+                    disabled={appointmentSubmitting}
+                    className="rounded-xl px-4 py-2.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700"
                   >
-                    {s.label}
+                    {appointmentSubmitting ? "Sending…" : "Request this date"}
                   </button>
-                );
-              })}
+                </>
+              )}
             </div>
+          ) : (
+            selectedDate && (
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                {TIME_SLOTS.map((s) => {
+                  const unavailable = blocked.has(s.time);
+                  const active = selectedTime === s.time;
+                  return (
+                    <button
+                      key={s.time}
+                      type="button"
+                      disabled={unavailable}
+                      onClick={() => setSelectedTime(s.time)}
+                      className={`rounded-full px-3 py-2 text-xs font-semibold border transition ${
+                        active
+                          ? "bg-indigo-600 text-white border-indigo-600"
+                          : unavailable
+                            ? "opacity-40 line-through border-slate-200"
+                            : "border-slate-200 hover:border-slate-300"
+                      }`}
+                    >
+                      {s.label}
+                    </button>
+                  );
+                })}
+              </div>
+            )
           )}
         </section>
 

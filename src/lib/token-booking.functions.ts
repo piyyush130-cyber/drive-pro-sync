@@ -1,9 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { pickInstructor } from "@/lib/public-booking.functions";
+import { pickInstructor, assertNotAppointmentOnly } from "@/lib/public-booking.functions";
 import { remainingLessons, remainingPackageHours } from "@/lib/student-balance";
 import { NO_SHOW_ESCALATION_THRESHOLD } from "@/lib/no-show";
 import { isBookingConflictError, BOOKING_CONFLICT_MESSAGE } from "@/lib/booking-conflict-error";
+import { computeAppointmentOnlyDates, toDateKey } from "@/lib/schedule-overrides";
+import { isBotSubmission } from "@/lib/booking-logic";
 
 const TokenSchema = z.object({ token: z.string().uuid() });
 
@@ -36,17 +38,23 @@ export const getInvitationForToken = createServerFn({ method: "POST" })
 
     const remaining = await remainingLessons(supabaseAdmin, student.id);
 
-    const [{ data: settings }, { data: lessonTypes }, { count: femaleCount }] = await Promise.all([
+    const [
+      { data: settings },
+      { data: lessonTypes },
+      { count: femaleCount },
+      { data: overrides },
+      { data: activeInstructors },
+    ] = await Promise.all([
       supabaseAdmin
         .from("school_settings")
         .select(
-          "school_name, booking_paused, mpi_test_locations, theory_lessons_enabled, vehicle_rental_enabled, online_payment_url, flexible_session_length_enabled",
+          "school_name, booking_paused, mpi_test_locations, theory_lessons_enabled, vehicle_rental_enabled, online_payment_url, flexible_session_length_enabled, skill_level_filter_enabled",
         )
         .eq("school_id", invitation.school_id)
         .maybeSingle(),
       supabaseAdmin
         .from("lesson_types")
-        .select("id, name, description, duration_minutes, price_cents, category")
+        .select("id, name, description, duration_minutes, price_cents, category, skill_levels")
         .eq("school_id", invitation.school_id)
         .eq("active", true)
         .order("sort_order"),
@@ -56,18 +64,35 @@ export const getInvitationForToken = createServerFn({ method: "POST" })
         .eq("school_id", invitation.school_id)
         .eq("active", true)
         .eq("is_female", true),
+      supabaseAdmin
+        .from("schedule_overrides")
+        .select("date, instructor_id")
+        .eq("school_id", invitation.school_id)
+        .gte("date", toDateKey(new Date())),
+      supabaseAdmin
+        .from("instructors")
+        .select("id")
+        .eq("school_id", invitation.school_id)
+        .eq("active", true)
+        .eq("status", "active"),
     ]);
 
     const flexibleSessionLengthEnabled = !!settings?.flexible_session_length_enabled;
     const remainingPackageHrs = flexibleSessionLengthEnabled
       ? await remainingPackageHours(supabaseAdmin, student.id)
       : 0;
+    const appointmentOnlyDates = computeAppointmentOnlyDates(
+      overrides ?? [],
+      (activeInstructors ?? []).map((i: any) => i.id),
+    );
 
     return {
       firstName: student.full_name?.split(" ")[0] || "there",
       remaining,
       flexibleSessionLengthEnabled,
       remainingPackageHours: remainingPackageHrs,
+      skillLevelFilterEnabled: !!settings?.skill_level_filter_enabled,
+      appointmentOnlyDates: Array.from(appointmentOnlyDates),
       schoolName: settings?.school_name ?? "your driving school",
       lessonTypes: (lessonTypes ?? []).filter((t: any) => {
         if (t.category === "theory") return !!settings?.theory_lessons_enabled;
@@ -131,6 +156,8 @@ export const submitTokenBooking = createServerFn({ method: "POST" })
       .maybeSingle();
     if (ltErr) throw new Error("Could not load lesson type");
     if (!lt || !lt.active) throw new Error("Invalid lesson type");
+
+    await assertNotAppointmentOnly(supabaseAdmin, invitation.school_id, data.scheduled_at);
 
     const useFlexibleHours = !!settings?.flexible_session_length_enabled && lt.category === "package";
     let bookingDurationMinutes = lt.duration_minutes;
@@ -210,4 +237,85 @@ export const submitTokenBooking = createServerFn({ method: "POST" })
     await notifyBookingCreated(supabaseAdmin, { bookingId: booking.id });
 
     return { ok: true, status: initialStatus };
+  });
+
+const TokenAppointmentRequestSchema = z.object({
+  token: z.string().uuid(),
+  preferred_date: z.string().trim().max(20).optional(),
+  message: z.string().trim().max(2000).optional(),
+  website: z.string().max(200).optional(),
+  formRenderedAt: z.number().optional(),
+});
+
+export const submitTokenAppointmentRequest = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => TokenAppointmentRequestSchema.parse(d))
+  .handler(async ({ data }) => {
+    if (isBotSubmission(data)) return { ok: true };
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: invitation } = await supabaseAdmin
+      .from("lesson_invitations")
+      .select("student_id, school_id")
+      .eq("token", data.token)
+      .maybeSingle();
+    if (!invitation) throw new Error("This link is no longer valid.");
+
+    const { data: student } = await supabaseAdmin
+      .from("students")
+      .select("full_name, email, phone")
+      .eq("id", invitation.student_id)
+      .maybeSingle();
+    if (!student) throw new Error("This link is no longer valid.");
+
+    const { error } = await supabaseAdmin.from("appointment_requests").insert({
+      school_id: invitation.school_id,
+      full_name: student.full_name,
+      email: student.email,
+      phone: student.phone,
+      preferred_date: data.preferred_date || null,
+      message: data.message || null,
+    });
+    if (error) throw new Error("Could not submit your request");
+
+    const { data: settings } = await supabaseAdmin
+      .from("school_settings")
+      .select("school_name")
+      .eq("school_id", invitation.school_id)
+      .maybeSingle();
+    const school_name = settings?.school_name ?? "your driving school";
+
+    const { data: admins } = await supabaseAdmin
+      .from("user_roles")
+      .select("profiles(email)")
+      .eq("school_id", invitation.school_id)
+      .eq("role", "admin");
+
+    const { sendEmail } = await import("@/lib/email.server");
+    for (const a of admins ?? []) {
+      const email = (a as any).profiles?.email;
+      if (!email) continue;
+      await sendEmail({
+        to: email,
+        subject: `Appointment request — ${student.full_name}`,
+        html: `
+          <div style="font-family: -apple-system, sans-serif; max-width: 480px; margin: 0 auto; color: #1A1A2E;">
+            <h2 style="margin-bottom: 8px;">A student is requesting an appointment</h2>
+            <p style="color: #6B6B7B; font-size: 14px;">${school_name}</p>
+            <ul style="list-style: none; padding: 0; font-size: 14px; line-height: 1.8;">
+              <li><strong>Name:</strong> ${student.full_name}</li>
+              ${student.email ? `<li><strong>Email:</strong> ${student.email}</li>` : ""}
+              ${student.phone ? `<li><strong>Phone:</strong> ${student.phone}</li>` : ""}
+              ${data.preferred_date ? `<li><strong>Preferred date:</strong> ${data.preferred_date}</li>` : ""}
+            </ul>
+            ${data.message ? `<p style="font-size: 14px; white-space: pre-wrap;">${data.message}</p>` : ""}
+            <p style="color: #94A3B8; font-size: 11px; margin-top: 24px; padding-top: 12px; border-top: 1px solid #E2E8F0;">
+              Sent via DrivingOps
+            </p>
+          </div>
+        `,
+      });
+    }
+
+    return { ok: true };
   });

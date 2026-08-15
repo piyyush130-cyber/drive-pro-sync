@@ -14,6 +14,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      appointment_requests: {
+        Row: {
+          created_at: string
+          email: string | null
+          full_name: string
+          id: string
+          message: string | null
+          phone: string | null
+          preferred_date: string | null
+          school_id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          full_name: string
+          id?: string
+          message?: string | null
+          phone?: string | null
+          preferred_date?: string | null
+          school_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          full_name?: string
+          id?: string
+          message?: string | null
+          phone?: string | null
+          preferred_date?: string | null
+          school_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_requests_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       booking_payments: {
         Row: {
           amount_cents: number
@@ -636,6 +677,7 @@ export type Database = {
           pickup_available: boolean
           price_cents: number
           school_id: string
+          skill_levels: string[]
           sort_order: number
         }
         Insert: {
@@ -650,6 +692,7 @@ export type Database = {
           pickup_available?: boolean
           price_cents?: number
           school_id: string
+          skill_levels?: string[]
           sort_order?: number
         }
         Update: {
@@ -664,6 +707,7 @@ export type Database = {
           pickup_available?: boolean
           price_cents?: number
           school_id?: string
+          skill_levels?: string[]
           sort_order?: number
         }
         Relationships: [
@@ -741,6 +785,45 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      schedule_overrides: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          instructor_id: string | null
+          school_id: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          instructor_id?: string | null
+          school_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          instructor_id?: string | null
+          school_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schedule_overrides_instructor_id_fkey"
+            columns: ["instructor_id"]
+            isOneToOne: false
+            referencedRelation: "instructors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "schedule_overrides_school_id_fkey"
+            columns: ["school_id"]
+            isOneToOne: false
+            referencedRelation: "schools"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       school_billing: {
         Row: {
@@ -823,6 +906,7 @@ export type Database = {
           school_id: string
           school_name: string
           service_area: string | null
+          skill_level_filter_enabled: boolean
           theory_lessons_enabled: boolean
           updated_at: string
           vehicle_rental_enabled: boolean
@@ -857,6 +941,7 @@ export type Database = {
           school_id: string
           school_name?: string
           service_area?: string | null
+          skill_level_filter_enabled?: boolean
           theory_lessons_enabled?: boolean
           updated_at?: string
           vehicle_rental_enabled?: boolean
@@ -891,6 +976,7 @@ export type Database = {
           school_id?: string
           school_name?: string
           service_area?: string | null
+          skill_level_filter_enabled?: boolean
           theory_lessons_enabled?: boolean
           updated_at?: string
           vehicle_rental_enabled?: boolean
