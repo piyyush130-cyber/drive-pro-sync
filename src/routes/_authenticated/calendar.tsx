@@ -9,20 +9,27 @@ export const Route = createFileRoute("/_authenticated/calendar")({
   component: CalendarPage,
 });
 
-function lessonClasses(status: string) {
-  switch (status) {
-    case "confirmed":
-      return "bg-blue-50 border-blue-200 text-blue-800";
-    case "pending":
-      return "bg-amber-50 border-amber-200 text-amber-800";
-    case "completed":
-      return "bg-emerald-50 border-emerald-200 text-emerald-800";
-    case "no_show":
-    case "cancelled":
-      return "bg-red-50 border-red-200 text-red-700";
-    default:
-      return "bg-slate-50 border-slate-200 text-slate-700";
-  }
+// Same hex values as statusTone in @/lib/format, so a lesson chip's tint
+// always agrees with the StatusPill rendered inside it — the two were
+// previously driven by separate, inconsistent color maps (e.g. "confirmed"
+// showed blue here but emerald on its own pill).
+const STATUS_HEX: Record<string, string> = {
+  pending: "#F59E0B",
+  confirmed: "#10B981",
+  completed: "#3B82F6",
+  cancelled: "#EF4444",
+  declined: "#EF4444",
+  no_show: "#EF4444",
+  rescheduled: "#3B82F6",
+};
+
+function lessonChipStyle(status: string): React.CSSProperties {
+  const hex = STATUS_HEX[status] ?? "#94A3B8";
+  return {
+    background: `${hex}1A`,
+    borderLeft: `3px solid ${hex}`,
+    color: "#1A1A2E",
+  };
 }
 
 function CalendarPage() {
@@ -73,7 +80,9 @@ function CalendarPage() {
     <div className="p-6 lg:p-10 max-w-7xl">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-2xl font-medium">Calendar</h1>
+          <h1 className="text-2xl tracking-tight" style={{ fontFamily: "var(--font-display)" }}>
+            Calendar
+          </h1>
           <p className="text-sm text-slate-500 mt-1">
             Week of {start.toLocaleDateString(undefined, { month: "long", day: "numeric" })}
           </p>
@@ -82,7 +91,7 @@ function CalendarPage() {
           <select
             value={instructorId}
             onChange={(e) => setInstructorId(e.target.value)}
-            className="text-sm bg-white border border-slate-200 rounded-md px-3 py-1.5"
+            className="text-sm btn-secondary py-1.5"
           >
             <option value="">All instructors</option>
             {instructorsQ.data?.map((i) => (
@@ -91,22 +100,13 @@ function CalendarPage() {
               </option>
             ))}
           </select>
-          <button
-            onClick={() => setOffset(offset - 1)}
-            className="px-3 py-1.5 text-sm bg-white border border-slate-200 rounded-md"
-          >
+          <button onClick={() => setOffset(offset - 1)} className="text-sm btn-secondary py-1.5 px-3">
             ←
           </button>
-          <button
-            onClick={() => setOffset(0)}
-            className="px-3 py-1.5 text-sm bg-white border border-slate-200 rounded-md"
-          >
+          <button onClick={() => setOffset(0)} className="text-sm btn-secondary py-1.5 px-3">
             Today
           </button>
-          <button
-            onClick={() => setOffset(offset + 1)}
-            className="px-3 py-1.5 text-sm bg-white border border-slate-200 rounded-md"
-          >
+          <button onClick={() => setOffset(offset + 1)} className="text-sm btn-secondary py-1.5 px-3">
             →
           </button>
         </div>
@@ -122,13 +122,21 @@ function CalendarPage() {
           return (
             <div
               key={dayStr}
-              className={`bg-white border rounded-xl p-3 min-h-[180px] ${
-                isToday ? "border-blue-300" : "border-slate-200"
-              }`}
+              className="rounded-xl p-3 min-h-[180px] transition-shadow hover:shadow-md"
+              style={{
+                background: isToday ? "rgba(201,168,76,0.06)" : "#FAF8F4",
+                border: isToday ? "1.5px solid #C9A84C" : "1px solid rgba(201,168,76,0.20)",
+                boxShadow: "0 2px 12px rgba(27,43,75,0.05)",
+              }}
             >
-              <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
-                {day.toLocaleDateString(undefined, { weekday: "short" })}{" "}
-                <span className={isToday ? "text-blue-600" : "text-slate-400"}>
+              <div className="text-xs font-semibold uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                <span className="text-slate-500">
+                  {day.toLocaleDateString(undefined, { weekday: "short" })}
+                </span>
+                <span
+                  className={isToday ? "rounded-full px-1.5 text-white" : "text-slate-400"}
+                  style={isToday ? { background: "#C9A84C" } : undefined}
+                >
                   {day.getDate()}
                 </span>
               </div>
@@ -136,7 +144,8 @@ function CalendarPage() {
                 {dayLessons.map((b: any) => (
                   <div
                     key={b.id}
-                    className={`text-xs p-2 rounded border ${lessonClasses(b.status)}`}
+                    className="text-xs p-2 rounded-md shadow-sm"
+                    style={lessonChipStyle(b.status)}
                   >
                     <div className="font-semibold">{fmtTime(b.scheduled_at)}</div>
                     <div className="truncate">{b.students?.full_name}</div>

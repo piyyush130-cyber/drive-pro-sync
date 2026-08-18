@@ -65,29 +65,23 @@ function StudentsPage() {
     <div className="p-6 lg:p-10 max-w-6xl">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-medium">Students</h1>
+          <h1 className="text-2xl tracking-tight" style={{ fontFamily: "var(--font-display)" }}>
+            Students
+          </h1>
           <p className="text-sm text-slate-500 mt-1">{list.length} students</p>
         </div>
-        <button
-          onClick={() => setAdding(!adding)}
-          className="btn-primary text-sm font-medium px-3 py-2 rounded-md"
-        >
+        <button onClick={() => setAdding(!adding)} className="btn-primary text-sm py-2">
           {adding ? "Cancel" : "+ Add student"}
         </button>
       </div>
 
       {adding && (
-        <form
-          onSubmit={addStudent}
-          className="bg-white border border-slate-200 rounded-xl p-5 mb-6 grid sm:grid-cols-2 gap-3"
-        >
-          <input name="full_name" required placeholder="Full name" className="input" />
-          <input name="phone" required placeholder="Phone" className="input" />
-          <input name="email" type="email" placeholder="Email" className="input" />
-          <input name="pickup_address" placeholder="Pickup address" className="input" />
-          <button className="btn-primary py-2 rounded-md text-sm font-medium sm:col-span-2">
-            Save
-          </button>
+        <form onSubmit={addStudent} className="card-premium p-5 mb-6 grid sm:grid-cols-2 gap-3">
+          <input name="full_name" required placeholder="Full name" className="input-premium" />
+          <input name="phone" required placeholder="Phone" className="input-premium" />
+          <input name="email" type="email" placeholder="Email" className="input-premium" />
+          <input name="pickup_address" placeholder="Pickup address" className="input-premium" />
+          <button className="btn-primary text-sm py-2.5 sm:col-span-2">Save</button>
         </form>
       )}
 
@@ -95,12 +89,15 @@ function StudentsPage() {
         value={q}
         onChange={(e) => setQ(e.target.value)}
         placeholder="Search students..."
-        className="input mb-4 max-w-sm"
+        className="input-premium mb-4 max-w-sm"
       />
 
-      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+      <div className="card-premium overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+          <thead
+            className="text-xs uppercase text-slate-500"
+            style={{ background: "#F0EBE1" }}
+          >
             <tr>
               <th className="text-left px-5 py-3">Name</th>
               <th className="text-left px-5 py-3">Contact</th>
@@ -109,13 +106,13 @@ function StudentsPage() {
               <th className="text-right px-5 py-3"></th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-[rgba(201,168,76,0.15)]">
             {list.map((s: any) => {
               const completed =
                 s.bookings?.filter((b: any) => b.status === "completed").length ?? 0;
               const remaining = Math.max(0, (s.lessons_purchased ?? 0) - completed);
               return (
-                <tr key={s.id} className="hover:bg-slate-50">
+                <tr key={s.id} className="hover:bg-[rgba(201,168,76,0.06)] transition-colors">
                   <td className="px-5 py-3 font-medium">
                     <Link to="/students/$id" params={{ id: s.id }} className="hover:text-blue-600">
                       {s.full_name}
@@ -151,7 +148,7 @@ function StudentsPage() {
                   <td className="px-5 py-3 text-right">
                     <button
                       onClick={() => deleteStudent(s.id, s.full_name)}
-                      className="text-xs text-red-600 hover:underline"
+                      className="text-xs btn-danger-soft py-1 px-2.5"
                     >
                       Delete
                     </button>
@@ -165,19 +162,6 @@ function StudentsPage() {
           <div className="text-center py-10 text-sm text-slate-500">No students yet.</div>
         )}
       </div>
-
-      <style>{`
-        .input {
-          width: 100%;
-          background: #fff;
-          border: 1px solid #e2e8f0;
-          border-radius: 6px;
-          padding: 8px 12px;
-          font-size: 14px;
-          outline: none;
-        }
-        .input:focus { border-color: #3b82f6; background: #fff; }
-      `}</style>
     </div>
   );
 }

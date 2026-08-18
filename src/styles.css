@@ -280,6 +280,26 @@
   border-radius: 0.75rem;
   transition: background 120ms ease;
 }
+.btn-danger:hover { background: #DC2626; }
+
+/* Lighter-weight destructive action (e.g. "Deny") — same red family as
+   btn-danger but tinted rather than solid, for actions that are reversible
+   or less severe than a permanent delete/cancel. */
+@utility btn-danger-soft {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgba(239,68,68,0.10);
+  color: #B91C1C;
+  font-weight: 600;
+  font-size: 14px;
+  padding: 10px 14px;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(239,68,68,0.20);
+  transition: background 120ms ease, border-color 120ms ease;
+}
+.btn-danger-soft:hover { background: rgba(239,68,68,0.16); border-color: rgba(239,68,68,0.32); }
 
 @utility eyebrow {
   font-size: 10px;

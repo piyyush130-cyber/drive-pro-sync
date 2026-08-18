@@ -299,7 +299,10 @@ function Dashboard() {
             <span className="h-px w-5 shrink-0" style={{ background: "#C9A84C" }} />
             <div className="eyebrow">Daily Dispatch</div>
           </div>
-          <h1 className="text-2xl md:text-3xl font-semibold tracking-tight mt-1.5">
+          <h1
+            className="text-2xl md:text-3xl tracking-tight mt-1.5"
+            style={{ fontFamily: "var(--font-display)" }}
+          >
             {greeting} at {setupQ.data?.schoolName ?? "your school"}
           </h1>
           <p className="text-sm text-slate-500 mt-1">{today}</p>
@@ -428,7 +431,9 @@ function Dashboard() {
           <div className="card-premium overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-center gap-3">
               <div className="min-w-0">
-                <h3 className="font-semibold tracking-tight">Dispatch queue</h3>
+                <h3 className="text-lg tracking-tight" style={{ fontFamily: "var(--font-display)" }}>
+                  Dispatch queue
+                </h3>
                 <div className="text-xs text-slate-500 mt-0.5">Today's scheduled lessons</div>
               </div>
               <div className="flex items-center gap-3 shrink-0">
@@ -471,14 +476,14 @@ function Dashboard() {
                     type="button"
                     disabled={cancelling}
                     onClick={handleCancelToday}
-                    className="rounded-md bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-60"
+                    className="text-xs btn-danger disabled:opacity-60"
                   >
                     {cancelling ? "Cancelling…" : "Confirm cancellation"}
                   </button>
                   <button
                     type="button"
                     onClick={() => setCancelPanelOpen(false)}
-                    className="rounded-md bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50"
+                    className="text-xs btn-secondary"
                   >
                     Dismiss
                   </button>
@@ -610,7 +615,7 @@ function Dashboard() {
                   type="button"
                   disabled={updatingId === b.id}
                   onClick={() => updateBooking(b.id, { status: "confirmed" })}
-                  className="rounded-md bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+                  className="text-xs btn-primary py-2 disabled:opacity-60"
                 >
                   Approve
                 </button>
@@ -618,7 +623,7 @@ function Dashboard() {
                   type="button"
                   disabled={updatingId === b.id}
                   onClick={() => updateBooking(b.id, { status: "declined" })}
-                  className="rounded-md bg-white px-3 py-2 text-xs font-semibold text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50 disabled:opacity-60"
+                  className="text-xs btn-danger-soft py-2 disabled:opacity-60"
                 >
                   Deny
                 </button>
@@ -638,7 +643,9 @@ function Dashboard() {
         <div className="card-premium p-5 mt-6">
           <div className="flex items-center gap-2 mb-4">
             <Scale className="size-4 text-slate-400" />
-            <h3 className="font-semibold tracking-tight">Instructor load this week</h3>
+            <h3 className="text-lg tracking-tight" style={{ fontFamily: "var(--font-display)" }}>
+              Instructor load this week
+            </h3>
           </div>
           <div className="space-y-2.5">
             {instructorLoadQ.data.rows.map((r) => {

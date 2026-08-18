@@ -175,23 +175,27 @@ function BookingsPage() {
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 mb-6">
         <div className="min-w-0">
           <div className="eyebrow text-blue-700">Booking Queue</div>
-          <h1 className="text-2xl md:text-3xl font-semibold tracking-tight mt-1">
+          <h1
+            className="text-2xl md:text-3xl tracking-tight mt-1"
+            style={{ fontFamily: "var(--font-display)" }}
+          >
             Review &amp; confirm bookings
           </h1>
           <p className="text-sm text-slate-500 mt-1">
             Approve, decline, assign an instructor, and update payment.
           </p>
         </div>
-        <div className="flex gap-1 bg-white rounded-lg p-1 ring-1 ring-slate-200 shrink-0">
+        <div className="flex gap-1 bg-white rounded-lg p-1 ring-1 ring-[rgba(201,168,76,0.25)] shrink-0">
           {(["pending", "all", "cancellations"] as const).map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
               className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${
                 filter === f
-                  ? "bg-blue-600 text-white shadow-sm"
+                  ? "text-white shadow-sm"
                   : "text-slate-600 hover:bg-slate-50"
               }`}
+              style={filter === f ? { background: "#1B2B4B" } : undefined}
             >
               {f === "pending" ? "Pending" : f === "all" ? "All" : "Cancellation requests"}
             </button>
@@ -308,13 +312,13 @@ function BookingsPage() {
                 <>
                   <button
                     onClick={() => update(b.id, { status: "confirmed" })}
-                    className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded-md font-semibold hover:bg-blue-700"
+                    className="text-xs btn-primary py-1.5"
                   >
                     Approve
                   </button>
                   <button
                     onClick={() => update(b.id, { status: "declined" })}
-                    className="text-xs bg-white ring-1 ring-slate-200 text-slate-700 px-3 py-1.5 rounded-md font-semibold hover:bg-slate-50"
+                    className="text-xs btn-danger-soft py-1.5"
                   >
                     Deny
                   </button>
@@ -324,13 +328,13 @@ function BookingsPage() {
                 <>
                   <button
                     onClick={() => update(b.id, { status: "completed" })}
-                    className="text-xs bg-emerald-600 text-white px-3 py-1.5 rounded-md font-semibold hover:bg-emerald-700"
+                    className="text-xs btn-primary py-1.5"
                   >
                     Mark completed
                   </button>
                   <button
                     onClick={() => update(b.id, { status: "no_show" })}
-                    className="text-xs bg-white ring-1 ring-slate-200 text-slate-700 px-3 py-1.5 rounded-md font-semibold hover:bg-slate-50"
+                    className="text-xs btn-danger-soft py-1.5"
                   >
                     No-show
                   </button>
@@ -339,7 +343,7 @@ function BookingsPage() {
               {(b.status === "pending" || b.status === "confirmed") && (
                 <button
                   onClick={() => update(b.id, { status: "cancelled" })}
-                  className="text-xs bg-white ring-1 ring-red-200 text-red-600 px-3 py-1.5 rounded-md font-semibold hover:bg-red-50"
+                  className="text-xs btn-danger-soft py-1.5"
                 >
                   Cancel
                 </button>
@@ -350,17 +354,14 @@ function BookingsPage() {
                     <button
                       key={m}
                       onClick={() => markFullyPaid(b, m)}
-                      className="text-xs border border-slate-200 px-2.5 py-1.5 rounded-md font-semibold hover:bg-slate-50"
+                      className="text-xs btn-secondary py-1.5 px-2.5"
                     >
                       {m}
                     </button>
                   ))}
                 </div>
               )}
-              <button
-                onClick={() => deleteBooking(b.id)}
-                className="text-xs text-red-600 hover:underline px-2"
-              >
+              <button onClick={() => deleteBooking(b.id)} className="text-xs btn-danger py-1.5">
                 Delete
               </button>
             </div>
@@ -476,14 +477,14 @@ function CancellationRequestsPanel({
               <button
                 onClick={() => handle(r.id, "approve")}
                 disabled={busyId === r.id}
-                className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded-md font-semibold hover:bg-blue-700 disabled:opacity-50"
+                className="text-xs btn-primary py-1.5 disabled:opacity-50"
               >
                 Approve cancellation
               </button>
               <button
                 onClick={() => handle(r.id, "reject")}
                 disabled={busyId === r.id}
-                className="text-xs bg-white ring-1 ring-slate-200 text-slate-700 px-3 py-1.5 rounded-md font-semibold hover:bg-slate-50 disabled:opacity-50"
+                className="text-xs btn-danger-soft py-1.5 disabled:opacity-50"
               >
                 Deny
               </button>
