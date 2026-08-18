@@ -269,11 +269,16 @@ function BookingsPage() {
               </StatusPill>
               {b.female_instructor_requested && (
                 <span
-                  className={`text-xs font-semibold px-2 py-1 rounded-full ${
+                  className="text-xs font-semibold px-2.5 py-1 rounded-full"
+                  style={
                     b.instructor_id
-                      ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200"
-                      : "bg-purple-600 text-white"
-                  }`}
+                      ? {
+                          background: "rgba(201,168,76,0.14)",
+                          color: "#8A6D1F",
+                          border: "1px solid rgba(201,168,76,0.35)",
+                        }
+                      : { background: "#C9A84C", color: "#1B2B4B" }
+                  }
                   title={
                     b.instructor_id
                       ? "Student requested a female instructor"

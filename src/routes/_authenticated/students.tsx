@@ -114,13 +114,22 @@ function StudentsPage() {
               return (
                 <tr key={s.id} className="hover:bg-[rgba(201,168,76,0.06)] transition-colors">
                   <td className="px-5 py-3 font-medium">
-                    <Link to="/students/$id" params={{ id: s.id }} className="hover:text-blue-600">
+                    <Link
+                      to="/students/$id"
+                      params={{ id: s.id }}
+                      className="hover:text-[#1B2B4B]"
+                    >
                       {s.full_name}
                     </Link>
                     {s.incident_notes && (
                       <span
                         title="Has incident notes"
-                        className="ml-1.5 inline-block text-[10px] font-semibold text-amber-700 bg-amber-100 border border-amber-200 rounded px-1 align-middle"
+                        className="ml-1.5 inline-block text-[10px] font-semibold rounded px-1 align-middle"
+                        style={{
+                          color: "#8A6D1F",
+                          background: "rgba(201,168,76,0.16)",
+                          border: "1px solid rgba(201,168,76,0.35)",
+                        }}
                       >
                         !
                       </span>
@@ -128,7 +137,12 @@ function StudentsPage() {
                     {isNoShowFlagged(s.bookings ?? []) && (
                       <span
                         title="Repeated no-shows — future bookings require manual confirmation"
-                        className="ml-1.5 inline-block text-[10px] font-semibold text-red-700 bg-red-100 border border-red-200 rounded px-1 align-middle"
+                        className="ml-1.5 inline-block text-[10px] font-semibold rounded px-1 align-middle"
+                        style={{
+                          color: "#B91C1C",
+                          background: "rgba(239,68,68,0.10)",
+                          border: "1px solid rgba(239,68,68,0.20)",
+                        }}
                       >
                         No-show
                       </span>

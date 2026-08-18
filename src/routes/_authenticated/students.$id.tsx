@@ -238,7 +238,9 @@ function StudentDetail() {
       </Link>
       <div className="flex items-start justify-between mt-3 mb-6">
         <div>
-          <h1 className="text-2xl font-medium text-slate-900">{s.full_name}</h1>
+          <h1 className="text-2xl tracking-tight" style={{ fontFamily: "var(--font-display)" }}>
+            {s.full_name}
+          </h1>
           <p className="text-sm text-slate-500 mt-1">
             {s.phone} · {s.email ?? "no email"}
           </p>
@@ -246,15 +248,27 @@ function StudentDetail() {
       </div>
 
       {isNoShowFlagged(bookings) && (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 mb-6 text-sm text-red-800">
+        <div
+          className="rounded-xl px-4 py-3 mb-6 text-sm"
+          style={{
+            background: "rgba(239,68,68,0.06)",
+            border: "1px solid rgba(239,68,68,0.20)",
+            color: "#B91C1C",
+          }}
+        >
           {countNoShows(bookings)} no-shows on record — new bookings from this student always land
           as pending and require manual confirmation, regardless of your approval settings.
         </div>
       )}
 
       {(tsrBookings.length > 0 || tsrVerifications.length > 0) && (
-        <section className="bg-white border border-amber-200 rounded-xl p-5 mb-6">
-          <h2 className="font-medium text-slate-900 mb-1">TSR / Retest package (MB)</h2>
+        <section
+          className="card-premium p-5 mb-6"
+          style={{ borderColor: "rgba(201,168,76,0.45)" }}
+        >
+          <h2 className="text-lg tracking-tight mb-1" style={{ fontFamily: "var(--font-display)" }}>
+            TSR / Retest package (MB)
+          </h2>
           <p className="text-xs text-slate-500 mb-3">
             MPI Training Support Requirement — 5 hours of documented instruction. Instructors mark
             verification form issuance from their booking view.
@@ -275,8 +289,10 @@ function StudentDetail() {
         </section>
       )}
 
-      <section className="bg-white border border-slate-200 rounded-xl p-5 mb-6">
-        <h2 className="font-medium text-slate-900 mb-4">Lesson package</h2>
+      <section className="card-premium p-5 mb-6">
+        <h2 className="text-lg tracking-tight mb-4" style={{ fontFamily: "var(--font-display)" }}>
+          Lesson package
+        </h2>
         <div className="grid grid-cols-3 gap-4 mb-4">
           <div>
             <div className="text-2xl font-semibold text-slate-900">{s.lessons_purchased ?? 0}</div>
@@ -300,7 +316,7 @@ function StudentDetail() {
             value={addAmount}
             onChange={(e) => setAddAmount(e.target.value)}
             placeholder="Lessons"
-            className="w-28 text-sm border border-slate-200 rounded-md px-3 py-2 outline-none focus:border-blue-500"
+            className="w-28 text-sm rounded-xl px-3 py-2 outline-none bg-[#F5F1EA] border border-[rgba(201,168,76,0.20)] text-[#1A1A2E] focus:border-[#1B2B4B] transition-colors"
           />
           <button
             onClick={addLessons}
@@ -312,8 +328,10 @@ function StudentDetail() {
       </section>
 
       {schoolSettingsQ.data?.flexible_session_length_enabled && (
-        <section className="bg-white border border-slate-200 rounded-xl p-5 mb-6">
-          <h2 className="font-medium text-slate-900 mb-1">Package hours</h2>
+        <section className="card-premium p-5 mb-6">
+          <h2 className="text-lg tracking-tight mb-1" style={{ fontFamily: "var(--font-display)" }}>
+            Package hours
+          </h2>
           <p className="text-xs text-slate-500 mb-3">
             Flexible session length is on for your school — this student can split these hours
             across sessions of any length when booking a Package Lesson.
@@ -346,7 +364,7 @@ function StudentDetail() {
               value={addHoursAmount}
               onChange={(e) => setAddHoursAmount(e.target.value)}
               placeholder="Hours"
-              className="w-28 text-sm border border-slate-200 rounded-md px-3 py-2 outline-none focus:border-blue-500"
+              className="w-28 text-sm rounded-xl px-3 py-2 outline-none bg-[#F5F1EA] border border-[rgba(201,168,76,0.20)] text-[#1A1A2E] focus:border-[#1B2B4B] transition-colors"
             />
             <button
               onClick={addPackageHours}
@@ -358,10 +376,12 @@ function StudentDetail() {
         </section>
       )}
 
-      <section className="bg-white border border-slate-200 rounded-xl p-5 mb-6">
+      <section className="card-premium p-5 mb-6">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
-            <h2 className="font-medium text-slate-900">Next lesson invitation</h2>
+            <h2 className="text-lg tracking-tight" style={{ fontFamily: "var(--font-display)" }}>
+              Next lesson invitation
+            </h2>
             {invitationQ.data ? (
               <p className="text-xs text-slate-500 mt-1">
                 Last sent {fmtDateTime(invitationQ.data.sent_at)} ·{" "}
@@ -385,9 +405,11 @@ function StudentDetail() {
         </div>
       </section>
 
-      <section className="bg-white border border-slate-200 rounded-xl p-5 mb-6">
+      <section className="card-premium p-5 mb-6">
         <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-          <h2 className="font-medium text-slate-900">Progress</h2>
+          <h2 className="text-lg tracking-tight" style={{ fontFamily: "var(--font-display)" }}>
+            Progress
+          </h2>
           <div className="flex items-center gap-2">
             <span className="text-xs text-slate-500 uppercase tracking-wider">
               Road-test readiness
@@ -448,7 +470,7 @@ function StudentDetail() {
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           placeholder="General notes..."
-          className="mt-4 w-full text-sm border border-slate-200 rounded-md p-2 min-h-[80px] bg-white outline-none focus:border-blue-500"
+          className="input-premium mt-4 min-h-[80px]"
         />
 
         <div className="flex justify-end mt-3">
@@ -461,8 +483,10 @@ function StudentDetail() {
         </div>
       </section>
 
-      <section className="bg-white border border-slate-200 rounded-xl p-5 mb-6">
-        <h2 className="font-medium text-slate-900 mb-4">Pickup & notes</h2>
+      <section className="card-premium p-5 mb-6">
+        <h2 className="text-lg tracking-tight mb-4" style={{ fontFamily: "var(--font-display)" }}>
+          Pickup & notes
+        </h2>
         <div className="text-sm space-y-2">
           <div>
             <span className="text-slate-400 text-xs uppercase tracking-wider">Pickup</span>
@@ -479,8 +503,10 @@ function StudentDetail() {
         </div>
       </section>
 
-      <section className="bg-white border border-amber-200 rounded-xl p-5 mb-6">
-        <h2 className="font-medium text-slate-900 mb-1">Incidents & complaints</h2>
+      <section className="card-premium p-5 mb-6" style={{ borderColor: "rgba(201,168,76,0.45)" }}>
+        <h2 className="text-lg tracking-tight mb-1" style={{ fontFamily: "var(--font-display)" }}>
+          Incidents & complaints
+        </h2>
         <p className="text-xs text-slate-500 mb-3">
           Internal notes only — never shown to the student or instructor.
         </p>
@@ -488,7 +514,7 @@ function StudentDetail() {
           value={incidentNotes}
           onChange={(e) => setIncidentNotes(e.target.value)}
           placeholder="No incidents recorded."
-          className="w-full text-sm border border-slate-200 rounded-md p-2 min-h-[70px] bg-white outline-none focus:border-amber-500"
+          className="input-premium min-h-[70px]"
         />
         <div className="flex justify-end mt-3">
           <button
@@ -500,8 +526,14 @@ function StudentDetail() {
         </div>
       </section>
 
-      <section className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-        <div className="px-5 py-3 border-b border-slate-100 font-medium text-slate-900">
+      <section className="card-premium overflow-hidden">
+        <div
+          className="px-5 py-3 text-lg tracking-tight"
+          style={{
+            borderBottom: "1px solid rgba(201,168,76,0.20)",
+            fontFamily: "var(--font-display)",
+          }}
+        >
           Lesson history
         </div>
         <div className="divide-y divide-slate-100">
