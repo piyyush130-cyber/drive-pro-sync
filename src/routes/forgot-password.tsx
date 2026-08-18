@@ -59,13 +59,21 @@ function ForgotPasswordPage() {
 
         {sent ? (
           <>
-            <h1 className="text-2xl font-semibold mt-3 mb-1" style={{ color: "#1A1A2E" }}>
+            <h1 className="text-2xl font-semibold mt-3 mb-2" style={{ color: "#1A1A2E" }}>
               Check your email
             </h1>
-            <p className="text-sm" style={{ color: "#6B6B7B" }}>
-              If an account exists for <strong>{email}</strong>, we've sent a link to reset your
-              password. It may take a minute to arrive — check your spam folder too.
+            <p className="text-sm leading-relaxed mb-6" style={{ color: "#6B6B7B" }}>
+              If an account exists for <strong style={{ color: "#1A1A2E" }}>{email}</strong>,
+              we've sent a link to reset your password. It may take a minute to arrive — check
+              your spam folder too.
             </p>
+            <Link
+              to="/auth"
+              className="block w-full text-center rounded-xl py-3 font-semibold text-white transition-all duration-150 hover:brightness-110"
+              style={{ background: "linear-gradient(90deg, #1B2B4B, #243660)" }}
+            >
+              Back to login
+            </Link>
           </>
         ) : (
           <>
