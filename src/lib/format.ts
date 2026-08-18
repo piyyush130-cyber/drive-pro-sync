@@ -9,6 +9,19 @@ export const fmtTime = (iso: string) =>
 
 export const fmtDateTime = (iso: string) => `${fmtDate(iso)} · ${fmtTime(iso)}`;
 
+const MONTH_NAMES = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+
+// "3 July, 2026" — built manually rather than via toLocaleDateString so the
+// format is identical everywhere regardless of the visitor's locale/browser
+// settings (which is what produced inconsistent "7/3/2026"-style output).
+export const fmtLongDate = (input: string | Date) => {
+  const d = typeof input === "string" ? new Date(input) : input;
+  return `${d.getDate()} ${MONTH_NAMES[d.getMonth()]}, ${d.getFullYear()}`;
+};
+
 export const statusLabel = (s: string) =>
   s.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 

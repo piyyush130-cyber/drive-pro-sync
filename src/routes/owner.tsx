@@ -14,6 +14,8 @@ import {
   ownerDeleteSchool,
 } from "@/lib/owner.functions";
 import { PLANS, type PlanKey } from "@/lib/plans";
+import { fmtLongDate } from "@/lib/format";
+import { StatusPill } from "@/components/StatCard";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/owner")({
@@ -39,6 +41,9 @@ const STATUS_TONE: Record<string, string> = {
   free_forever: "bg-purple-100 text-purple-700",
   suspended: "bg-slate-200 text-slate-700",
 };
+
+const ACTION_BTN_BASE =
+  "inline-flex items-center justify-center gap-1.5 text-xs font-semibold h-8 px-3 rounded-lg transition-all duration-150 hover:-translate-y-px disabled:opacity-50 disabled:hover:translate-y-0 disabled:cursor-not-allowed";
 
 function OwnerPage() {
   const navigate = useNavigate();
@@ -227,78 +232,79 @@ function OwnerPage() {
                   <th className="text-right px-5 py-3">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-200">
                 {visibleSchools.map((s) => {
                   const status = s.billing?.billing_status ?? "no billing set up";
                   const plan = s.billing?.plan as PlanKey | undefined;
                   const isSuspended = status === "suspended";
                   const isBusy = busyId === s.id;
                   return (
-                    <tr key={s.id} className="hover:bg-slate-50">
+                    <tr key={s.id} className="even:bg-slate-50/70 hover:bg-blue-50/60 transition-colors">
                       <td className="px-5 py-3">
                         <div className="font-medium text-slate-900">{s.name}</div>
                         <div className="text-xs text-slate-400">/{s.slug}</div>
                       </td>
                       <td className="px-5 py-3 text-slate-600">{plan ? PLANS[plan].name : "—"}</td>
                       <td className="px-5 py-3">
-                        <span
-                          className={`text-xs px-2 py-1 rounded-full font-medium ${STATUS_TONE[status] ?? "bg-slate-100 text-slate-600"}`}
-                        >
-                          {STATUS_LABEL[status] ?? status}
-                        </span>
-                        {s.isDormant && (
-                          <span className="ml-1.5 text-xs px-2 py-1 rounded-full font-medium bg-slate-800 text-white">
-                            Dormant
-                          </span>
-                        )}
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <StatusPill tone={STATUS_TONE[status] ?? "bg-slate-100 text-slate-600"}>
+                            {STATUS_LABEL[status] ?? status}
+                          </StatusPill>
+                          {s.isDormant && (
+                            <StatusPill tone="bg-slate-800 text-white">Dormant</StatusPill>
+                          )}
+                        </div>
                         {s.billing?.trial_ends_at && status === "trialing" && (
                           <div className="text-xs text-slate-400 mt-1">
-                            ends {new Date(s.billing.trial_ends_at).toLocaleDateString()}
+                            ends {fmtLongDate(s.billing.trial_ends_at)}
                           </div>
                         )}
                         {s.billing?.grace_period_ends_at && status === "grace_period" && (
                           <div className="text-xs text-slate-400 mt-1">
-                            grace ends{" "}
-                            {new Date(s.billing.grace_period_ends_at).toLocaleDateString()}
+                            grace ends {fmtLongDate(s.billing.grace_period_ends_at)}
                           </div>
                         )}
                         {s.lockedOutSince && (
                           <div className="text-xs text-slate-400 mt-1">
-                            locked out since {new Date(s.lockedOutSince).toLocaleDateString()}
+                            locked out since {fmtLongDate(s.lockedOutSince)}
                           </div>
                         )}
                       </td>
                       <td className="px-5 py-3 text-slate-600">{s.instructorCount}</td>
                       <td className="px-5 py-3 text-slate-400 text-xs">
-                        {new Date(s.createdAt).toLocaleDateString()}
+                        {fmtLongDate(s.createdAt)}
                       </td>
                       <td className="px-5 py-3">
-                        <div className="flex items-center justify-end gap-2 flex-wrap">
+                        <div className="flex items-center justify-end gap-1.5 flex-wrap">
                           <button
                             onClick={() => copyPortalLink(s.slug)}
-                            className="text-xs border border-slate-200 px-2.5 py-1.5 rounded-md hover:bg-slate-50"
+                            className={`${ACTION_BTN_BASE} text-white shadow-sm ${
+                              copiedSlug === s.slug
+                                ? "bg-emerald-600"
+                                : "bg-blue-600 hover:bg-blue-700"
+                            }`}
                           >
                             {copiedSlug === s.slug ? (
                               <>
-                                <Check className="size-3.5 inline mr-1" /> Copied!
+                                <Check className="size-3.5" /> Copied!
                               </>
                             ) : (
                               <>
-                                <Copy className="size-3.5 inline mr-1" /> Portal link
+                                <Copy className="size-3.5" /> Portal link
                               </>
                             )}
                           </button>
                           <button
                             disabled={isBusy}
                             onClick={() => handleExtendTrial(s.id)}
-                            className="text-xs border border-slate-200 px-2.5 py-1.5 rounded-md hover:bg-slate-50 disabled:opacity-50"
+                            className={`${ACTION_BTN_BASE} bg-slate-100 text-slate-700 hover:bg-slate-200`}
                           >
                             Extend trial
                           </button>
                           <button
                             disabled={isBusy || status === "free_forever"}
                             onClick={() => handleMarkFreeForever(s.id, s.name)}
-                            className="text-xs border border-slate-200 px-2.5 py-1.5 rounded-md hover:bg-slate-50 disabled:opacity-50"
+                            className={`${ACTION_BTN_BASE} bg-slate-100 text-slate-700 hover:bg-slate-200`}
                           >
                             Free forever
                           </button>
@@ -306,7 +312,7 @@ function OwnerPage() {
                             <button
                               disabled={isBusy}
                               onClick={() => handleReactivate(s.id, s.name)}
-                              className="text-xs bg-blue-600 text-white px-2.5 py-1.5 rounded-md hover:bg-blue-700 disabled:opacity-50"
+                              className={`${ACTION_BTN_BASE} bg-blue-600 text-white shadow-sm hover:bg-blue-700`}
                             >
                               Reactivate
                             </button>
@@ -314,7 +320,7 @@ function OwnerPage() {
                             <button
                               disabled={isBusy}
                               onClick={() => handleSuspend(s.id, s.name)}
-                              className="text-xs text-red-600 border border-red-200 px-2.5 py-1.5 rounded-md hover:bg-red-50 disabled:opacity-50"
+                              className={`${ACTION_BTN_BASE} bg-red-50 text-red-600 hover:bg-red-100`}
                             >
                               Suspend
                             </button>
@@ -322,7 +328,7 @@ function OwnerPage() {
                           <button
                             disabled={isBusy}
                             onClick={() => handleDelete(s.id, s.name)}
-                            className="text-xs text-red-700 bg-red-50 border border-red-200 px-2.5 py-1.5 rounded-md hover:bg-red-100 disabled:opacity-50"
+                            className={`${ACTION_BTN_BASE} bg-red-100 text-red-700 hover:bg-red-200`}
                           >
                             Delete
                           </button>

@@ -5,7 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Copy, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuthUser, useSchoolId } from "@/lib/auth";
-import { money } from "@/lib/format";
+import { money, fmtLongDate } from "@/lib/format";
 import { createBillingPortalSession } from "@/lib/billing.functions";
 import { PLANS, type PlanKey } from "@/lib/plans";
 import { normalizeServiceAreaInput } from "@/lib/postal-code";
@@ -220,7 +220,7 @@ function SettingsPage() {
                 <div className="text-xs text-slate-500 mt-0.5">
                   Status: {billingQ.data.billing_status}
                   {billingQ.data.trial_ends_at && billingQ.data.billing_status === "trialing" && (
-                    <> · trial ends {new Date(billingQ.data.trial_ends_at).toLocaleDateString()}</>
+                    <> · trial ends {fmtLongDate(billingQ.data.trial_ends_at)}</>
                   )}
                 </div>
               </div>
