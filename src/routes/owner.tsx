@@ -32,14 +32,18 @@ const STATUS_LABEL: Record<string, string> = {
   suspended: "Suspended",
 };
 
+// Dark, glassy pill tones — this page runs a cooler "mission control" theme
+// distinct from the warm cream/gold surface used everywhere else, so these
+// tones are local to owner.tsx rather than reusing the app-wide statusTone
+// map (which assumes a light background).
 const STATUS_TONE: Record<string, string> = {
-  trialing: "bg-blue-100 text-blue-700",
-  active: "bg-emerald-100 text-emerald-700",
-  past_due: "bg-amber-100 text-amber-700",
-  grace_period: "bg-amber-100 text-amber-700",
-  locked: "bg-red-100 text-red-700",
-  free_forever: "bg-purple-100 text-purple-700",
-  suspended: "bg-slate-200 text-slate-700",
+  trialing: "bg-blue-500/15 text-blue-300 ring-1 ring-blue-500/25",
+  active: "bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/25",
+  past_due: "bg-amber-500/15 text-amber-300 ring-1 ring-amber-500/25",
+  grace_period: "bg-amber-500/15 text-amber-300 ring-1 ring-amber-500/25",
+  locked: "bg-red-500/15 text-red-300 ring-1 ring-red-500/25",
+  free_forever: "bg-purple-500/15 text-purple-300 ring-1 ring-purple-500/25",
+  suspended: "bg-slate-500/15 text-slate-300 ring-1 ring-slate-500/25",
 };
 
 const ACTION_BTN_BASE =
@@ -182,7 +186,12 @@ function OwnerPage() {
 
   if (loading || isOwner !== true) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-slate-500">Loading…</div>
+      <div
+        className="min-h-screen flex items-center justify-center text-slate-400"
+        style={{ background: "linear-gradient(160deg, #0A0F1E 0%, #0D1428 50%, #0A0F1E 100%)" }}
+      >
+        Loading…
+      </div>
     );
   }
 
@@ -191,97 +200,129 @@ function OwnerPage() {
   const visibleSchools = dormantOnly ? allSchools.filter((s) => s.isDormant) : allSchools;
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+    <div
+      className="min-h-screen"
+      style={{ background: "linear-gradient(160deg, #0A0F1E 0%, #0D1428 50%, #0A0F1E 100%)" }}
+    >
+      <header className="border-b border-white/5 px-6 py-4 flex items-center justify-between bg-white/[0.02]">
         <div>
-          <h1 className="text-lg font-semibold text-slate-900">Owner Dashboard</h1>
-          <p className="text-xs text-slate-500">Every school on DrivingOps, in one place.</p>
+          <h1 className="text-xl font-bold tracking-tight text-white">Owner Dashboard</h1>
+          <p className="text-[11px] uppercase tracking-wider text-slate-500 mt-0.5">
+            Every school on DrivingOps, in one place.
+          </p>
         </div>
-        <button onClick={signOut} className="text-sm text-slate-500 hover:text-slate-700">
+        <button onClick={signOut} className="text-sm text-slate-400 hover:text-white transition-colors">
           Sign out
         </button>
       </header>
 
       <main className="p-6 max-w-6xl mx-auto">
         <div className="mb-4 flex items-center justify-between">
-          <label className="inline-flex items-center gap-2 text-sm text-slate-600">
+          <label className="inline-flex items-center gap-2 text-sm text-slate-300">
             <input
               type="checkbox"
               checked={dormantOnly}
               onChange={(e) => setDormantOnly(e.target.checked)}
-              className="size-4 rounded border-slate-300"
+              className="size-4 rounded border-white/20 bg-white/5 accent-blue-500"
             />
             Dormant only — locked out 12+ months, never auto-deleted
           </label>
-          <span className="text-xs text-slate-400">
+          <span className="text-xs text-slate-500 font-mono">
             {dormantCount} dormant school{dormantCount === 1 ? "" : "s"}
           </span>
         </div>
         {schoolsQ.isLoading ? (
           <p className="text-sm text-slate-500">Loading schools…</p>
         ) : (
-          <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-            <table className="w-full text-sm">
-              <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+          <div
+            className="rounded-xl overflow-hidden"
+            style={{
+              background: "#0F1729",
+              border: "1px solid rgba(96,165,250,0.14)",
+              boxShadow: "0 0 40px rgba(59,130,246,0.05), 0 8px 32px rgba(0,0,0,0.45)",
+            }}
+          >
+            <table
+              className="w-full text-sm border-separate"
+              style={{ borderSpacing: "0 6px" }}
+            >
+              <thead className="text-slate-500">
                 <tr>
-                  <th className="text-left px-5 py-3">School</th>
-                  <th className="text-left px-5 py-3">Plan</th>
-                  <th className="text-left px-5 py-3">Status</th>
-                  <th className="text-left px-5 py-3">Instructors</th>
-                  <th className="text-left px-5 py-3">Signed up</th>
-                  <th className="text-right px-5 py-3">Actions</th>
+                  <th className="text-left px-5 py-2 text-[11px] font-bold uppercase tracking-[0.14em]">
+                    School
+                  </th>
+                  <th className="text-left px-5 py-2 text-[11px] font-bold uppercase tracking-[0.14em]">
+                    Plan
+                  </th>
+                  <th className="text-left px-5 py-2 text-[11px] font-bold uppercase tracking-[0.14em]">
+                    Status
+                  </th>
+                  <th className="text-left px-5 py-2 text-[11px] font-bold uppercase tracking-[0.14em]">
+                    Instructors
+                  </th>
+                  <th className="text-left px-5 py-2 text-[11px] font-bold uppercase tracking-[0.14em]">
+                    Signed up
+                  </th>
+                  <th className="text-right px-5 py-2 text-[11px] font-bold uppercase tracking-[0.14em]">
+                    Actions
+                  </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200">
+              <tbody>
                 {visibleSchools.map((s) => {
                   const status = s.billing?.billing_status ?? "no billing set up";
                   const plan = s.billing?.plan as PlanKey | undefined;
                   const isSuspended = status === "suspended";
                   const isBusy = busyId === s.id;
                   return (
-                    <tr key={s.id} className="even:bg-slate-50/70 hover:bg-blue-50/60 transition-colors">
+                    <tr
+                      key={s.id}
+                      className="odd:bg-white/[0.02] even:bg-white/[0.04] hover:bg-blue-500/[0.07] transition-colors [&>td:first-child]:rounded-l-xl [&>td:last-child]:rounded-r-xl"
+                    >
                       <td className="px-5 py-3">
-                        <div className="font-medium text-slate-900">{s.name}</div>
-                        <div className="text-xs text-slate-400">/{s.slug}</div>
+                        <div className="font-medium text-white">{s.name}</div>
+                        <div className="text-xs text-slate-500">/{s.slug}</div>
                       </td>
-                      <td className="px-5 py-3 text-slate-600">{plan ? PLANS[plan].name : "—"}</td>
+                      <td className="px-5 py-3 text-slate-300">{plan ? PLANS[plan].name : "—"}</td>
                       <td className="px-5 py-3">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <StatusPill tone={STATUS_TONE[status] ?? "bg-slate-100 text-slate-600"}>
+                          <StatusPill tone={STATUS_TONE[status] ?? "bg-slate-500/15 text-slate-300 ring-1 ring-slate-500/25"}>
                             {STATUS_LABEL[status] ?? status}
                           </StatusPill>
                           {s.isDormant && (
-                            <StatusPill tone="bg-slate-800 text-white">Dormant</StatusPill>
+                            <StatusPill tone="bg-orange-500/15 text-orange-300 ring-1 ring-orange-500/25">
+                              Dormant
+                            </StatusPill>
                           )}
                         </div>
                         {s.billing?.trial_ends_at && status === "trialing" && (
-                          <div className="text-xs text-slate-400 mt-1">
+                          <div className="text-xs text-slate-500 mt-1 font-mono">
                             ends {fmtLongDate(s.billing.trial_ends_at)}
                           </div>
                         )}
                         {s.billing?.grace_period_ends_at && status === "grace_period" && (
-                          <div className="text-xs text-slate-400 mt-1">
+                          <div className="text-xs text-slate-500 mt-1 font-mono">
                             grace ends {fmtLongDate(s.billing.grace_period_ends_at)}
                           </div>
                         )}
                         {s.lockedOutSince && (
-                          <div className="text-xs text-slate-400 mt-1">
+                          <div className="text-xs text-slate-500 mt-1 font-mono">
                             locked out since {fmtLongDate(s.lockedOutSince)}
                           </div>
                         )}
                       </td>
-                      <td className="px-5 py-3 text-slate-600">{s.instructorCount}</td>
-                      <td className="px-5 py-3 text-slate-400 text-xs">
+                      <td className="px-5 py-3 text-slate-300 font-mono">{s.instructorCount}</td>
+                      <td className="px-5 py-3 text-slate-500 text-xs font-mono">
                         {fmtLongDate(s.createdAt)}
                       </td>
                       <td className="px-5 py-3">
                         <div className="flex items-center justify-end gap-1.5 flex-wrap">
                           <button
                             onClick={() => copyPortalLink(s.slug)}
-                            className={`${ACTION_BTN_BASE} text-white shadow-sm ${
+                            className={`${ACTION_BTN_BASE} text-white ${
                               copiedSlug === s.slug
-                                ? "bg-emerald-600"
-                                : "bg-blue-600 hover:bg-blue-700"
+                                ? "bg-gradient-to-r from-emerald-600 to-emerald-500 shadow-[0_0_16px_rgba(16,185,129,0.35)]"
+                                : "bg-gradient-to-r from-blue-600 to-indigo-600 shadow-[0_0_16px_rgba(59,130,246,0.3)] hover:shadow-[0_0_26px_rgba(59,130,246,0.5)] hover:brightness-110"
                             }`}
                           >
                             {copiedSlug === s.slug ? (
@@ -297,14 +338,14 @@ function OwnerPage() {
                           <button
                             disabled={isBusy}
                             onClick={() => handleExtendTrial(s.id)}
-                            className={`${ACTION_BTN_BASE} bg-slate-100 text-slate-700 hover:bg-slate-200`}
+                            className={`${ACTION_BTN_BASE} bg-white/5 text-slate-300 ring-1 ring-white/10 hover:bg-white/10 hover:ring-white/20`}
                           >
                             Extend trial
                           </button>
                           <button
                             disabled={isBusy || status === "free_forever"}
                             onClick={() => handleMarkFreeForever(s.id, s.name)}
-                            className={`${ACTION_BTN_BASE} bg-slate-100 text-slate-700 hover:bg-slate-200`}
+                            className={`${ACTION_BTN_BASE} bg-white/5 text-slate-300 ring-1 ring-white/10 hover:bg-white/10 hover:ring-white/20`}
                           >
                             Free forever
                           </button>
@@ -312,7 +353,7 @@ function OwnerPage() {
                             <button
                               disabled={isBusy}
                               onClick={() => handleReactivate(s.id, s.name)}
-                              className={`${ACTION_BTN_BASE} bg-blue-600 text-white shadow-sm hover:bg-blue-700`}
+                              className={`${ACTION_BTN_BASE} text-white bg-gradient-to-r from-blue-600 to-indigo-600 shadow-[0_0_16px_rgba(59,130,246,0.3)] hover:shadow-[0_0_26px_rgba(59,130,246,0.5)] hover:brightness-110`}
                             >
                               Reactivate
                             </button>
@@ -320,7 +361,7 @@ function OwnerPage() {
                             <button
                               disabled={isBusy}
                               onClick={() => handleSuspend(s.id, s.name)}
-                              className={`${ACTION_BTN_BASE} bg-red-50 text-red-600 hover:bg-red-100`}
+                              className={`${ACTION_BTN_BASE} bg-red-500/10 text-red-300 ring-1 ring-red-500/20 hover:bg-red-500/15 hover:ring-red-500/30`}
                             >
                               Suspend
                             </button>
@@ -328,7 +369,7 @@ function OwnerPage() {
                           <button
                             disabled={isBusy}
                             onClick={() => handleDelete(s.id, s.name)}
-                            className={`${ACTION_BTN_BASE} bg-red-100 text-red-700 hover:bg-red-200`}
+                            className={`${ACTION_BTN_BASE} bg-red-500/15 text-red-300 ring-1 ring-red-500/30 hover:bg-red-500/20 hover:shadow-[0_0_14px_rgba(239,68,68,0.3)]`}
                           >
                             Delete
                           </button>
