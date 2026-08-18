@@ -32,6 +32,7 @@ import {
   submitPublicBooking,
   getHasFemaleInstructor,
   getAppointmentOnlyDates,
+  getAvailableInstructors,
 } from "@/lib/public-booking.functions";
 import { submitCustomPackageRequest } from "@/lib/custom-package-requests.functions";
 import { submitAppointmentRequest } from "@/lib/appointment-requests.functions";
@@ -65,7 +66,34 @@ type Settings = {
   vehicle_rental_enabled?: boolean;
   online_payment_url?: string | null;
   skill_level_filter_enabled?: boolean;
+  instructor_selection_enabled?: boolean;
 };
+
+type InstructorProfile = {
+  id: string;
+  full_name: string;
+  photo_url: string | null;
+  bio: string | null;
+  badges: string[];
+  is_female: boolean;
+  vehicle_make: string | null;
+  vehicle_model: string | null;
+  vehicle_year: number | null;
+};
+
+function initials(name: string): string {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase())
+    .join("");
+}
+
+function vehicleLine(i: InstructorProfile): string | null {
+  const parts = [i.vehicle_year, i.vehicle_make, i.vehicle_model].filter(Boolean);
+  return parts.length > 0 ? parts.join(" ") : null;
+}
 
 const SKILL_LEVEL_FILTERS: { value: string; label: string }[] = [
   { value: "new_driver", label: "I'm new to driving" },
@@ -127,7 +155,7 @@ function BookingPage() {
       const { data } = await supabase
         .from("school_settings")
         .select(
-          "school_name, booking_paused, pickup_service_areas, cancellation_policy, mpi_test_locations, theory_lessons_enabled, vehicle_rental_enabled, online_payment_url, skill_level_filter_enabled",
+          "school_name, booking_paused, pickup_service_areas, cancellation_policy, mpi_test_locations, theory_lessons_enabled, vehicle_rental_enabled, online_payment_url, skill_level_filter_enabled, instructor_selection_enabled",
         )
         .eq("school_id", schoolId as string)
         .maybeSingle();
@@ -173,6 +201,7 @@ function BookingPage() {
   const [skillFilter, setSkillFilter] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
+  const [selectedInstructorId, setSelectedInstructorId] = useState<string | null>(null);
   const [form, setForm] = useState({
     full_name: "",
     phone: "",
@@ -191,6 +220,32 @@ function BookingPage() {
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [formRenderedAt] = useState(() => Date.now());
+
+  const scheduledAtIso = useMemo(() => {
+    if (!selectedDate || !selectedTime) return null;
+    const [h, m] = selectedTime.split(":").map(Number);
+    const dt = new Date(selectedDate);
+    dt.setHours(h, m, 0, 0);
+    return dt.toISOString();
+  }, [selectedDate, selectedTime]);
+
+  const getAvailableInstructorsFn = useServerFn(getAvailableInstructors);
+  const availableInstructorsQ = useQuery({
+    queryKey: ["public-available-instructors", schoolId, scheduledAtIso, selected?.duration_minutes],
+    enabled:
+      !!schoolId &&
+      !!scheduledAtIso &&
+      !!selected &&
+      !!settingsQ.data?.instructor_selection_enabled,
+    queryFn: () =>
+      getAvailableInstructorsFn({
+        data: {
+          schoolId: schoolId as string,
+          scheduledAt: scheduledAtIso as string,
+          durationMinutes: selected!.duration_minutes,
+        },
+      }),
+  });
 
   const [customPackageOpen, setCustomPackageOpen] = useState(false);
   const [customPackageForm, setCustomPackageForm] = useState({
@@ -294,6 +349,7 @@ function BookingPage() {
           postal_code: form.postal_code.trim(),
           mpi_test_location: form.mpi_test_location.trim() || null,
           female_instructor_only: form.female_instructor_only,
+          selected_instructor_id: selectedInstructorId ?? undefined,
           dropoff_address: form.dropoff_same ? form.pickup_address : form.dropoff_address,
           notes:
             [form.pickup_notes && `Pickup: ${form.pickup_notes}`, form.notes]
@@ -469,6 +525,7 @@ function BookingPage() {
                 onSelect={(t) => {
                   setSelected(t);
                   setSelectedTime(null);
+                  setSelectedInstructorId(null);
                   setErrors((e) => ({ ...e, service: undefined }));
                 }}
               />
@@ -741,7 +798,8 @@ function BookingPage() {
               </Panel>
             )}
 
-            {femaleInstructorQ.data?.hasFemaleInstructor && (
+            {femaleInstructorQ.data?.hasFemaleInstructor &&
+              !settingsQ.data?.instructor_selection_enabled && (
               <Panel eyebrow="Instructor" title="Any preference?" icon={User}>
                 <label
                   className="flex items-center gap-2.5 text-sm select-none"
@@ -780,16 +838,106 @@ function BookingPage() {
                 onDate={(d) => {
                   setSelectedDate(d);
                   setSelectedTime(null);
+                  setSelectedInstructorId(null);
                   setErrors((e) => ({ ...e, date: undefined, time: undefined }));
                 }}
                 onTime={(t) => {
                   setSelectedTime(t);
+                  setSelectedInstructorId(null);
                   setErrors((e) => ({ ...e, time: undefined }));
                 }}
               />
               {errors.date && <InlineError msg={errors.date} />}
               {errors.time && <InlineError msg={errors.time} />}
             </Panel>
+
+            {settingsQ.data?.instructor_selection_enabled && scheduledAtIso && (
+              <Panel eyebrow="Instructor" title="Choose your instructor" icon={User}>
+                <p className="text-xs -mt-1" style={{ color: C.muted }}>
+                  Optional — pick who you'd like, or skip and we'll assign one for you.
+                </p>
+                {availableInstructorsQ.isLoading ? (
+                  <p className="text-sm" style={{ color: C.muted }}>
+                    Checking availability…
+                  </p>
+                ) : (availableInstructorsQ.data?.instructors ?? []).length === 0 ? (
+                  <p className="text-sm" style={{ color: C.muted }}>
+                    No instructors are listed as available for this slot — we'll assign one for
+                    you.
+                  </p>
+                ) : (
+                  <div className="grid sm:grid-cols-2 gap-3">
+                    {(availableInstructorsQ.data?.instructors ?? []).map(
+                      (i: InstructorProfile) => {
+                        const active = selectedInstructorId === i.id;
+                        return (
+                          <button
+                            key={i.id}
+                            type="button"
+                            onClick={() => setSelectedInstructorId(active ? null : i.id)}
+                            className="text-left rounded-xl p-3.5 border transition"
+                            style={
+                              active
+                                ? { borderColor: C.primary, background: C.primarySoft }
+                                : { borderColor: C.border }
+                            }
+                          >
+                            <div className="flex items-center gap-3">
+                              {i.photo_url ? (
+                                <img
+                                  src={i.photo_url}
+                                  alt={i.full_name}
+                                  className="size-11 rounded-full object-cover shrink-0"
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = "none";
+                                  }}
+                                />
+                              ) : (
+                                <div
+                                  className="size-11 rounded-full grid place-items-center shrink-0 text-sm font-semibold"
+                                  style={{ background: C.primarySoft, color: C.primary }}
+                                >
+                                  {initials(i.full_name)}
+                                </div>
+                              )}
+                              <div className="min-w-0">
+                                <div className="text-sm font-semibold truncate">{i.full_name}</div>
+                                {vehicleLine(i) && (
+                                  <div
+                                    className="text-xs inline-flex items-center gap-1 mt-0.5"
+                                    style={{ color: C.muted }}
+                                  >
+                                    <CarFront className="size-3" /> {vehicleLine(i)}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            {i.bio && (
+                              <p className="text-xs mt-2 line-clamp-2" style={{ color: C.muted }}>
+                                {i.bio}
+                              </p>
+                            )}
+                            {i.badges.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mt-2">
+                                {i.badges.map((b) => (
+                                  <span
+                                    key={b}
+                                    className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                                    style={{ background: C.primarySoft, color: C.primary }}
+                                  >
+                                    {b}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </button>
+                        );
+                      },
+                    )}
+                  </div>
+                )}
+              </Panel>
+            )}
 
             {selectedDate && appointmentOnlyDates.has(toDateKey(selectedDate)) && (
               <Panel eyebrow="By appointment" title="Request a time" icon={MessageSquarePlus}>

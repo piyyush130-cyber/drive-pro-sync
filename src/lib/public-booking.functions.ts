@@ -4,7 +4,7 @@ import {
   RATE_LIMIT_MAX_BOOKINGS,
   RATE_LIMIT_WINDOW_MINUTES,
   isBotSubmission,
-  pickBestInstructor,
+  listEligibleInstructors,
 } from "@/lib/booking-logic";
 import { isValidPostalCode, isPickupAreaServiced } from "@/lib/postal-code";
 import { isBookingConflictError, BOOKING_CONFLICT_MESSAGE } from "@/lib/booking-conflict-error";
@@ -21,6 +21,7 @@ const BookingSchema = z.object({
   postal_code: z.string().trim().max(10).optional().default(""),
   mpi_test_location: z.string().trim().max(200).optional().nullable(),
   female_instructor_only: z.boolean().optional(),
+  selected_instructor_id: z.string().uuid().optional(),
   dropoff_address: z.string().max(300).optional().nullable(),
   notes: z.string().max(2000).optional().nullable(),
   lesson_type_id: z.string().uuid(),
@@ -33,22 +34,26 @@ const BookingSchema = z.object({
   formRenderedAt: z.number().optional(),
 });
 
-// Fetches active instructors + that day's bookings for the school, then
-// delegates the actual selection to the pure, unit-tested pickBestInstructor.
-export async function pickInstructor(
+// Fetches active, non-schedule-overridden instructors + that day's bookings
+// (including held waitlist offers) for the school, and returns everyone
+// eligible for the slot, least-loaded first — the single shared source of
+// truth behind auto-assignment, the student-facing instructor picker, and
+// server-side re-validation of a student's manual pick, so all three can
+// never drift apart.
+async function getEligibleCandidates(
   supabaseAdmin: any,
   schoolId: string,
   scheduledAt: string,
   durationMinutes: number,
   femaleOnly = false,
-): Promise<string | null> {
+): Promise<{ id: string; load: number }[]> {
   const { data: allInstructors } = await supabaseAdmin
     .from("instructors")
     .select("id, weekly_availability, is_female")
     .eq("school_id", schoolId)
     .eq("active", true)
     .eq("status", "active");
-  if (!allInstructors || allInstructors.length === 0) return null;
+  if (!allInstructors || allInstructors.length === 0) return [];
 
   const start = new Date(scheduledAt);
   const dateKey = toDateKey(start);
@@ -61,10 +66,10 @@ export async function pickInstructor(
   // auto-assigned — submitPublicBooking/submitPortalBooking/
   // submitTokenBooking also reject the submission outright for this case,
   // but this is a second line of defense against a manually-crafted request.
-  if ((dayOverrides ?? []).some((o: any) => !o.instructor_id)) return null;
+  if ((dayOverrides ?? []).some((o: any) => !o.instructor_id)) return [];
   const blockedInstructorIds = new Set((dayOverrides ?? []).map((o: any) => o.instructor_id));
   const instructors = allInstructors.filter((i: any) => !blockedInstructorIds.has(i.id));
-  if (instructors.length === 0) return null;
+  if (instructors.length === 0) return [];
 
   const dayStart = new Date(start);
   dayStart.setUTCHours(0, 0, 0, 0);
@@ -95,13 +100,76 @@ export async function pickInstructor(
     .gte("scheduled_at", dayStart.toISOString())
     .lte("scheduled_at", dayEnd.toISOString());
 
-  return pickBestInstructor({
+  return listEligibleInstructors({
     instructors: instructors ?? [],
     dayBookings: [...(dayBookings ?? []), ...(activeOffers ?? [])],
     scheduledAt,
     durationMinutes,
     femaleOnly,
   });
+}
+
+export async function pickInstructor(
+  supabaseAdmin: any,
+  schoolId: string,
+  scheduledAt: string,
+  durationMinutes: number,
+  femaleOnly = false,
+): Promise<string | null> {
+  const eligible = await getEligibleCandidates(
+    supabaseAdmin,
+    schoolId,
+    scheduledAt,
+    durationMinutes,
+    femaleOnly,
+  );
+  return eligible[0]?.id ?? null;
+}
+
+// Re-validates a student's manually-picked instructor is still eligible for
+// this exact slot at submission time — the client-side card list is UX, not
+// a security/correctness boundary, same reasoning as the pickup-address
+// re-check in submitPublicBooking below.
+export async function assertInstructorAvailable(
+  supabaseAdmin: any,
+  schoolId: string,
+  instructorId: string,
+  scheduledAt: string,
+  durationMinutes: number,
+): Promise<void> {
+  const eligible = await getEligibleCandidates(supabaseAdmin, schoolId, scheduledAt, durationMinutes);
+  if (!eligible.some((c) => c.id === instructorId)) {
+    throw new Error(
+      "That instructor is no longer available for this time. Please pick another or leave it to us.",
+    );
+  }
+}
+
+const InstructorProfileFields =
+  "id, full_name, photo_url, bio, badges, is_female, vehicle_make, vehicle_model, vehicle_year";
+
+// instructors has no anon-read RLS policy, so this is the only way the
+// booking pages can show profile cards for the slot's actually-eligible
+// instructors (same reasoning as getHasFemaleInstructor below).
+export async function getAvailableInstructorProfiles(
+  supabaseAdmin: any,
+  schoolId: string,
+  scheduledAt: string,
+  durationMinutes: number,
+) {
+  const eligible = await getEligibleCandidates(supabaseAdmin, schoolId, scheduledAt, durationMinutes);
+  if (eligible.length === 0) return [];
+  const order = new Map(eligible.map((c, i) => [c.id, i]));
+  const { data: profiles } = await supabaseAdmin
+    .from("instructors")
+    .select(InstructorProfileFields)
+    .in(
+      "id",
+      eligible.map((c) => c.id),
+    );
+  return (profiles ?? []).sort(
+    (a: any, b: any) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0),
+  );
 }
 
 const SchoolIdSchema = z.object({ schoolId: z.string().uuid() });
@@ -122,8 +190,27 @@ export const getHasFemaleInstructor = createServerFn({ method: "POST" })
     return { hasFemaleInstructor: (count ?? 0) > 0 };
   });
 
-// schedule_overrides is publicly readable (see so_public_read policy), but
-// instructors isn't — this combines both server-side and returns just the
+const AvailableInstructorsSchema = z.object({
+  schoolId: z.string().uuid(),
+  scheduledAt: z.string().datetime(),
+  durationMinutes: z.number().positive(),
+});
+
+export const getAvailableInstructors = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => AvailableInstructorsSchema.parse(d))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const instructors = await getAvailableInstructorProfiles(
+      supabaseAdmin,
+      data.schoolId,
+      data.scheduledAt,
+      data.durationMinutes,
+    );
+    return { instructors };
+  });
+
+// Neither schedule_overrides nor instructors has an anon-read policy, so
+// this combines both server-side (via supabaseAdmin) and returns just the
 // resulting set of blocked date strings, same reasoning as
 // getHasFemaleInstructor above.
 export const getAppointmentOnlyDates = createServerFn({ method: "POST" })
@@ -249,15 +336,25 @@ export const submitPublicBooking = createServerFn({ method: "POST" })
       .single();
     if (sErr || !student) throw new Error("Could not create student");
 
-    const instructorId = settings?.auto_assign_instructor
-      ? await pickInstructor(
-          supabaseAdmin,
-          data.school_id,
-          data.scheduled_at,
-          lt.duration_minutes,
-          !!data.female_instructor_only,
-        )
-      : null;
+    let instructorId: string | null = null;
+    if (data.selected_instructor_id) {
+      await assertInstructorAvailable(
+        supabaseAdmin,
+        data.school_id,
+        data.selected_instructor_id,
+        data.scheduled_at,
+        lt.duration_minutes,
+      );
+      instructorId = data.selected_instructor_id;
+    } else if (settings?.auto_assign_instructor) {
+      instructorId = await pickInstructor(
+        supabaseAdmin,
+        data.school_id,
+        data.scheduled_at,
+        lt.duration_minutes,
+        !!data.female_instructor_only,
+      );
+    }
 
     const { data: booking, error: bErr } = await supabaseAdmin
       .from("bookings")

@@ -15,6 +15,7 @@ import {
   getInvitationForToken,
   submitTokenBooking,
   submitTokenAppointmentRequest,
+  getTokenAvailableInstructors,
 } from "@/lib/token-booking.functions";
 import { TIME_SLOTS, unavailableForDate, buildMonthGrid } from "@/lib/booking-calendar";
 import { money } from "@/lib/format";
@@ -47,6 +48,32 @@ function matchesSkillFilter(t: LessonType, filter: string | null): boolean {
   return t.skill_levels.includes(filter);
 }
 
+type InstructorProfile = {
+  id: string;
+  full_name: string;
+  photo_url: string | null;
+  bio: string | null;
+  badges: string[];
+  is_female: boolean;
+  vehicle_make: string | null;
+  vehicle_model: string | null;
+  vehicle_year: number | null;
+};
+
+function initials(name: string): string {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase())
+    .join("");
+}
+
+function vehicleLine(i: InstructorProfile): string | null {
+  const parts = [i.vehicle_year, i.vehicle_make, i.vehicle_model].filter(Boolean);
+  return parts.length > 0 ? parts.join(" ") : null;
+}
+
 function NextLessonPage() {
   const { token } = Route.useParams();
   const getInvitation = useServerFn(getInvitationForToken);
@@ -61,6 +88,7 @@ function NextLessonPage() {
     flexibleSessionLengthEnabled: boolean;
     remainingPackageHours: number;
     skillLevelFilterEnabled: boolean;
+    instructorSelectionEnabled: boolean;
     appointmentOnlyDates: string[];
     schoolName: string;
     lessonTypes: LessonType[];
@@ -86,6 +114,7 @@ function NextLessonPage() {
   const [skillFilter, setSkillFilter] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [selectedInstructorId, setSelectedInstructorId] = useState<string | null>(null);
   const [appointmentMessage, setAppointmentMessage] = useState("");
   const [appointmentSubmitting, setAppointmentSubmitting] = useState(false);
   const [appointmentSubmitted, setAppointmentSubmitted] = useState(false);
@@ -108,6 +137,46 @@ function NextLessonPage() {
     [info],
   );
   const isAppointmentOnly = !!(selectedDate && appointmentOnlyDates.has(toDateKey(selectedDate)));
+
+  const scheduledAtIso = useMemo(() => {
+    if (!selectedDate || !selectedTime) return null;
+    const [h, m] = selectedTime.split(":").map(Number);
+    const dt = new Date(selectedDate);
+    dt.setHours(h, m, 0, 0);
+    return dt.toISOString();
+  }, [selectedDate, selectedTime]);
+  const effectiveDurationMinutes = needsSessionHours
+    ? Math.round((Number(sessionHours) || 0) * 60)
+    : (selected?.duration_minutes ?? 0);
+
+  const getAvailableInstructorsFn = useServerFn(getTokenAvailableInstructors);
+  const [availableInstructors, setAvailableInstructors] = useState<InstructorProfile[]>([]);
+  const [loadingInstructors, setLoadingInstructors] = useState(false);
+  useEffect(() => {
+    if (
+      !scheduledAtIso ||
+      isAppointmentOnly ||
+      effectiveDurationMinutes <= 0 ||
+      !info?.instructorSelectionEnabled
+    ) {
+      setAvailableInstructors([]);
+      return;
+    }
+    let cancelled = false;
+    setLoadingInstructors(true);
+    getAvailableInstructorsFn({
+      data: { token, scheduledAt: scheduledAtIso, durationMinutes: effectiveDurationMinutes },
+    })
+      .then((res) => {
+        if (!cancelled) setAvailableInstructors(res.instructors as InstructorProfile[]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingInstructors(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [scheduledAtIso, effectiveDurationMinutes, isAppointmentOnly, info?.instructorSelectionEnabled]);
 
   async function handleAppointmentRequestSubmit() {
     setAppointmentSubmitting(true);
@@ -150,6 +219,7 @@ function NextLessonPage() {
           scheduled_at: dt.toISOString(),
           mpi_test_location: mpiLocation.trim() || null,
           female_instructor_only: femaleInstructorOnly,
+          selected_instructor_id: selectedInstructorId ?? undefined,
           session_hours: needsSessionHours ? hoursNum : undefined,
         },
       });
@@ -282,7 +352,10 @@ function NextLessonPage() {
                 <button
                   key={lt.id}
                   type="button"
-                  onClick={() => setSelected(lt)}
+                  onClick={() => {
+                    setSelected(lt);
+                    setSelectedInstructorId(null);
+                  }}
                   className={`text-left rounded-lg p-3 border transition ${
                     active
                       ? "border-indigo-600 bg-indigo-50"
@@ -374,6 +447,7 @@ function NextLessonPage() {
                   onClick={() => {
                     setSelectedDate(d);
                     setSelectedTime(null);
+                    setSelectedInstructorId(null);
                     setAppointmentSubmitted(false);
                   }}
                   className={`relative h-9 rounded-full text-sm font-medium transition ${
@@ -434,7 +508,10 @@ function NextLessonPage() {
                       key={s.time}
                       type="button"
                       disabled={unavailable}
-                      onClick={() => setSelectedTime(s.time)}
+                      onClick={() => {
+                        setSelectedTime(s.time);
+                        setSelectedInstructorId(null);
+                      }}
                       className={`rounded-full px-3 py-2 text-xs font-semibold border transition ${
                         active
                           ? "bg-indigo-600 text-white border-indigo-600"
@@ -451,6 +528,82 @@ function NextLessonPage() {
             )
           )}
         </section>
+
+        {info.instructorSelectionEnabled && scheduledAtIso && !isAppointmentOnly && (
+          <section className="bg-white border border-slate-200 rounded-xl p-5">
+            <h2 className="text-sm font-semibold text-slate-900 mb-1">Choose your instructor</h2>
+            <p className="text-xs text-slate-500 mb-3">
+              Optional — pick who you'd like, or skip and we'll assign one for you.
+            </p>
+            {loadingInstructors ? (
+              <p className="text-sm text-slate-500">Checking availability…</p>
+            ) : availableInstructors.length === 0 ? (
+              <p className="text-sm text-slate-500">
+                No instructors are listed as available for this slot — we'll assign one for you.
+              </p>
+            ) : (
+              <div className="grid sm:grid-cols-2 gap-3">
+                {availableInstructors.map((i) => {
+                  const active = selectedInstructorId === i.id;
+                  return (
+                    <button
+                      key={i.id}
+                      type="button"
+                      onClick={() => setSelectedInstructorId(active ? null : i.id)}
+                      className={`text-left rounded-xl p-3.5 border transition ${
+                        active
+                          ? "border-indigo-600 bg-indigo-50"
+                          : "border-slate-200 hover:border-slate-300"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        {i.photo_url ? (
+                          <img
+                            src={i.photo_url}
+                            alt={i.full_name}
+                            className="size-11 rounded-full object-cover shrink-0"
+                            onError={(e) => {
+                              e.currentTarget.style.display = "none";
+                            }}
+                          />
+                        ) : (
+                          <div className="size-11 rounded-full grid place-items-center shrink-0 text-sm font-semibold bg-indigo-50 text-indigo-600">
+                            {initials(i.full_name)}
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <div className="text-sm font-semibold text-slate-900 truncate">
+                            {i.full_name}
+                          </div>
+                          {vehicleLine(i) && (
+                            <div className="text-xs text-slate-500 inline-flex items-center gap-1 mt-0.5">
+                              <CarFront className="size-3" /> {vehicleLine(i)}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      {i.bio && (
+                        <p className="text-xs text-slate-500 mt-2 line-clamp-2">{i.bio}</p>
+                      )}
+                      {i.badges.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {i.badges.map((b) => (
+                            <span
+                              key={b}
+                              className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600"
+                            >
+                              {b}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+        )}
 
         {needsMpiLocation && (
           <section className="bg-white border border-slate-200 rounded-xl p-5">
@@ -479,7 +632,7 @@ function NextLessonPage() {
           </section>
         )}
 
-        {info.hasFemaleInstructor && (
+        {info.hasFemaleInstructor && !info.instructorSelectionEnabled && (
           <section className="bg-white border border-slate-200 rounded-xl p-5">
             <label className="flex items-center gap-2.5 text-sm text-slate-700 select-none">
               <input

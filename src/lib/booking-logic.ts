@@ -39,23 +39,27 @@ function timeToMinutes(t: string): number {
   return h * 60 + m;
 }
 
-// Picks the least-loaded instructor whose weekly_availability covers the
-// requested slot and who has no overlapping booking that day. Pure — takes
-// already-fetched candidates and that day's bookings, does no I/O itself.
-export function pickBestInstructor(input: {
+// Every instructor whose weekly_availability covers the requested slot and
+// who has no overlapping booking that day, sorted least-loaded first. Pure
+// — takes already-fetched candidates and that day's bookings, does no I/O
+// itself. Shared by auto-assignment (pickBestInstructor, below) and the
+// student-facing "choose your instructor" picker, so an instructor offered
+// to a student is guaranteed to be exactly one auto-assign could have
+// picked — the two can never drift apart.
+export function listEligibleInstructors(input: {
   instructors: InstructorCandidate[];
   dayBookings: DayBooking[];
   scheduledAt: string;
   durationMinutes: number;
   femaleOnly?: boolean;
-}): string | null {
+}): { id: string; load: number }[] {
   const { instructors, dayBookings, scheduledAt, durationMinutes, femaleOnly } = input;
   const start = new Date(scheduledAt);
   const end = new Date(start.getTime() + durationMinutes * 60000);
   const dayKey = DAY_KEYS[start.getUTCDay()];
   const minutesOfDay = start.getUTCHours() * 60 + start.getUTCMinutes();
 
-  let best: { id: string; load: number } | null = null;
+  const eligible: { id: string; load: number }[] = [];
   for (const inst of instructors) {
     if (femaleOnly && !inst.is_female) continue;
     const avail = inst.weekly_availability ?? {};
@@ -76,11 +80,20 @@ export function pickBestInstructor(input: {
     });
     if (conflicts) continue;
 
-    if (!best || instBookings.length < best.load) {
-      best = { id: inst.id, load: instBookings.length };
-    }
+    eligible.push({ id: inst.id, load: instBookings.length });
   }
-  return best?.id ?? null;
+  return eligible.sort((a, b) => a.load - b.load);
+}
+
+// Picks the least-loaded eligible instructor, or null if none qualify.
+export function pickBestInstructor(input: {
+  instructors: InstructorCandidate[];
+  dayBookings: DayBooking[];
+  scheduledAt: string;
+  durationMinutes: number;
+  femaleOnly?: boolean;
+}): string | null {
+  return listEligibleInstructors(input)[0]?.id ?? null;
 }
 
 export type VehicleBooking = {

@@ -37,6 +37,7 @@ function InstructorsPage() {
   const genCode = useServerFn(generateInviteCode);
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<string | null>(null);
+  const [editingProfile, setEditingProfile] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
   const [offboardingId, setOffboardingId] = useState<string | null>(null);
   const { user } = useAuthUser();
@@ -166,6 +167,14 @@ function InstructorsPage() {
     setEditing(null);
     qc.invalidateQueries({ queryKey: ["instructors-all"] });
     toast.success("Availability saved");
+  }
+
+  async function saveProfile(id: string, patch: any) {
+    const { error } = await supabase.from("instructors").update(patch).eq("id", id);
+    if (error) return toast.error(error.message);
+    setEditingProfile(null);
+    qc.invalidateQueries({ queryKey: ["instructors-all"] });
+    toast.success("Profile saved");
   }
 
   const signupUrl =
@@ -354,6 +363,12 @@ function InstructorsPage() {
                 >
                   {isEditing ? "Close" : "Edit availability"}
                 </button>
+                <button
+                  onClick={() => setEditingProfile(editingProfile === i.id ? null : i.id)}
+                  className="btn-secondary text-xs"
+                >
+                  {editingProfile === i.id ? "Close" : "Edit profile"}
+                </button>
                 <button onClick={() => toggle(i.id, i.active)} className="btn-secondary text-xs">
                   {i.active ? "Deactivate" : "Activate"}
                 </button>
@@ -370,6 +385,10 @@ function InstructorsPage() {
                   initial={i.weekly_availability}
                   onSave={(v) => saveAvailability(i.id, v)}
                 />
+              )}
+
+              {editingProfile === i.id && (
+                <ProfileEditor initial={i} onSave={(patch) => saveProfile(i.id, patch)} />
               )}
             </div>
           );
@@ -527,6 +546,120 @@ function OffboardPanel({
           Cancel
         </button>
       </div>
+    </div>
+  );
+}
+
+function ProfileEditor({
+  initial,
+  onSave,
+}: {
+  initial: any;
+  onSave: (patch: any) => void;
+}) {
+  const [photoUrl, setPhotoUrl] = useState(initial.photo_url ?? "");
+  const [bio, setBio] = useState(initial.bio ?? "");
+  const [badgesText, setBadgesText] = useState((initial.badges ?? []).join(", "));
+  const [vehicleMake, setVehicleMake] = useState(initial.vehicle_make ?? "");
+  const [vehicleModel, setVehicleModel] = useState(initial.vehicle_model ?? "");
+  const [vehicleYear, setVehicleYear] = useState(initial.vehicle_year ?? "");
+
+  function save() {
+    onSave({
+      photo_url: photoUrl.trim() || null,
+      bio: bio.trim() || null,
+      badges: Array.from(
+        new Set(
+          badgesText
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean),
+        ),
+      ),
+      vehicle_make: vehicleMake.trim() || null,
+      vehicle_model: vehicleModel.trim() || null,
+      vehicle_year: vehicleYear ? Number(vehicleYear) : null,
+    });
+  }
+
+  return (
+    <div className="mt-4 pt-4 border-t border-slate-800 space-y-3">
+      <p className="text-xs text-slate-500">
+        Shown to students on the booking page if you enable instructor selection in Settings.
+        Every field here is optional.
+      </p>
+      <div>
+        <label className="block text-[10px] uppercase tracking-wider text-slate-500 mb-1">
+          Photo URL
+        </label>
+        <input
+          value={photoUrl}
+          onChange={(e) => setPhotoUrl(e.target.value)}
+          placeholder="https://…"
+          className="glass-input text-sm w-full"
+        />
+      </div>
+      <div>
+        <label className="block text-[10px] uppercase tracking-wider text-slate-500 mb-1">
+          Bio
+        </label>
+        <textarea
+          value={bio}
+          onChange={(e) => setBio(e.target.value)}
+          placeholder="A short introduction students will see"
+          className="glass-input text-sm w-full min-h-[70px]"
+        />
+      </div>
+      <div>
+        <label className="block text-[10px] uppercase tracking-wider text-slate-500 mb-1">
+          Badges (comma-separated)
+        </label>
+        <input
+          value={badgesText}
+          onChange={(e) => setBadgesText(e.target.value)}
+          placeholder="MTO Certified, Patient with New Drivers"
+          className="glass-input text-sm w-full"
+        />
+      </div>
+      <div className="grid grid-cols-3 gap-2">
+        <div>
+          <label className="block text-[10px] uppercase tracking-wider text-slate-500 mb-1">
+            Vehicle make
+          </label>
+          <input
+            value={vehicleMake}
+            onChange={(e) => setVehicleMake(e.target.value)}
+            placeholder="Honda"
+            className="glass-input text-sm w-full"
+          />
+        </div>
+        <div>
+          <label className="block text-[10px] uppercase tracking-wider text-slate-500 mb-1">
+            Vehicle model
+          </label>
+          <input
+            value={vehicleModel}
+            onChange={(e) => setVehicleModel(e.target.value)}
+            placeholder="Civic"
+            className="glass-input text-sm w-full"
+          />
+        </div>
+        <div>
+          <label className="block text-[10px] uppercase tracking-wider text-slate-500 mb-1">
+            Vehicle year
+          </label>
+          <input
+            type="number"
+            value={vehicleYear}
+            onChange={(e) => setVehicleYear(e.target.value)}
+            placeholder="2022"
+            className="glass-input text-sm w-full"
+          />
+        </div>
+      </div>
+      <button onClick={save} className="btn-primary text-sm">
+        Save profile
+      </button>
     </div>
   );
 }

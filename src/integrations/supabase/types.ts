@@ -463,6 +463,8 @@ export type Database = {
           active: boolean
           approved_at: string | null
           approved_by: string | null
+          badges: string[]
+          bio: string | null
           created_at: string
           deleted_at: string | null
           email: string | null
@@ -473,16 +475,22 @@ export type Database = {
           mpi_permitted: boolean
           notes: string | null
           phone: string | null
+          photo_url: string | null
           profile_id: string | null
           school_id: string
           status: Database["public"]["Enums"]["instructor_status"]
           updated_at: string
+          vehicle_make: string | null
+          vehicle_model: string | null
+          vehicle_year: number | null
           weekly_availability: Json
         }
         Insert: {
           active?: boolean
           approved_at?: string | null
           approved_by?: string | null
+          badges?: string[]
+          bio?: string | null
           created_at?: string
           deleted_at?: string | null
           email?: string | null
@@ -493,16 +501,22 @@ export type Database = {
           mpi_permitted?: boolean
           notes?: string | null
           phone?: string | null
+          photo_url?: string | null
           profile_id?: string | null
           school_id: string
           status?: Database["public"]["Enums"]["instructor_status"]
           updated_at?: string
+          vehicle_make?: string | null
+          vehicle_model?: string | null
+          vehicle_year?: number | null
           weekly_availability?: Json
         }
         Update: {
           active?: boolean
           approved_at?: string | null
           approved_by?: string | null
+          badges?: string[]
+          bio?: string | null
           created_at?: string
           deleted_at?: string | null
           email?: string | null
@@ -513,10 +527,14 @@ export type Database = {
           mpi_permitted?: boolean
           notes?: string | null
           phone?: string | null
+          photo_url?: string | null
           profile_id?: string | null
           school_id?: string
           status?: Database["public"]["Enums"]["instructor_status"]
           updated_at?: string
+          vehicle_make?: string | null
+          vehicle_model?: string | null
+          vehicle_year?: number | null
           weekly_availability?: Json
         }
         Relationships: [
@@ -891,6 +909,7 @@ export type Database = {
           deposit_cents: number
           deposit_required: boolean
           flexible_session_length_enabled: boolean
+          instructor_selection_enabled: boolean
           late_cancel_fee_type: string
           late_cancel_fee_value: number
           logo_url: string | null
@@ -926,6 +945,7 @@ export type Database = {
           deposit_cents?: number
           deposit_required?: boolean
           flexible_session_length_enabled?: boolean
+          instructor_selection_enabled?: boolean
           late_cancel_fee_type?: string
           late_cancel_fee_value?: number
           logo_url?: string | null
@@ -961,6 +981,7 @@ export type Database = {
           deposit_cents?: number
           deposit_required?: boolean
           flexible_session_length_enabled?: boolean
+          instructor_selection_enabled?: boolean
           late_cancel_fee_type?: string
           late_cancel_fee_value?: number
           logo_url?: string | null

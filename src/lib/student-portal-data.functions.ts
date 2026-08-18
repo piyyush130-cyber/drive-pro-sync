@@ -2,7 +2,12 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireStudentSession } from "@/lib/student-portal-auth.server";
 import { remainingLessons, remainingPackageHours } from "@/lib/student-balance";
-import { pickInstructor, assertNotAppointmentOnly } from "@/lib/public-booking.functions";
+import {
+  pickInstructor,
+  assertNotAppointmentOnly,
+  assertInstructorAvailable,
+  getAvailableInstructorProfiles,
+} from "@/lib/public-booking.functions";
 import { NO_SHOW_ESCALATION_THRESHOLD } from "@/lib/no-show";
 import { isBookingConflictError, BOOKING_CONFLICT_MESSAGE } from "@/lib/booking-conflict-error";
 import { computeAppointmentOnlyDates, toDateKey } from "@/lib/schedule-overrides";
@@ -86,7 +91,7 @@ export const getPortalBookingOptions = createServerFn({ method: "POST" })
       supabaseAdmin
         .from("school_settings")
         .select(
-          "booking_paused, mpi_test_locations, theory_lessons_enabled, vehicle_rental_enabled, flexible_session_length_enabled, skill_level_filter_enabled",
+          "booking_paused, mpi_test_locations, theory_lessons_enabled, vehicle_rental_enabled, flexible_session_length_enabled, skill_level_filter_enabled, instructor_selection_enabled",
         )
         .eq("school_id", schoolId)
         .maybeSingle(),
@@ -130,11 +135,32 @@ export const getPortalBookingOptions = createServerFn({ method: "POST" })
       flexibleSessionLengthEnabled,
       remainingPackageHours: remainingPackageHrs,
       skillLevelFilterEnabled: !!settings?.skill_level_filter_enabled,
+      instructorSelectionEnabled: !!settings?.instructor_selection_enabled,
       appointmentOnlyDates: Array.from(appointmentOnlyDates),
       bookingPaused: !!settings?.booking_paused,
       mpiTestLocations: settings?.mpi_test_locations ?? [],
       hasFemaleInstructor: (femaleCount ?? 0) > 0,
     };
+  });
+
+const AvailableInstructorsForSlotSchema = z.object({
+  sessionToken: z.string(),
+  scheduledAt: z.string().datetime(),
+  durationMinutes: z.number().positive(),
+});
+
+export const getPortalAvailableInstructors = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => AvailableInstructorsForSlotSchema.parse(d))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { schoolId } = await requireStudentSession(supabaseAdmin, data.sessionToken);
+    const instructors = await getAvailableInstructorProfiles(
+      supabaseAdmin,
+      schoolId,
+      data.scheduledAt,
+      data.durationMinutes,
+    );
+    return { instructors };
   });
 
 const SubmitBookingSchema = z.object({
@@ -143,6 +169,7 @@ const SubmitBookingSchema = z.object({
   scheduled_at: z.string().datetime(),
   mpi_test_location: z.string().trim().max(200).optional().nullable(),
   female_instructor_only: z.boolean().optional(),
+  selected_instructor_id: z.string().uuid().optional(),
   // Only used for category='package' bookings at a school with
   // flexible_session_length_enabled — the student's chosen session length,
   // in hours, drawn against remainingPackageHours instead of the fixed
@@ -230,15 +257,25 @@ export const submitPortalBooking = createServerFn({ method: "POST" })
         ? "confirmed"
         : "pending";
 
-    const instructorId = settings?.auto_assign_instructor
-      ? await pickInstructor(
-          supabaseAdmin,
-          schoolId,
-          data.scheduled_at,
-          bookingDurationMinutes,
-          !!data.female_instructor_only,
-        )
-      : null;
+    let instructorId: string | null = null;
+    if (data.selected_instructor_id) {
+      await assertInstructorAvailable(
+        supabaseAdmin,
+        schoolId,
+        data.selected_instructor_id,
+        data.scheduled_at,
+        bookingDurationMinutes,
+      );
+      instructorId = data.selected_instructor_id;
+    } else if (settings?.auto_assign_instructor) {
+      instructorId = await pickInstructor(
+        supabaseAdmin,
+        schoolId,
+        data.scheduled_at,
+        bookingDurationMinutes,
+        !!data.female_instructor_only,
+      );
+    }
 
     const { data: booking, error: bErr } = await supabaseAdmin
       .from("bookings")

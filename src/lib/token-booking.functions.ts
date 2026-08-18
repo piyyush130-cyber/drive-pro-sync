@@ -1,6 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { pickInstructor, assertNotAppointmentOnly } from "@/lib/public-booking.functions";
+import {
+  pickInstructor,
+  assertNotAppointmentOnly,
+  assertInstructorAvailable,
+  getAvailableInstructorProfiles,
+} from "@/lib/public-booking.functions";
 import { remainingLessons, remainingPackageHours } from "@/lib/student-balance";
 import { NO_SHOW_ESCALATION_THRESHOLD } from "@/lib/no-show";
 import { isBookingConflictError, BOOKING_CONFLICT_MESSAGE } from "@/lib/booking-conflict-error";
@@ -48,7 +53,7 @@ export const getInvitationForToken = createServerFn({ method: "POST" })
       supabaseAdmin
         .from("school_settings")
         .select(
-          "school_name, booking_paused, mpi_test_locations, theory_lessons_enabled, vehicle_rental_enabled, online_payment_url, flexible_session_length_enabled, skill_level_filter_enabled",
+          "school_name, booking_paused, mpi_test_locations, theory_lessons_enabled, vehicle_rental_enabled, online_payment_url, flexible_session_length_enabled, skill_level_filter_enabled, instructor_selection_enabled",
         )
         .eq("school_id", invitation.school_id)
         .maybeSingle(),
@@ -92,6 +97,7 @@ export const getInvitationForToken = createServerFn({ method: "POST" })
       flexibleSessionLengthEnabled,
       remainingPackageHours: remainingPackageHrs,
       skillLevelFilterEnabled: !!settings?.skill_level_filter_enabled,
+      instructorSelectionEnabled: !!settings?.instructor_selection_enabled,
       appointmentOnlyDates: Array.from(appointmentOnlyDates),
       schoolName: settings?.school_name ?? "your driving school",
       lessonTypes: (lessonTypes ?? []).filter((t: any) => {
@@ -107,11 +113,37 @@ export const getInvitationForToken = createServerFn({ method: "POST" })
     };
   });
 
+const AvailableInstructorsForSlotSchema = z.object({
+  token: z.string().uuid(),
+  scheduledAt: z.string().datetime(),
+  durationMinutes: z.number().positive(),
+});
+
+export const getTokenAvailableInstructors = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => AvailableInstructorsForSlotSchema.parse(d))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: invitation } = await supabaseAdmin
+      .from("lesson_invitations")
+      .select("school_id")
+      .eq("token", data.token)
+      .maybeSingle();
+    if (!invitation) throw new Error("This link is no longer valid.");
+    const instructors = await getAvailableInstructorProfiles(
+      supabaseAdmin,
+      invitation.school_id,
+      data.scheduledAt,
+      data.durationMinutes,
+    );
+    return { instructors };
+  });
+
 const BookSchema = z.object({
   token: z.string().uuid(),
   lesson_type_id: z.string().uuid(),
   scheduled_at: z.string().datetime(),
   mpi_test_location: z.string().trim().max(200).optional().nullable(),
+  selected_instructor_id: z.string().uuid().optional(),
   female_instructor_only: z.boolean().optional(),
   session_hours: z.number().positive().max(24).optional(),
 });
@@ -197,15 +229,25 @@ export const submitTokenBooking = createServerFn({ method: "POST" })
         ? "confirmed"
         : "pending";
 
-    const instructorId = settings?.auto_assign_instructor
-      ? await pickInstructor(
-          supabaseAdmin,
-          invitation.school_id,
-          data.scheduled_at,
-          bookingDurationMinutes,
-          !!data.female_instructor_only,
-        )
-      : null;
+    let instructorId: string | null = null;
+    if (data.selected_instructor_id) {
+      await assertInstructorAvailable(
+        supabaseAdmin,
+        invitation.school_id,
+        data.selected_instructor_id,
+        data.scheduled_at,
+        bookingDurationMinutes,
+      );
+      instructorId = data.selected_instructor_id;
+    } else if (settings?.auto_assign_instructor) {
+      instructorId = await pickInstructor(
+        supabaseAdmin,
+        invitation.school_id,
+        data.scheduled_at,
+        bookingDurationMinutes,
+        !!data.female_instructor_only,
+      );
+    }
 
     const { data: booking, error: bErr } = await supabaseAdmin
       .from("bookings")

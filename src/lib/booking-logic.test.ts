@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   isBotSubmission,
   pickBestInstructor,
+  listEligibleInstructors,
   hasVehicleConflict,
   MIN_FILL_TIME_MS,
 } from "./booking-logic";
@@ -161,6 +162,64 @@ describe("pickBestInstructor", () => {
       durationMinutes: 60,
     });
     expect(result).toBe("a");
+  });
+});
+
+describe("listEligibleInstructors", () => {
+  const MONDAY_9AM = "2026-08-03T09:00:00.000Z";
+
+  it("returns an empty array when nobody is available", () => {
+    const result = listEligibleInstructors({
+      instructors: [{ id: "a", weekly_availability: { monday: { enabled: false } } }],
+      dayBookings: [],
+      scheduledAt: MONDAY_9AM,
+      durationMinutes: 60,
+    });
+    expect(result).toEqual([]);
+  });
+
+  it("returns all eligible instructors sorted least-loaded first", () => {
+    const avail = { monday: { enabled: true, start: "09:00", end: "17:00" } };
+    const result = listEligibleInstructors({
+      instructors: [
+        { id: "busy", weekly_availability: avail },
+        { id: "free", weekly_availability: avail },
+      ],
+      dayBookings: [
+        { instructor_id: "busy", scheduled_at: "2026-08-03T13:00:00.000Z", duration_minutes: 60 },
+      ],
+      scheduledAt: MONDAY_9AM,
+      durationMinutes: 60,
+    });
+    expect(result.map((r) => r.id)).toEqual(["free", "busy"]);
+  });
+
+  it("excludes an instructor with a conflicting booking that day", () => {
+    const avail = { monday: { enabled: true, start: "09:00", end: "17:00" } };
+    const result = listEligibleInstructors({
+      instructors: [{ id: "a", weekly_availability: avail }],
+      dayBookings: [
+        { instructor_id: "a", scheduled_at: MONDAY_9AM, duration_minutes: 60 },
+      ],
+      scheduledAt: MONDAY_9AM,
+      durationMinutes: 60,
+    });
+    expect(result).toEqual([]);
+  });
+
+  it("respects femaleOnly", () => {
+    const avail = { monday: { enabled: true, start: "09:00", end: "17:00" } };
+    const result = listEligibleInstructors({
+      instructors: [
+        { id: "a", weekly_availability: avail, is_female: false },
+        { id: "b", weekly_availability: avail, is_female: true },
+      ],
+      dayBookings: [],
+      scheduledAt: MONDAY_9AM,
+      durationMinutes: 60,
+      femaleOnly: true,
+    });
+    expect(result.map((r) => r.id)).toEqual(["b"]);
   });
 });
 

@@ -134,6 +134,7 @@ function SettingsPage() {
         vehicle_rental_enabled: !!form.vehicle_rental_enabled,
         flexible_session_length_enabled: !!form.flexible_session_length_enabled,
         skill_level_filter_enabled: !!form.skill_level_filter_enabled,
+        instructor_selection_enabled: !!form.instructor_selection_enabled,
         online_payment_url: form.online_payment_url?.trim() || null,
         pickup_service_areas: normalizeServiceAreaInput(pickupAreasText),
         mpi_test_locations: normalizeCommaList(mpiLocationsText),
@@ -569,6 +570,22 @@ function SettingsPage() {
           When on, tag each package with the student level(s) it applies to on the Services page,
           and students see "New driver" / "Some experience" / "Retesting" filter buttons on your
           booking page. When off, the booking page looks exactly as it does today.
+        </p>
+        <label className="flex items-center gap-2 text-sm text-slate-700">
+          <input
+            type="checkbox"
+            checked={!!form.instructor_selection_enabled}
+            onChange={(e) => setForm({ ...form, instructor_selection_enabled: e.target.checked })}
+            className="accent-[#3B82F6]"
+          />
+          Let students choose their instructor?
+        </label>
+        <p className="text-xs text-slate-500 -mt-2">
+          When on, students see a "Choose your instructor" step after picking a date and time,
+          showing profile cards (photo, bio, badges, vehicle) for instructors actually available
+          at that slot — set these up per instructor on the Instructors page. Choosing is optional;
+          a student can skip it and we'll assign one as usual. When off, the booking page looks
+          exactly as it does today.
         </p>
         <button onClick={saveSettings} className="btn-primary text-sm">
           Save settings

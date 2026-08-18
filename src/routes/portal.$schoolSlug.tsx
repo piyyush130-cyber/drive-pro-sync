@@ -24,6 +24,7 @@ import {
   submitPortalBooking,
   submitPortalCancellation,
   submitPortalAppointmentRequest,
+  getPortalAvailableInstructors,
 } from "@/lib/student-portal-data.functions";
 import { TIME_SLOTS, unavailableForDate, buildMonthGrid } from "@/lib/booking-calendar";
 import { money, fmtDate, fmtTime, statusLabel, statusTone } from "@/lib/format";
@@ -547,6 +548,32 @@ function matchesSkillFilter(t: LessonType, filter: string | null): boolean {
   return t.skill_levels.includes(filter);
 }
 
+type InstructorProfile = {
+  id: string;
+  full_name: string;
+  photo_url: string | null;
+  bio: string | null;
+  badges: string[];
+  is_female: boolean;
+  vehicle_make: string | null;
+  vehicle_model: string | null;
+  vehicle_year: number | null;
+};
+
+function initials(name: string): string {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase())
+    .join("");
+}
+
+function vehicleLine(i: InstructorProfile): string | null {
+  const parts = [i.vehicle_year, i.vehicle_make, i.vehicle_model].filter(Boolean);
+  return parts.length > 0 ? parts.join(" ") : null;
+}
+
 function BookTab({
   sessionToken,
   onBooked,
@@ -571,6 +598,7 @@ function BookTab({
   const [sessionHours, setSessionHours] = useState("");
   const [skillFilter, setSkillFilter] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [selectedInstructorId, setSelectedInstructorId] = useState<string | null>(null);
   const [appointmentMessage, setAppointmentMessage] = useState("");
   const [appointmentSubmitting, setAppointmentSubmitting] = useState(false);
   const [appointmentSubmitted, setAppointmentSubmitted] = useState(false);
@@ -595,6 +623,35 @@ function BookTab({
     [optionsQ.data],
   );
   const isAppointmentOnly = !!(selectedDate && appointmentOnlyDates.has(toDateKey(selectedDate)));
+
+  const scheduledAtIso = useMemo(() => {
+    if (!selectedDate || !selectedTime) return null;
+    const [h, m] = selectedTime.split(":").map(Number);
+    const dt = new Date(selectedDate);
+    dt.setHours(h, m, 0, 0);
+    return dt.toISOString();
+  }, [selectedDate, selectedTime]);
+  const effectiveDurationMinutes = needsSessionHours
+    ? Math.round((Number(sessionHours) || 0) * 60)
+    : (selected?.duration_minutes ?? 0);
+
+  const getAvailableInstructorsFn = useServerFn(getPortalAvailableInstructors);
+  const availableInstructorsQ = useQuery({
+    queryKey: ["portal-available-instructors", sessionToken, scheduledAtIso, effectiveDurationMinutes],
+    enabled:
+      !!scheduledAtIso &&
+      !isAppointmentOnly &&
+      effectiveDurationMinutes > 0 &&
+      !!optionsQ.data?.instructorSelectionEnabled,
+    queryFn: () =>
+      getAvailableInstructorsFn({
+        data: {
+          sessionToken,
+          scheduledAt: scheduledAtIso as string,
+          durationMinutes: effectiveDurationMinutes,
+        },
+      }),
+  });
 
   async function handleAppointmentRequestSubmit() {
     setAppointmentSubmitting(true);
@@ -637,6 +694,7 @@ function BookTab({
           scheduled_at: dt.toISOString(),
           mpi_test_location: mpiLocation.trim() || null,
           female_instructor_only: femaleInstructorOnly,
+          selected_instructor_id: selectedInstructorId ?? undefined,
           session_hours: needsSessionHours ? hoursNum : undefined,
         },
       });
@@ -714,7 +772,10 @@ function BookTab({
               <button
                 key={lt.id}
                 type="button"
-                onClick={() => setSelected(lt)}
+                onClick={() => {
+                  setSelected(lt);
+                  setSelectedInstructorId(null);
+                }}
                 className="text-left rounded-lg p-3 border transition"
                 style={
                   active
@@ -817,6 +878,7 @@ function BookTab({
                 onClick={() => {
                   setSelectedDate(d);
                   setSelectedTime(null);
+                  setSelectedInstructorId(null);
                   setAppointmentSubmitted(false);
                 }}
                 className={`relative h-9 rounded-full text-sm font-medium transition ${
@@ -879,7 +941,10 @@ function BookTab({
                     key={s.time}
                     type="button"
                     disabled={unavailable}
-                    onClick={() => setSelectedTime(s.time)}
+                    onClick={() => {
+                      setSelectedTime(s.time);
+                      setSelectedInstructorId(null);
+                    }}
                     className={`rounded-full px-3 py-2 text-xs font-semibold border transition ${
                       unavailable ? "opacity-40 line-through" : ""
                     }`}
@@ -897,6 +962,95 @@ function BookTab({
           )
         )}
       </div>
+
+      {optionsQ.data.instructorSelectionEnabled && scheduledAtIso && !isAppointmentOnly && (
+        <div
+          className="rounded-2xl p-5"
+          style={{ background: C.surfaceSolid, border: `1px solid ${C.border}` }}
+        >
+          <h2 className="text-sm font-semibold mb-1">Choose your instructor</h2>
+          <p className="text-xs mb-3" style={{ color: C.muted }}>
+            Optional — pick who you'd like, or skip and we'll assign one for you.
+          </p>
+          {availableInstructorsQ.isLoading ? (
+            <p className="text-sm" style={{ color: C.muted }}>
+              Checking availability…
+            </p>
+          ) : (availableInstructorsQ.data?.instructors ?? []).length === 0 ? (
+            <p className="text-sm" style={{ color: C.muted }}>
+              No instructors are listed as available for this slot — we'll assign one for you.
+            </p>
+          ) : (
+            <div className="grid sm:grid-cols-2 gap-3">
+              {(availableInstructorsQ.data?.instructors ?? []).map((i: InstructorProfile) => {
+                const active = selectedInstructorId === i.id;
+                return (
+                  <button
+                    key={i.id}
+                    type="button"
+                    onClick={() => setSelectedInstructorId(active ? null : i.id)}
+                    className="text-left rounded-xl p-3.5 border transition"
+                    style={
+                      active
+                        ? { borderColor: C.primary, background: C.primarySoft }
+                        : { borderColor: C.border }
+                    }
+                  >
+                    <div className="flex items-center gap-3">
+                      {i.photo_url ? (
+                        <img
+                          src={i.photo_url}
+                          alt={i.full_name}
+                          className="size-11 rounded-full object-cover shrink-0"
+                          onError={(e) => {
+                            e.currentTarget.style.display = "none";
+                          }}
+                        />
+                      ) : (
+                        <div
+                          className="size-11 rounded-full grid place-items-center shrink-0 text-sm font-semibold"
+                          style={{ background: C.primarySoft, color: C.primary }}
+                        >
+                          {initials(i.full_name)}
+                        </div>
+                      )}
+                      <div className="min-w-0">
+                        <div className="text-sm font-semibold truncate">{i.full_name}</div>
+                        {vehicleLine(i) && (
+                          <div
+                            className="text-xs inline-flex items-center gap-1 mt-0.5"
+                            style={{ color: C.muted }}
+                          >
+                            <CarFront className="size-3" /> {vehicleLine(i)}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    {i.bio && (
+                      <p className="text-xs mt-2 line-clamp-2" style={{ color: C.muted }}>
+                        {i.bio}
+                      </p>
+                    )}
+                    {i.badges.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {i.badges.map((b) => (
+                          <span
+                            key={b}
+                            className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                            style={{ background: C.primarySoft, color: C.primary }}
+                          >
+                            {b}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
 
       {needsMpiLocation && (
         <div
@@ -930,7 +1084,7 @@ function BookTab({
         </div>
       )}
 
-      {optionsQ.data.hasFemaleInstructor && (
+      {optionsQ.data.hasFemaleInstructor && !optionsQ.data.instructorSelectionEnabled && (
         <div
           className="rounded-2xl p-5"
           style={{ background: C.surfaceSolid, border: `1px solid ${C.border}` }}
