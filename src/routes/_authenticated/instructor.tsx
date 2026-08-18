@@ -110,6 +110,40 @@ function InstructorPage() {
     },
   });
 
+  // Independent of the tab filter above — the top card always needs
+  // "whichever lesson is next or currently running," which today/upcoming/
+  // past can't answer on their own (today's tab has nothing on a day with
+  // no lessons even if tomorrow is booked, and vice versa). A 4-hour
+  // look-back covers any lesson that started earlier today and is still
+  // running, without needing raw SQL date-arithmetic filtering.
+  const nextOrLiveQ = useQuery({
+    queryKey: ["instructor-next-or-live", meQ.data?.id],
+    enabled: !!meQ.data?.id,
+    queryFn: async () => {
+      const windowStart = new Date(Date.now() - 4 * 3600000);
+      const { data, error } = await supabase
+        .from("bookings")
+        .select(
+          "*, students(full_name, phone, email), lesson_types(name, category), vehicles(name)",
+        )
+        .eq("instructor_id", meQ.data!.id)
+        .is("deleted_at", null)
+        .not("status", "in", "(cancelled,declined,completed,no_show)")
+        .gte("scheduled_at", windowStart.toISOString())
+        .order("scheduled_at")
+        .limit(20);
+      if (error) throw error;
+      const now = Date.now();
+      return (
+        (data ?? []).find((b: any) => {
+          const startMs = new Date(b.scheduled_at).getTime();
+          const endMs = startMs + (b.duration_minutes ?? 0) * 60000;
+          return endMs >= now;
+        }) ?? null
+      );
+    },
+  });
+
   const notifyUpdate = useServerFn(notifyBookingUpdated);
 
   async function setStatus(id: string, status: "completed" | "no_show") {
@@ -117,6 +151,7 @@ function InstructorPage() {
     if (error) return toast.error(error.message);
     toast.success("Updated");
     qc.invalidateQueries({ queryKey: ["instructor-bookings"] });
+    qc.invalidateQueries({ queryKey: ["instructor-next-or-live"] });
     // Only no_show has side effects (no-show fee, waitlist offer) — this
     // was previously a gap: an instructor marking no-show (the common
     // case, since they're the one at the pickup) never triggered them,
@@ -147,15 +182,11 @@ function InstructorPage() {
 
   const list = bookingsQ.data ?? [];
   const now = Date.now();
-  const nextLesson =
-    tab === "today" || tab === "upcoming"
-      ? list.find(
-          (b: any) =>
-            new Date(b.scheduled_at).getTime() >= now &&
-            b.status !== "completed" &&
-            b.status !== "no_show",
-        )
-      : null;
+  const topBooking = nextOrLiveQ.data;
+  const isLive =
+    !!topBooking &&
+    now >= new Date(topBooking.scheduled_at).getTime() &&
+    now < new Date(topBooking.scheduled_at).getTime() + (topBooking.duration_minutes ?? 0) * 60000;
 
   async function loadDemo() {
     setReseeding(true);
@@ -204,51 +235,98 @@ function InstructorPage() {
       </header>
 
       <main className="relative max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-        {nextLesson && (
+        {topBooking && (
           <div
             className="mb-6 rounded-2xl p-5 sm:p-6 text-white shadow-lg relative overflow-hidden"
-            style={{ background: "linear-gradient(135deg, #1B2B4B 0%, #243660 100%)" }}
+            style={{
+              background: isLive
+                ? "linear-gradient(135deg, #14532D 0%, #1B2B4B 100%)"
+                : "linear-gradient(135deg, #1B2B4B 0%, #243660 100%)",
+            }}
           >
             <div
               className="pointer-events-none absolute -top-12 -right-12 size-48 rounded-full opacity-50 blur-2xl"
-              style={{ background: "radial-gradient(circle, rgba(201,168,76,0.5) 0%, transparent 70%)" }}
+              style={{
+                background: isLive
+                  ? "radial-gradient(circle, rgba(74,222,128,0.4) 0%, transparent 70%)"
+                  : "radial-gradient(circle, rgba(201,168,76,0.5) 0%, transparent 70%)",
+              }}
             />
             <div
               className="relative text-[11px] uppercase tracking-widest flex items-center gap-1.5"
-              style={{ color: "#F0DFA0" }}
+              style={{ color: isLive ? "#86EFAC" : "#F0DFA0" }}
             >
-              <Sparkles className="size-3.5" /> Next lesson
+              {isLive ? (
+                <>
+                  <span className="relative flex size-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full size-2 bg-emerald-400" />
+                  </span>
+                  Lesson in progress
+                </>
+              ) : (
+                <>
+                  <Sparkles className="size-3.5" /> Next lesson
+                </>
+              )}
             </div>
             <div className="relative mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
               <div className="text-2xl sm:text-3xl font-bold tracking-tight">
-                {fmtTime(nextLesson.scheduled_at)}
+                {fmtTime(topBooking.scheduled_at)}
               </div>
-              <div className="text-white/70">{fmtDate(nextLesson.scheduled_at)}</div>
+              <div className="text-white/70">{fmtDate(topBooking.scheduled_at)}</div>
             </div>
             <div className="relative mt-3 text-lg font-semibold">
-              {nextLesson.students?.full_name}
+              {topBooking.students?.full_name}
             </div>
             <div className="relative text-sm text-white/70">
-              {nextLesson.lesson_types?.name} · {nextLesson.duration_minutes} min
+              {topBooking.lesson_types?.name} · {topBooking.duration_minutes} min
             </div>
             <div className="relative mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm">
               <span className="inline-flex items-center gap-1.5">
                 <MapPin className="size-4" />
-                {nextLesson.pickup_address}
+                {topBooking.pickup_address}
               </span>
-              {nextLesson.students?.phone && (
+              {topBooking.students?.phone && (
                 <a
-                  href={`tel:${nextLesson.students.phone}`}
+                  href={`tel:${topBooking.students.phone}`}
                   className="inline-flex items-center gap-1.5 hover:underline"
                 >
                   <Phone className="size-4" />
-                  {nextLesson.students.phone}
+                  {topBooking.students.phone}
                 </a>
               )}
             </div>
-            {nextLesson.notes && (
+            {topBooking.notes && (
               <div className="relative mt-3 text-sm bg-white/10 rounded-lg px-3 py-2 italic">
-                "{nextLesson.notes}"
+                "{topBooking.notes}"
+              </div>
+            )}
+            {isLive && (
+              <div className="relative mt-4">
+                <button
+                  onClick={() =>
+                    noteOpen === topBooking.id ? setNoteOpen(null) : openNote(topBooking.id)
+                  }
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold bg-white/15 hover:bg-white/25 transition-colors px-3 py-2 rounded-lg"
+                >
+                  <NotebookPen className="size-3.5" />
+                  {noteOpen === topBooking.id ? "Close note" : "Add lesson note"}
+                </button>
+                {noteOpen === topBooking.id && (
+                  <div className="mt-3 text-slate-900">
+                    <LessonNoteForm
+                      practiced={practiced}
+                      setPracticed={setPracticed}
+                      nextFocus={nextFocus}
+                      setNextFocus={setNextFocus}
+                      readiness={readiness}
+                      setReadiness={setReadiness}
+                      onSave={() => saveNote(topBooking)}
+                      saving={savingNote}
+                    />
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -400,68 +478,98 @@ function InstructorPage() {
                   )}
                 </div>
                 {historyOpen === b.id && <StudentHistoryPanel studentId={b.student_id} />}
-                {(b.status === "confirmed" || b.status === "completed") && (
-                  <div className="mt-3">
-                    {noteOpen === b.id && (
-                      <div
-                        className="card-premium mt-3 p-4 space-y-3"
-                        style={{ background: "rgba(201,168,76,0.06)", borderColor: "rgba(201,168,76,0.3)" }}
-                      >
-                        <div>
-                          <label className="text-xs font-medium text-slate-700">
-                            Practiced today
-                          </label>
-                          <textarea
-                            value={practiced}
-                            onChange={(e) => setPracticed(e.target.value)}
-                            placeholder="What did we practice today?"
-                            rows={2}
-                            className="mt-1 w-full text-sm rounded-md border border-slate-200 bg-white px-3 py-2 outline-none focus:border-blue-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-xs font-medium text-slate-700">Next focus</label>
-                          <textarea
-                            value={nextFocus}
-                            onChange={(e) => setNextFocus(e.target.value)}
-                            placeholder="What should the student focus on next?"
-                            rows={2}
-                            className="mt-1 w-full text-sm rounded-md border border-slate-200 bg-white px-3 py-2 outline-none focus:border-blue-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-xs font-medium text-slate-700">
-                            Road-test readiness
-                          </label>
-                          <select
-                            value={readiness}
-                            onChange={(e) => setReadiness(e.target.value as typeof readiness)}
-                            className="mt-1 w-full text-sm rounded-md border border-slate-200 bg-white px-3 py-2 outline-none focus:border-blue-500"
-                          >
-                            <option value="not_ready">Not ready</option>
-                            <option value="improving">Improving</option>
-                            <option value="almost_ready">Almost ready</option>
-                            <option value="ready">Ready to test</option>
-                          </select>
-                        </div>
-                        <div className="flex justify-end">
-                          <button
-                            onClick={() => saveNote(b)}
-                            disabled={savingNote}
-                            className="btn-primary text-sm px-3 py-2 rounded-md disabled:opacity-60"
-                          >
-                            {savingNote ? "Saving…" : "Save note"}
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                {(b.status === "confirmed" || b.status === "completed") && noteOpen === b.id && (
+                  <LessonNoteForm
+                    practiced={practiced}
+                    setPracticed={setPracticed}
+                    nextFocus={nextFocus}
+                    setNextFocus={setNextFocus}
+                    readiness={readiness}
+                    setReadiness={setReadiness}
+                    onSave={() => saveNote(b)}
+                    saving={savingNote}
+                  />
                 )}
               </div>
             ))}
           </div>
         )}
       </main>
+    </div>
+  );
+}
+
+type Readiness = "not_ready" | "improving" | "almost_ready" | "ready";
+
+// Shared by the per-booking list row and the live "Lesson in progress" top
+// card — same fields, same save handler, just a different trigger point so
+// an instructor isn't forced to scroll down to log notes mid-lesson.
+function LessonNoteForm({
+  practiced,
+  setPracticed,
+  nextFocus,
+  setNextFocus,
+  readiness,
+  setReadiness,
+  onSave,
+  saving,
+}: {
+  practiced: string;
+  setPracticed: (v: string) => void;
+  nextFocus: string;
+  setNextFocus: (v: string) => void;
+  readiness: Readiness;
+  setReadiness: (v: Readiness) => void;
+  onSave: () => void;
+  saving: boolean;
+}) {
+  return (
+    <div
+      className="card-premium mt-3 p-4 space-y-3"
+      style={{ background: "rgba(201,168,76,0.06)", borderColor: "rgba(201,168,76,0.3)" }}
+    >
+      <div>
+        <label className="text-xs font-medium text-slate-700">Practiced today</label>
+        <textarea
+          value={practiced}
+          onChange={(e) => setPracticed(e.target.value)}
+          placeholder="What did we practice today?"
+          rows={2}
+          className="mt-1 w-full text-sm rounded-md border border-slate-200 bg-white px-3 py-2 outline-none focus:border-blue-500"
+        />
+      </div>
+      <div>
+        <label className="text-xs font-medium text-slate-700">Next focus</label>
+        <textarea
+          value={nextFocus}
+          onChange={(e) => setNextFocus(e.target.value)}
+          placeholder="What should the student focus on next?"
+          rows={2}
+          className="mt-1 w-full text-sm rounded-md border border-slate-200 bg-white px-3 py-2 outline-none focus:border-blue-500"
+        />
+      </div>
+      <div>
+        <label className="text-xs font-medium text-slate-700">Road-test readiness</label>
+        <select
+          value={readiness}
+          onChange={(e) => setReadiness(e.target.value as Readiness)}
+          className="mt-1 w-full text-sm rounded-md border border-slate-200 bg-white px-3 py-2 outline-none focus:border-blue-500"
+        >
+          <option value="not_ready">Not ready</option>
+          <option value="improving">Improving</option>
+          <option value="almost_ready">Almost ready</option>
+          <option value="ready">Ready to test</option>
+        </select>
+      </div>
+      <div className="flex justify-end">
+        <button
+          onClick={onSave}
+          disabled={saving}
+          className="btn-primary text-sm px-3 py-2 rounded-md disabled:opacity-60"
+        >
+          {saving ? "Saving…" : "Save note"}
+        </button>
+      </div>
     </div>
   );
 }

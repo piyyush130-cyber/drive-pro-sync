@@ -200,8 +200,10 @@ function Dashboard() {
           .eq("active", true),
       ]);
       const s = settings.data ?? ({} as any);
+      const hasSchoolName = !!s.school_name && s.school_name !== "Standard Driving School";
       return {
-        hasSchoolName: !!s.school_name && s.school_name !== "Standard Driving School",
+        schoolName: hasSchoolName ? (s.school_name as string) : null,
+        hasSchoolName,
         hasContact: !!s.contact_phone && !!s.contact_email,
         hasServiceArea: !!s.service_area,
         hasInstructor: (instructors.count ?? 0) > 0,
@@ -216,6 +218,12 @@ function Dashboard() {
     month: "long",
     day: "numeric",
   });
+  const greetingHour = new Date().getHours();
+  const greeting =
+    greetingHour < 12 ? "Good morning" : greetingHour < 17 ? "Good afternoon" : "Good evening";
+  const unassignedToday = lessons.filter(
+    (b: any) => !b.instructors && b.status !== "cancelled" && b.status !== "declined",
+  ).length;
 
   async function updateBooking(id: string, patch: Record<string, unknown>) {
     setUpdatingId(id);
@@ -292,7 +300,7 @@ function Dashboard() {
             <div className="eyebrow">Daily Dispatch</div>
           </div>
           <h1 className="text-2xl md:text-3xl font-semibold tracking-tight mt-1.5">
-            Today at a glance
+            {greeting} at {setupQ.data?.schoolName ?? "your school"}
           </h1>
           <p className="text-sm text-slate-500 mt-1">{today}</p>
         </div>
@@ -516,7 +524,7 @@ function Dashboard() {
           </div>
         </div>
 
-        <div className="space-y-3">
+        <div className="flex flex-col gap-3 lg:h-full">
           <div className="flex items-center justify-between px-1">
             <h3 className="eyebrow text-slate-500">Booking Queue</h3>
             <Link
@@ -527,7 +535,24 @@ function Dashboard() {
             </Link>
           </div>
           {(pendingQ.data ?? []).length === 0 && (
-            <div className="card-premium p-5 text-sm text-slate-500">No pending requests.</div>
+            <div className="card-premium p-6 flex-1 flex flex-col items-center justify-center text-center gap-2 min-h-[220px]">
+              <div
+                className="size-10 rounded-full grid place-items-center"
+                style={{ background: "rgba(16,185,129,0.12)" }}
+              >
+                <CheckCircle2 className="size-5 text-emerald-600" />
+              </div>
+              <div className="text-sm font-medium text-slate-700">All caught up</div>
+              <div className="text-xs text-slate-500 max-w-[200px]">
+                No pending booking requests right now.
+              </div>
+              {unassignedToday > 0 && (
+                <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-3 py-1 mt-1">
+                  {unassignedToday} of today's lessons still {unassignedToday === 1 ? "needs" : "need"}{" "}
+                  an instructor
+                </div>
+              )}
+            </div>
           )}
           {(pendingQ.data ?? []).map((b: any) => (
             <div key={b.id} className="card-premium p-4">
