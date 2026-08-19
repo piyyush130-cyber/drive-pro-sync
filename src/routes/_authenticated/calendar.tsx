@@ -58,7 +58,7 @@ function CalendarPage() {
     queryFn: async () => {
       let q = supabase
         .from("bookings")
-        .select("*, students(full_name), instructors(full_name)")
+        .select("*, students(full_name), instructors(full_name), lesson_types(name)")
         .is("deleted_at", null)
         .gte("scheduled_at", start.toISOString())
         .lt("scheduled_at", end.toISOString())
@@ -149,6 +149,9 @@ function CalendarPage() {
                   >
                     <div className="font-semibold">{fmtTime(b.scheduled_at)}</div>
                     <div className="truncate">{b.students?.full_name}</div>
+                    <div className="truncate font-medium opacity-90">
+                      {b.lesson_types?.name ?? "Lesson"}
+                    </div>
                     <div className="truncate opacity-75">
                       {b.instructors?.full_name ?? "Unassigned"}
                     </div>

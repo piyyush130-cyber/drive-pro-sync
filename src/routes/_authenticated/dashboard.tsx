@@ -502,13 +502,13 @@ function Dashboard() {
                     <div className="text-sm font-semibold text-slate-900">
                       {fmtTime(b.scheduled_at)}
                     </div>
-                    <div className="text-[10px] uppercase tracking-widest text-slate-400">
-                      {b.lesson_types?.name?.split(" ")[0] ?? "Lesson"}
-                    </div>
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-semibold truncate">
                       {b.students?.full_name ?? "—"}
+                    </div>
+                    <div className="text-xs text-slate-500 truncate">
+                      {b.lesson_types?.name ?? "Lesson"}
                     </div>
                     <div className="text-xs text-slate-500 truncate inline-flex items-center gap-1">
                       <MapPin className="size-3 shrink-0 text-slate-400" />
