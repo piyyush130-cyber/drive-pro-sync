@@ -35,15 +35,18 @@ const STATUS_LABEL: Record<string, string> = {
 // Dark, glassy pill tones — this page runs a cooler "mission control" theme
 // distinct from the warm cream/gold surface used everywhere else, so these
 // tones are local to owner.tsx rather than reusing the app-wide statusTone
-// map (which assumes a light background).
+// map (which assumes a light background). Deliberately spread across
+// several hues (not just blue) so each status reads as visually distinct
+// at a glance — past_due and grace_period in particular used to share the
+// exact same amber tone, which was part of why the page felt monochrome.
 const STATUS_TONE: Record<string, string> = {
-  trialing: "bg-blue-500/15 text-blue-300 ring-1 ring-blue-500/25",
-  active: "bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/25",
-  past_due: "bg-amber-500/15 text-amber-300 ring-1 ring-amber-500/25",
-  grace_period: "bg-amber-500/15 text-amber-300 ring-1 ring-amber-500/25",
-  locked: "bg-red-500/15 text-red-300 ring-1 ring-red-500/25",
-  free_forever: "bg-purple-500/15 text-purple-300 ring-1 ring-purple-500/25",
-  suspended: "bg-slate-500/15 text-slate-300 ring-1 ring-slate-500/25",
+  trialing: "bg-blue-500/20 text-blue-300 ring-1 ring-blue-500/30",
+  active: "bg-emerald-500/20 text-emerald-300 ring-1 ring-emerald-500/30",
+  past_due: "bg-amber-500/20 text-amber-300 ring-1 ring-amber-500/30",
+  grace_period: "bg-cyan-500/20 text-cyan-300 ring-1 ring-cyan-500/30",
+  locked: "bg-red-500/20 text-red-300 ring-1 ring-red-500/30",
+  free_forever: "bg-purple-500/20 text-purple-300 ring-1 ring-purple-500/30",
+  suspended: "bg-slate-500/20 text-slate-300 ring-1 ring-slate-500/30",
 };
 
 const ACTION_BTN_BASE =
@@ -201,12 +204,42 @@ function OwnerPage() {
 
   return (
     <div
-      className="min-h-screen"
+      className="min-h-screen relative overflow-hidden"
       style={{ background: "linear-gradient(160deg, #0A0F1E 0%, #0D1428 50%, #0A0F1E 100%)" }}
     >
-      <header className="border-b border-white/5 px-6 py-4 flex items-center justify-between bg-white/[0.02]">
+      {/* Background depth: cool-toned grid + two off-hue glow blobs, kept
+          well away from the blue used everywhere else so the page doesn't
+          read as a single repeated color. */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.4]"
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(96,165,250,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(96,165,250,0.05) 1px, transparent 1px)",
+          backgroundSize: "56px 56px",
+        }}
+      />
+      <div
+        className="pointer-events-none absolute -top-32 -right-24 size-[480px] rounded-full blur-3xl opacity-30"
+        style={{ background: "radial-gradient(circle, rgba(168,85,247,0.35) 0%, transparent 70%)" }}
+      />
+      <div
+        className="pointer-events-none absolute top-1/3 -left-40 size-[420px] rounded-full blur-3xl opacity-25"
+        style={{ background: "radial-gradient(circle, rgba(34,211,238,0.3) 0%, transparent 70%)" }}
+      />
+
+      <header className="relative border-b border-white/5 px-6 py-4 flex items-center justify-between bg-white/[0.02]">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-white">Owner Dashboard</h1>
+          <h1
+            className="text-xl font-bold tracking-tight"
+            style={{
+              background: "linear-gradient(90deg, #FFFFFF 0%, #93C5FD 60%, #67E8F9 100%)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+            }}
+          >
+            Owner Dashboard
+          </h1>
           <p className="text-[11px] uppercase tracking-wider text-slate-500 mt-0.5">
             Every school on DrivingOps, in one place.
           </p>
@@ -216,7 +249,7 @@ function OwnerPage() {
         </button>
       </header>
 
-      <main className="p-6 max-w-6xl mx-auto">
+      <main className="relative p-6 max-w-6xl mx-auto">
         <div className="mb-4 flex items-center justify-between">
           <label className="inline-flex items-center gap-2 text-sm text-slate-300">
             <input
@@ -239,7 +272,8 @@ function OwnerPage() {
             style={{
               background: "#0F1729",
               border: "1px solid rgba(96,165,250,0.14)",
-              boxShadow: "0 0 40px rgba(59,130,246,0.05), 0 8px 32px rgba(0,0,0,0.45)",
+              boxShadow:
+                "0 0 40px rgba(59,130,246,0.05), 0 0 70px rgba(168,85,247,0.04), 0 8px 32px rgba(0,0,0,0.45)",
             }}
           >
             <table
@@ -247,23 +281,27 @@ function OwnerPage() {
               style={{ borderSpacing: "0 6px" }}
             >
               <thead className="text-slate-500">
-                <tr>
-                  <th className="text-left px-5 py-2 text-[11px] font-bold uppercase tracking-[0.14em]">
+                <tr
+                  style={{
+                    boxShadow: "inset 0 -1px 0 0 rgba(96,165,250,0.18)",
+                  }}
+                >
+                  <th className="text-left px-5 py-2 pb-3 text-[11px] font-bold uppercase tracking-[0.14em]">
                     School
                   </th>
-                  <th className="text-left px-5 py-2 text-[11px] font-bold uppercase tracking-[0.14em]">
+                  <th className="text-left px-5 py-2 pb-3 text-[11px] font-bold uppercase tracking-[0.14em]">
                     Plan
                   </th>
-                  <th className="text-left px-5 py-2 text-[11px] font-bold uppercase tracking-[0.14em]">
+                  <th className="text-left px-5 py-2 pb-3 text-[11px] font-bold uppercase tracking-[0.14em]">
                     Status
                   </th>
-                  <th className="text-left px-5 py-2 text-[11px] font-bold uppercase tracking-[0.14em]">
+                  <th className="text-left px-5 py-2 pb-3 text-[11px] font-bold uppercase tracking-[0.14em]">
                     Instructors
                   </th>
-                  <th className="text-left px-5 py-2 text-[11px] font-bold uppercase tracking-[0.14em]">
+                  <th className="text-left px-5 py-2 pb-3 text-[11px] font-bold uppercase tracking-[0.14em]">
                     Signed up
                   </th>
-                  <th className="text-right px-5 py-2 text-[11px] font-bold uppercase tracking-[0.14em]">
+                  <th className="text-right px-5 py-2 pb-3 text-[11px] font-bold uppercase tracking-[0.14em]">
                     Actions
                   </th>
                 </tr>
@@ -277,7 +315,7 @@ function OwnerPage() {
                   return (
                     <tr
                       key={s.id}
-                      className="odd:bg-white/[0.02] even:bg-white/[0.04] hover:bg-blue-500/[0.07] transition-colors [&>td:first-child]:rounded-l-xl [&>td:last-child]:rounded-r-xl"
+                      className="odd:bg-white/[0.02] even:bg-white/[0.04] hover:bg-cyan-500/[0.06] hover:shadow-[0_0_0_1px_rgba(34,211,238,0.3),0_4px_20px_rgba(34,211,238,0.1)] transition-all [&>td:first-child]:rounded-l-xl [&>td:last-child]:rounded-r-xl"
                     >
                       <td className="px-5 py-3">
                         <div className="font-medium text-white">{s.name}</div>
@@ -322,7 +360,7 @@ function OwnerPage() {
                             className={`${ACTION_BTN_BASE} text-white ${
                               copiedSlug === s.slug
                                 ? "bg-gradient-to-r from-emerald-600 to-emerald-500 shadow-[0_0_16px_rgba(16,185,129,0.35)]"
-                                : "bg-gradient-to-r from-blue-600 to-indigo-600 shadow-[0_0_16px_rgba(59,130,246,0.3)] hover:shadow-[0_0_26px_rgba(59,130,246,0.5)] hover:brightness-110"
+                                : "bg-gradient-to-r from-blue-600 to-cyan-500 shadow-[0_0_16px_rgba(34,211,238,0.3)] hover:shadow-[0_0_28px_rgba(34,211,238,0.55)] hover:brightness-110"
                             }`}
                           >
                             {copiedSlug === s.slug ? (
@@ -345,7 +383,7 @@ function OwnerPage() {
                           <button
                             disabled={isBusy || status === "free_forever"}
                             onClick={() => handleMarkFreeForever(s.id, s.name)}
-                            className={`${ACTION_BTN_BASE} bg-white/5 text-slate-300 ring-1 ring-white/10 hover:bg-white/10 hover:ring-white/20`}
+                            className={`${ACTION_BTN_BASE} bg-purple-500/10 text-purple-300 ring-1 ring-purple-500/20 hover:bg-purple-500/15 hover:ring-purple-500/35`}
                           >
                             Free forever
                           </button>
@@ -353,7 +391,7 @@ function OwnerPage() {
                             <button
                               disabled={isBusy}
                               onClick={() => handleReactivate(s.id, s.name)}
-                              className={`${ACTION_BTN_BASE} text-white bg-gradient-to-r from-blue-600 to-indigo-600 shadow-[0_0_16px_rgba(59,130,246,0.3)] hover:shadow-[0_0_26px_rgba(59,130,246,0.5)] hover:brightness-110`}
+                              className={`${ACTION_BTN_BASE} text-white bg-gradient-to-r from-emerald-600 to-teal-500 shadow-[0_0_16px_rgba(20,184,166,0.3)] hover:shadow-[0_0_28px_rgba(20,184,166,0.55)] hover:brightness-110`}
                             >
                               Reactivate
                             </button>
